@@ -16,13 +16,10 @@ Integrator::~Integrator()
 }
 
 void Integrator::RenderImage()
-{
-    // 创建图像数据
-    // uint8_t* pixels = new uint8_t[width * height * 4];
-    
-    // 生成渐变图像
+{    
+    // Generate Image
      for (int j = 0; j < height; ++j) {
-        uint8_t* row = pixels + j * width * 4;  // 指向行开始的指针
+        uint8_t* row = pixels + j * width * 4;  // Pointer to the start of the line
         std::clog << "\rScanlines remaining: " << (height - j) << ' ' << std::flush;
         for (int i = 0; i < width; i++) {
             auto r = double(i) / (width-1);
@@ -33,7 +30,7 @@ void Integrator::RenderImage()
             int ig = int(255.999 * g);
             int ib = int(255.999 * b);
 
-            uint8_t* pixel = row + i * 4;  // 当前像素的指针
+            uint8_t* pixel = row + i * 4;  // Pointer to the current pixel
             pixel[0] = ir;  // R
             pixel[1] = ig;  // G
             pixel[2] = ib;  // B

@@ -14,7 +14,7 @@ int render()
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     
-    int width = 1200;
+    int width = 1600;
     int height = 900;
     GLFWwindow* window = glfwCreateWindow(width, height, "raytracer", NULL, NULL);
     if (window == NULL) {

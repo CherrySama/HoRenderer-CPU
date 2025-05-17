@@ -1,8 +1,8 @@
 # HoRenderer-CPU
-HoRenderer is a C++ offline renderer created by Xmake. 
+HoRenderer is a C++ offline renderer created by Xmake. And Im still working on it...🥲
 
 ## Installation
 
-### Requirements
+### Requirements📝
 * Xmake
 * VSCode

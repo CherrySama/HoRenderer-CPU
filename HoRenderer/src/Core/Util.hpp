@@ -24,22 +24,32 @@ class Integrator;
 class Renderer;
 class RenderPass;
 class Shader;
-
+class Ray;
+// class Shape;
+class Hittable;
+class Hit_Record;
+class HittableList;
+class Sphere;
 
 using Vector2u = glm::uvec2;
 using Vector2i = glm::ivec2;
 using Vector2f = glm::vec2;
+using Vector2d = glm::dvec2;
 using Vector3u = glm::uvec3;
 using Vector3i = glm::ivec3;
 using Vector3f = glm::vec3;
+using Vector3d = glm::dvec3;
 using Vector4u = glm::uvec4;
 using Vector4i = glm::ivec4;
 using Vector4f = glm::vec4;
+using Vector4d = glm::dvec4;
 using Matrix3f = glm::mat3x3;
 using Matrix4f = glm::mat4x4;
 
 
-constexpr double Epsilon = 1e-5;
+constexpr float Epsilon = 1e-5;
+constexpr float Infinity = std::numeric_limits<double>::infinity();
+constexpr float PI = 3.1415926535897932385;
 
 
 inline uint32_t FloatToBits(float f) {
@@ -94,4 +104,8 @@ inline float NextFloatDown(float v) {
 	}
 
 	return BitsToFloat(ui);
+}
+
+inline float degrees_to_radians(float degrees) {
+    return degrees * PI / 180.0;
 }

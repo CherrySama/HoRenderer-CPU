@@ -16,7 +16,7 @@ int render()
     
     int width = 1600;
     int height = 900;
-    GLFWwindow* window = glfwCreateWindow(width, height, "raytracer", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(width, height, "HoRenderer", NULL, NULL);
     if (window == NULL) {
         std::cout << "Failed to create GLFW window" << std::endl;
         glfwTerminate();

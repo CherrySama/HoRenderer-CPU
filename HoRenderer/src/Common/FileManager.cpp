@@ -22,7 +22,7 @@ void FileManager::init() {
     char execPath[1024] = {0};
     GetModuleFileName(NULL, execPath, 1024);
     
-    // 假设可执行文件在 build/windows/x64/release 目录下
+    // exe file is in build/windows/x64/release 
     std::filesystem::path exePath(execPath);
     auto parentPath = exePath.parent_path(); // release
     parentPath = parentPath.parent_path();   // x64
@@ -44,26 +44,4 @@ std::string FileManager::getShaderPath(const std::string& filename) {
     pathCache[key] = path;
     return path;
 }
-
-// void FileManager::printPaths() {
-//     // Get the current working directory
-//     char cwd[1024];
-// #ifdef _WIN32
-//     GetCurrentDirectory(1024, cwd);
-// #else
-//     getcwd(cwd, sizeof(cwd));
-// #endif
-    
-//     // Get the executable file path
-//     char execPath[1024] = {0};
-// #ifdef _WIN32
-//     GetModuleFileName(NULL, execPath, 1024);
-// #else
-//     readlink("/proc/self/exe", execPath, 1024);
-// #endif
-    
-//     std::cout << "Current working directory: " << cwd << std::endl;
-//     std::cout << "Executable path: " << execPath << std::endl;
-//     std::cout << "Project root directory: " << projectRoot << std::endl;
-// }
 

@@ -9,7 +9,7 @@ Shader::Shader()
 
 Shader::~Shader()
 {
-	glDeleteProgram(m_ID);
+	Clean();
 }
 
 void Shader::ShaderConfig(const char* vertexPath, const char* fragmentPath, const char* geometryPath)
@@ -106,6 +106,11 @@ void Shader::UnUse()
 unsigned int Shader::GetID() const
 {
 	return m_ID;
+}
+
+void Shader::Clean()
+{
+	glDeleteProgram(m_ID);
 }
 
 void Shader::SetBool(const std::string& name, bool value) const

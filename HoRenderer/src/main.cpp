@@ -32,10 +32,11 @@ int render()
     FileManager* fm = FileManager::getInstance();
     fm->init();
 
-    RenderPass renderPass;
-    renderPass.width = width;
-    renderPass.height = height;
-    renderPass.ShaderConfig(fm->getShaderPath("VertexShader.vert").c_str(),
+    // RenderPass renderPass;
+    auto renderPass = std::make_unique<RenderPass>();
+    renderPass->width = width;
+    renderPass->height = height;
+    renderPass->ShaderConfig(fm->getShaderPath("VertexShader.vert").c_str(),
                             fm->getShaderPath("FirstPass.frag").c_str());
 
     // Creating Textures
@@ -56,7 +57,7 @@ int render()
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, integrator.GetPixels());
     glGenerateMipmap(GL_TEXTURE_2D);
 
-    renderPass.BindData(true);
+    renderPass->BindData(true);
 
     // Render Loop 
     while (!glfwWindowShouldClose(window)) {
@@ -68,7 +69,7 @@ int render()
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
         
-        renderPass.Draw({renderTexture});
+        renderPass->Draw({renderTexture});
         
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -77,7 +78,7 @@ int render()
     // Cleaning up resources
     // delete[] pixels;
     glDeleteTextures(1, &renderTexture);
-    renderPass.Clean();
+    renderPass.reset();
 
     glfwDestroyWindow(window);
     glfwTerminate();

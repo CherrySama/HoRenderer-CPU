@@ -3,8 +3,17 @@
 */
 #include "RenderPass.hpp"
 
-void RenderPass::BindData(bool finalPass) {
-	if (!finalPass) {
+RenderPass::~RenderPass()
+{
+	glDeleteVertexArrays(1, &vao);
+    glDeleteBuffers(1, &vbo);
+    if (fbo != 0) 
+        glDeleteFramebuffers(1, &fbo);
+}
+
+void RenderPass::BindData(bool finalPass)
+{
+    if (!finalPass) {
 		glGenFramebuffers(1, &fbo);
 	}
 	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
@@ -70,11 +79,3 @@ void RenderPass::Draw(std::vector<unsigned int> texPassArray) {
 	glUseProgram(0);
 }
 
-void RenderPass::Clean()
-{
-	glDeleteVertexArrays(1, &vao);
-    glDeleteBuffers(1, &vbo);
-    if (fbo != 0) {
-        glDeleteFramebuffers(1, &fbo);
-    }
-}

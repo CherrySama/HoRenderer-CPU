@@ -13,6 +13,7 @@ public:
 	void Use();
 	void UnUse();
 	unsigned int GetID() const;
+	void Clean();
 
 	void SetBool(const std::string& name, bool value) const;
 	void SetUnInt(const std::string& name, int value) const;

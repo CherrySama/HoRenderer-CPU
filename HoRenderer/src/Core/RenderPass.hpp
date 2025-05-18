@@ -17,8 +17,8 @@ public:
 	int height = 0;
 
 public:
+	~RenderPass();
 	void BindData(bool finalPass = false);
 	void ShaderConfig(const char* vertexPath, const char* fragmentPath, const char* geometryPath = nullptr);
 	void Draw(std::vector<unsigned int> texPassArray = {});
-	void Clean();
 };

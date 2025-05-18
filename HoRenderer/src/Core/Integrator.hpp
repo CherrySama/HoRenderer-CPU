@@ -29,6 +29,8 @@ public:
         return (1.0f - t) * Vector3f(1.0, 1.0, 1.0) + t * Vector3f(0.5, 0.7, 1.0);
     }
 
+    void Clean();
+
 private:
     int width, height;
     uint8_t *pixels;

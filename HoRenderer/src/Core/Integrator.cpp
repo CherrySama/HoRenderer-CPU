@@ -12,7 +12,7 @@ Integrator::Integrator(int width, int height)
 
 Integrator::~Integrator()
 {
-    delete[] pixels;
+    Clean();
 }
 
 void Integrator::RenderImage()
@@ -70,4 +70,9 @@ void Integrator::RenderImage()
 uint8_t *Integrator::GetPixels()
 {
     return pixels;
+}
+
+void Integrator::Clean()
+{
+    delete[] pixels;
 }

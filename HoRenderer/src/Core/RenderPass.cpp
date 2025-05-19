@@ -57,7 +57,7 @@ void RenderPass::ShaderConfig(const char* vertexPath, const char* fragmentPath, 
     m_shader.ShaderConfig(vertexPath, fragmentPath, geometryPath);
 }
 
-void RenderPass::Draw(std::vector<unsigned int> texPassArray) {
+void RenderPass::Draw(const std::vector<unsigned int>& texPassArray) {
 	glUseProgram(m_shader.GetID());
 	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 

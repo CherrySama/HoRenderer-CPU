@@ -4,7 +4,10 @@
 #include "Core/Util.hpp"
 #include "Core/RenderPass.hpp"
 #include "Core/Integrator.hpp"
+#include "Core/Camera.hpp"
+#include "Core/Scene.hpp"
 #include "Common/FileManager.hpp"
+#include "Core/Renderer.hpp"
 
 int render()
 {
@@ -14,9 +17,16 @@ int render()
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     
-    int width = 1600;
-    int height = 900;
-    GLFWwindow* window = glfwCreateWindow(width, height, "HoRenderer", NULL, NULL);
+    CameraParams camParams = {16.0f / 9.0f, 2.0f, 1.0f, 1600};
+    Camera cam(Vector3f(0));
+    cam.Create(camParams);
+
+    std::cout << cam.image_width << std::endl;
+    std::cout << cam.image_height << std::endl;
+
+    // int width = 1600;
+    // int height = 900;
+    GLFWwindow* window = glfwCreateWindow(cam.image_width, cam.image_height, "HoRenderer", NULL, NULL);
     if (window == NULL) {
         std::cout << "Failed to create GLFW window" << std::endl;
         glfwTerminate();
@@ -34,10 +44,18 @@ int render()
 
     // RenderPass renderPass;
     auto renderPass = std::make_unique<RenderPass>();
-    renderPass->width = width;
-    renderPass->height = height;
+    renderPass->width = cam.image_width;
+    renderPass->height = cam.image_height;
     renderPass->ShaderConfig(fm->getShaderPath("VertexShader.vert").c_str(),
                             fm->getShaderPath("FirstPass.frag").c_str());
+
+    // World
+    Scene world;
+    world.Add(std::make_shared<Sphere>(Vector3f(0, 0,-1), 0.5f));
+    world.Add(std::make_shared<Sphere>(Vector3f(0,-100.5,-1), 100.0f));
+
+    Integrator integrator(cam.image_width, cam.image_height);
+    integrator.RenderImage(cam, world);
 
     // Creating Textures
     GLuint renderTexture;
@@ -48,13 +66,8 @@ int render()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-    Integrator integrator(width, height);
-    integrator.RenderImage();
-
-
     // Loading image data into a texture
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, integrator.GetPixels());
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, cam.image_width, cam.image_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, integrator.GetPixels());
     glGenerateMipmap(GL_TEXTURE_2D);
 
     renderPass->BindData(true);
@@ -108,8 +121,17 @@ int testFileManager()
     return 0;
 }
 
+int testRenderer()
+{
+    Renderer renderer;
+    renderer.Run();
+
+    return 0;
+}
+
 int main()
 {
-    render();
+    // render();
     // testFileManager();
+    testRenderer();
 }

@@ -1,26 +1,26 @@
 /*
     Created by Yinghao He on 2025-05-18
 */
-#include "HittableList.hpp"
+#include "Scene.hpp"
 
-void HittableList::Clean()
+void Scene::Clean()
 {
     hit_objects.clear();
 }
 
-void HittableList::Add(std::shared_ptr<Hittable> object)
+void Scene::Add(std::shared_ptr<Hittable> object)
 {
     hit_objects.push_back(object);
 }
 
-bool HittableList::isHit(const Ray &r, float t_min, float t_max, Hit_Record &rec) const
+bool Scene::isHit(const Ray &r, Vector2f t_interval, Hit_Payload &rec) const
 {
-    Hit_Record temp_rec;
+    Hit_Payload temp_rec;
     bool isHit = false;
-    auto closest_t = t_max;
+    auto closest_t = t_interval.y;
 
     for (const auto &object:hit_objects) {
-        if (object->isHit(r, t_min, closest_t, temp_rec))
+        if (object->isHit(r, Vector2f(t_interval.x, closest_t), temp_rec))
         {
             isHit = true;
             closest_t = temp_rec.t;

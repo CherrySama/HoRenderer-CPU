@@ -3,13 +3,6 @@
 */
 #include "Integrator.hpp"
 
-Integrator::Integrator(int width, int height)
-{
-    this->width = width;
-    this->height = height;
-    pixels = new uint8_t[width * height * 4];;
-}
-
 Integrator::~Integrator()
 {
     Clean();
@@ -18,7 +11,7 @@ Integrator::~Integrator()
 void Integrator::RenderImage()
 {    
     // 计算视口尺寸和相关参数
-    float aspect_ratio = 16.0 / 9.0;
+    float aspect_ratio = 16.0f / 9.0f;
     int image_width = width;
     // Calculate the image height, and ensure that it's at least 1.
     int image_height = int(image_width / aspect_ratio);
@@ -40,8 +33,8 @@ void Integrator::RenderImage()
     auto pixel00_loc = viewport_upper_left + 0.5f * (pixel_delta_u + pixel_delta_v);
 
     // 加入两个球体
-    world.Add(std::make_shared<Sphere>(Vector3f(0, 0,-1), 0.5));
-    world.Add(std::make_shared<Sphere>(Vector3f(0,-100.5,-1), 100));
+    world.Add(std::make_shared<Sphere>(Vector3f(0, 0,-1), 0.5f));
+    world.Add(std::make_shared<Sphere>(Vector3f(0,-100.5,-1), 100.0f));
     // world.Add(std::make_shared<Box>(Vector3f(0.0f, 0.0f, -3.0f),      
     //                                 Vector3f(2.0f, 1.0f, 3.0f)));
     // world.Add(std::make_shared<Quad>(
@@ -53,13 +46,10 @@ void Integrator::RenderImage()
                             
 
     // Generate Image
-     for (int j = 0; j < height; ++j) {
-        uint8_t* row = pixels + j * width * 4;  // Pointer to the start of the line
-        std::clog << "\rScanlines remaining: " << (height - j) << ' ' << std::flush;
-        for (int i = 0; i < width; i++) {
-            // auto r = double(i) / (width-1);
-            // auto g = double(j) / (height-1);
-            // auto b = 0.0;
+     for (int j = 0; j < image_height; ++j) {
+        uint8_t* row = pixels.get() + j * image_width * 4;  // Pointer to the start of the line
+        std::clog << "\rScanlines remaining: " << (image_height - j) << ' ' << std::flush;
+        for (int i = 0; i < image_width; i++) {
             // 计算像素中心位置
             Vector3f pixel_center = pixel00_loc + (float(i) * pixel_delta_u) + (float(j) * pixel_delta_v);
             
@@ -84,50 +74,56 @@ void Integrator::RenderImage()
     std::clog << "\rDone.                 \n";
 }
 
-uint8_t *Integrator::GetPixels()
+void Integrator::RenderImage(Camera &cam, Scene &world)
 {
-    return pixels;
+    // Generate Image
+    for (int j = 0; j < cam.image_height; ++j)
+    {
+        uint8_t* row = pixels.get() + j * cam.image_width * 4;  // Pointer to the start of the line
+        std::clog << "\rScanlines remaining: " << (cam.image_height - j) << ' ' << std::flush;
+        for (int i = 0; i < cam.image_width; i++) {
+            Ray r = cam.GenerateRay(i, j);
+
+            // 获取射线颜色
+            Vector3f color = ray_color(r, world);
+
+            int ir = int(255.999f * color.r);
+            int ig = int(255.999f * color.g);
+            int ib = int(255.999f * color.b);
+
+            uint8_t* pixel = row + i * 4;  // Pointer to the current pixel
+            pixel[0] = ir;  // R
+            pixel[1] = ig;  // G
+            pixel[2] = ib;  // B
+            pixel[3] = 255; // A
+        }
+    }
+    std::clog << "\rDone.                 \n"; 
+}
+
+const uint8_t *Integrator::GetPixels() const
+{
+    return pixels.get();
 }
 
 Vector3f Integrator::ray_color(const Ray &r, const Hittable &world)
 {
-    // auto t = hit_sphere(Vector3f(0,0,-1), 0.5, r);
-    // if (t > 0.0) {
-    //     Vector3f N = glm::normalize(r.at(t) - Vector3f(0,0,-1));
-    //     return 0.5f * Vector3f(N.x + 1, N.y + 1, N.z + 1);
-    // }
-    Hit_Record rec;
-    if (world.isHit(r, 0, Infinity, rec)) {
+    Hit_Payload rec;
+    if (world.isHit(r, Vector2f(0, Infinity), rec)) {
         return 0.5f * (rec.normal + Vector3f(1,1,1));
     }
     
     // 获取射线的单位方向向量
     Vector3f unit_direction = glm::normalize(r.direction());
     // 基于y分量做线性插值，范围从0到1
-    float color = 0.5 * (unit_direction.y + 1.0);
+    float color = 0.5f * (unit_direction.y + 1.0f);
     // 从白色(1,1,1)到蓝色(0.5,0.7,1.0)的线性插值
     return (1.0f - color) * Vector3f(1.0, 1.0, 1.0) + color * Vector3f(0.5, 0.7, 1.0);
 }
 
-float Integrator::hit_sphere(const Vector3f &center, float radius, const Ray &r)
-{
-    Vector3f oc = center - r.origin();
-    auto a = glm::dot(r.direction(), r.direction());
-    // auto b = -2.0 * glm::dot(r.direction(), oc);
-    // make b = -2h
-    auto h = glm::dot(r.direction(), oc);
-    auto c = glm::dot(oc, oc) - radius*radius;
-    auto discriminant = h * h -  a * c;
-    // return (discriminant >= 0);
-    if (discriminant < 0)
-    {
-        return -1.0;
-    }else{
-        return (h - std::sqrt(discriminant)) / a; // Select the nearest intersection point smallest(t)
-    }
-}
-
 void Integrator::Clean()
 {
-    delete[] pixels;
+    // delete[] pixels;
+    pixels.reset();
 }
+

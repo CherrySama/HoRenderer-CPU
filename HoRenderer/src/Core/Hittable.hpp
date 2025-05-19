@@ -5,7 +5,7 @@
 
 #include "Ray.hpp"
 
-class Hit_Record {
+class Hit_Payload {
 public:    
     Vector3f p;
     Vector3f normal;
@@ -19,5 +19,5 @@ public:
 class Hittable{
 public:
     virtual ~Hittable() = default;
-    virtual bool isHit(const Ray &r, float t_min, float t_max, Hit_Record &rec) const = 0;
+    virtual bool isHit(const Ray &r, Vector2f t_interval, Hit_Payload &rec) const = 0;
 };

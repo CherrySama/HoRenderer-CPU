@@ -9,6 +9,7 @@ class Ray{
 public:
     Ray() {}
     Ray(const Vector3f &origin, const Vector3f &direction) : orig(origin), dir(direction) {}
+    ~Ray() = default;
 
     inline const Vector3f& origin() const { return orig; }
     inline const Vector3f& direction() const { return dir; }

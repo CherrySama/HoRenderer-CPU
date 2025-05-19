@@ -3,18 +3,19 @@
 */
 #include "Shape.hpp"
 
-bool Sphere::isHit(const Ray &r, float t_min, float t_max, Hit_Record &rec) const
+bool Sphere::isHit(const Ray &r, Vector2f t_interval, Hit_Payload &rec) const
 {
     Vector3f oc = center - r.origin();
-    auto a = glm::dot(r.direction(), r.direction());
-    auto h = glm::dot(r.direction(), oc);   // make b = -2h
-    auto c = glm::dot(oc, oc) - radius*radius;
-    auto discriminant = h * h -  a * c; // 
+    float a = glm::dot(r.direction(), r.direction());
+    float h = glm::dot(r.direction(), oc);   // make b = -2h
+    float c = glm::dot(oc, oc) - radius*radius;
+    float discriminant = h * h -  a * c; //
     
+
     if (discriminant > 0) { 
-        auto sqrt_d = std::sqrt(discriminant);
-        auto root = (h - sqrt_d) / a; 
-        if (root > t_min && root < t_max){
+        float sqrt_d = std::sqrtf(discriminant);
+        float root = (h - sqrt_d) / a; 
+        if (isInInterval(t_interval, root)){
             rec.t = root;
             rec.p = r.at(rec.t);
             // rec.normal = (rec.p - center) / radius;
@@ -23,7 +24,7 @@ bool Sphere::isHit(const Ray &r, float t_min, float t_max, Hit_Record &rec) cons
             return true;
         }
         root = (h + sqrt_d) / a;
-        if (root > t_min && root < t_max){
+        if (isInInterval(t_interval, root)){
             rec.t = root;
             rec.p = r.at(rec.t);
             Vector3f outward_normal = (rec.p - center) / radius;
@@ -35,7 +36,7 @@ bool Sphere::isHit(const Ray &r, float t_min, float t_max, Hit_Record &rec) cons
     return false;
 }
 
-bool Quad::isHit(const Ray &r, float t_min, float t_max, Hit_Record &rec) const
+bool Quad::isHit(const Ray &r, Vector2f t_interval, Hit_Payload &rec) const
 {
     // 计算光线与平面的交点
     float denom = glm::dot(normal, r.direction());
@@ -48,7 +49,7 @@ bool Quad::isHit(const Ray &r, float t_min, float t_max, Hit_Record &rec) const
     float t = glm::dot(center - r.origin(), normal) / denom;
     
     // 检查t是否在有效范围内
-    if (t < t_min || t > t_max)
+    if (t < t_interval.x || t > t_interval.y)
         return false;
     
     // 计算交点
@@ -73,16 +74,16 @@ bool Quad::isHit(const Ray &r, float t_min, float t_max, Hit_Record &rec) const
     return true;
 }
 
-bool Box::isHit(const Ray &r, float t_min, float t_max, Hit_Record &rec) const {
-    Hit_Record temp_rec;
+bool Box::isHit(const Ray &r, Vector2f t_interval, Hit_Payload &rec) const {
+    Hit_Payload temp_rec;
     bool hit_anything = false;
-    auto closest_so_far = t_max;
+    float closest_t = t_interval.y;
     
     // 检查射线与各个面的交点
     for (const auto& side : sides) {
-        if (side->isHit(r, t_min, closest_so_far, temp_rec)) {
+        if (side->isHit(r, Vector2f(t_interval.x, closest_t), temp_rec)) {
             hit_anything = true;
-            closest_so_far = temp_rec.t;
+            closest_t = temp_rec.t;
             rec = temp_rec;
         }
     }

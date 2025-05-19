@@ -7,15 +7,15 @@
 #include "Hittable.hpp"
 
 //  A class that stores a list of class Hittable
-class HittableList : public Hittable {
+class Scene : public Hittable {
 public:
-    HittableList() {}
-    HittableList(std::shared_ptr<Hittable> object) { Add(object); }
+    Scene() {}
+    Scene(std::shared_ptr<Hittable> object) { Add(object); }
 
     void Clean();
     void Add(std::shared_ptr<Hittable> object);
 
-    bool isHit(const Ray &r, float t_min, float t_max, Hit_Record &rec) const override;
+    bool isHit(const Ray &r, Vector2f t_interval, Hit_Payload &rec) const override;
 
 private:
     std::vector<std::shared_ptr<Hittable>> hit_objects;

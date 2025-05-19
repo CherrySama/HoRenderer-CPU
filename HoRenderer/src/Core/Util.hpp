@@ -4,6 +4,7 @@
 #pragma once
 
 #include <iostream>
+#include <memory>
 #include <cmath>
 #include <omp.h>
 #include <string>
@@ -25,11 +26,13 @@ class Renderer;
 class RenderPass;
 class Shader;
 class Ray;
-// class Shape;
 class Hittable;
-class Hit_Record;
+class Hit_Payload;
 class HittableList;
 class Sphere;
+class Quad;
+class Box;
+class Camera;
 
 using Vector2u = glm::uvec2;
 using Vector2i = glm::ivec2;
@@ -47,9 +50,9 @@ using Matrix3f = glm::mat3x3;
 using Matrix4f = glm::mat4x4;
 
 
-constexpr float Epsilon = 1e-5;
-constexpr float Infinity = std::numeric_limits<double>::infinity();
-constexpr float PI = 3.1415926535897932385;
+constexpr float Epsilon = 1e-5f;
+constexpr float Infinity = std::numeric_limits<float>::infinity();
+constexpr float PI = 3.1415926535897932385f;
 
 
 inline uint32_t FloatToBits(float f) {
@@ -108,4 +111,9 @@ inline float NextFloatDown(float v) {
 
 inline float degrees_to_radians(float degrees) {
     return degrees * PI / 180.0;
+}
+
+inline bool isInInterval(Vector2f interval, float x)
+{
+	return interval.x < x && x < interval.y;
 }

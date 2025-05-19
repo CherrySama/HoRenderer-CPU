@@ -11,7 +11,7 @@ public:
     Sphere() {}
     Sphere(const Vector3f center, float radius) : center(center), radius(std::fmax(0,radius)) {}
 
-    bool isHit(const Ray &r, float t_min, float t_max, Hit_Record &rec) const override;
+    bool isHit(const Ray &r, Vector2f t_interval, Hit_Payload &rec) const override;
 
 private:
     Vector3f center;
@@ -35,7 +35,7 @@ public:
         half_height = height * 0.5f;
     }
 
-    bool isHit(const Ray &r, float t_min, float t_max, Hit_Record &rec) const override;
+    bool isHit(const Ray &r, Vector2f t_interval, Hit_Payload &rec) const override;
 
 private:
     Vector3f center;     // 矩形中心
@@ -63,7 +63,7 @@ public:
         CreateSides();
     }
 
-    bool isHit(const Ray &r, float t_min, float t_max, Hit_Record &rec) const override;
+    bool isHit(const Ray &r, Vector2f t_interval, Hit_Payload &rec) const override;
 
 private:
     Vector3f center;      // 长方体的中心点

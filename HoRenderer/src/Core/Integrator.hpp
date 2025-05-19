@@ -5,17 +5,20 @@
 
 #include "Util.hpp"
 #include "Ray.hpp"
-#include "HittableList.hpp"
+#include "Scene.hpp"
 #include "Hittable.hpp"
 #include "Shape.hpp"
+#include "Camera.hpp"
+
 
 class Integrator{
 public:
-    Integrator(int width, int height);
+    Integrator(int width, int height) : width(width), height(height), pixels(std::make_unique<uint8_t[]>(width * height * 4)) {}
     ~Integrator();
 
     void RenderImage();
-    uint8_t *GetPixels();
+    void RenderImage(Camera &cam, Scene &world);
+    const uint8_t *GetPixels() const;
 
     // 简单相机参数
     Vector3f camera_center{0, 0, 0};  // 相机位置
@@ -23,16 +26,15 @@ public:
     float focal_length = 1.0;        // 焦距
 
     // World
-    HittableList world;
+    Scene world;
 
     // 计算射线颜色（背景）
     Vector3f ray_color(const Ray &r, const Hittable &world);
-
-    float hit_sphere(const Vector3f& center, float radius, const Ray& r);
 
     void Clean();
 
 private:
     int width, height;
-    uint8_t *pixels;
+    // uint8_t *pixels;
+    std::unique_ptr<uint8_t[]> pixels;
 };

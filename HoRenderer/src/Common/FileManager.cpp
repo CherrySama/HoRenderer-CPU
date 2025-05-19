@@ -30,7 +30,7 @@ void FileManager::init() {
     parentPath = parentPath.parent_path();   // build
     projectRoot = parentPath.parent_path().generic_string(); // HoRenderer
     
-    std::cout << "Project root: " << projectRoot << std::endl;
+    // std::cout << "Project root: " << projectRoot << std::endl;
 }
 
 std::string FileManager::getShaderPath(const std::string& filename) {

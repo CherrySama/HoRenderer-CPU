@@ -20,5 +20,5 @@ public:
 	~RenderPass();
 	void BindData(bool finalPass = false);
 	void ShaderConfig(const char* vertexPath, const char* fragmentPath, const char* geometryPath = nullptr);
-	void Draw(std::vector<unsigned int> texPassArray = {});
+	void Draw(const std::vector<unsigned int>& texPassArray);
 };

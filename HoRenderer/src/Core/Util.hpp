@@ -5,6 +5,8 @@
 
 #include <iostream>
 #include <memory>
+#include <cstdlib>
+#include <random>
 #include <cmath>
 #include <omp.h>
 #include <string>
@@ -28,11 +30,12 @@ class Shader;
 class Ray;
 class Hittable;
 class Hit_Payload;
-class HittableList;
+class Scene;
 class Sphere;
 class Quad;
 class Box;
 class Camera;
+class Sampler;
 
 using Vector2u = glm::uvec2;
 using Vector2i = glm::ivec2;
@@ -117,3 +120,4 @@ inline bool isInInterval(Vector2f interval, float x)
 {
 	return interval.x < x && x < interval.y;
 }
+

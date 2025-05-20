@@ -10,6 +10,7 @@ Renderer::Renderer()
 	camera = std::make_unique<Camera>(Vector3f(0.0f, 0.0f, 0.0f));
 	camera->Create(camParams);
 	integrator = std::make_unique<Integrator>(camera->image_width, camera->image_height);
+	sampler = std::make_unique<Sampler>(100);
 	scene = std::make_unique<Scene>(); 
 	PipelineConfiguration(FileManager::getInstance());
 	SceneConfig();
@@ -86,11 +87,11 @@ void Renderer::test(FileManager *fm)
 void Renderer::Run()
 {
 	// start to render
-	integrator->RenderImage(*camera, *scene);
+	integrator->RenderImage(*camera, *scene, *sampler);
 	GLuint renderTexture = GetTextureRGB32F(camera->image_width, camera->image_height, *integrator);
 	pass1.BindData(true);
 
-	    // Render Loop 
+	// Render Loop 
     while (!glfwWindowShouldClose(window)) {
         // Input Processing
         if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)

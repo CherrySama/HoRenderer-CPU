@@ -24,7 +24,7 @@ public:
     void Initialize();
     void Move(Vector3f pos);
 
-    Ray GenerateRay(int u, int v);
+    Ray GenerateRay(int u, int v, const Vector2f& offset = Vector2f(0, 0));
 
 private:
     Vector3f cameraPos;        // 相机位置

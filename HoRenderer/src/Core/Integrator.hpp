@@ -9,23 +9,31 @@
 #include "Hittable.hpp"
 #include "Shape.hpp"
 #include "Camera.hpp"
+#include "Sampler.hpp"
 
 
 class Integrator{
 public:
-    Integrator(int width, int height) : width(width), height(height), pixels(std::make_unique<uint8_t[]>(width * height * 4)) {}
+    Integrator(int width, int height) : width(width), height(height), 
+                pixels(std::make_unique<uint8_t[]>(width * height * 4)),
+                num_threads(omp_get_max_threads()) {}
     ~Integrator();
 
-    // void RenderImage();
-    void RenderImage(Camera &cam, Scene &world);
-    const uint8_t *GetPixels() const;
-
+    void RenderImage(Camera &cam, Scene &world, Sampler &sampler);
+    void write_color(int u, int v, const Vector3f &color);
     // Calculate ray color (background)
     Vector3f ray_color(const Ray &r, const Hittable &world);
+    
+    // Set the number of threads
+    void SetNumThreads(int threads);
+    // Get the current number of threads
+    int GetNumThreads() const;
 
+    const uint8_t *GetPixels() const;
     void Clean();
 
 private:
     int width, height;
     std::unique_ptr<uint8_t[]> pixels;
+    int num_threads;
 };

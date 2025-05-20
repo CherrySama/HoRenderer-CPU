@@ -35,10 +35,12 @@ void Camera::Move(Vector3f pos)
     cameraPos = pos;
 }
 
-Ray Camera::GenerateRay(int u, int v)
+Ray Camera::GenerateRay(int u, int v, const Vector2f& offset)
 {
     // Calculate pixel center position    
-    Vector3f pixel_center = pixel00_loc + (float(u) * pixel_delta_u) + (float(v) * pixel_delta_v);
+    Vector3f pixel_center = pixel00_loc 
+                            + ((float(u) + offset.x) * pixel_delta_u) 
+                            + ((float(v) + offset.y) * pixel_delta_v);
     // Generate ray: from camera center to pixel
     Vector3f ray_direction = pixel_center - cameraPos;
     return Ray(cameraPos, ray_direction);

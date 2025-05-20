@@ -36,6 +36,7 @@ class Quad;
 class Box;
 class Camera;
 class Sampler;
+class ProgressTracker;
 
 using Vector2u = glm::uvec2;
 using Vector2i = glm::ivec2;

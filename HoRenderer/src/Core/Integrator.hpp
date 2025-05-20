@@ -10,6 +10,7 @@
 #include "Shape.hpp"
 #include "Camera.hpp"
 #include "Sampler.hpp"
+#include "../Common/ProgressTracker.hpp"
 
 
 class Integrator{
@@ -35,5 +36,6 @@ public:
 private:
     int width, height;
     std::unique_ptr<uint8_t[]> pixels;
+    ProgressTracker progress;
     int num_threads;
 };

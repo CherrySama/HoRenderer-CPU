@@ -13,6 +13,7 @@ void Integrator::RenderImage(Camera &cam, Scene &world, Sampler &sampler)
     // Set the number of threads for OpenMP
     omp_set_num_threads(num_threads);
     std::cout << "Rendering with " << num_threads << " threads..." << std::endl;
+    progress.Initialize(height);
 
     #pragma omp parallel
     {   
@@ -20,7 +21,7 @@ void Integrator::RenderImage(Camera &cam, Scene &world, Sampler &sampler)
         for (int j = 0; j < height; ++j)
         {                  
             if (omp_get_thread_num() == 0) 
-                std::clog << "\rScanlines remaining: " << (height - j) << ' ' << std::flush;
+                progress.Update(1);
             
             for (int i = 0; i < width; i++) {
                 Vector3f pixel_color(0, 0, 0);
@@ -66,6 +67,16 @@ Vector3f Integrator::ray_color(const Ray &r, const Hittable &world)
     float color = 0.5f * (unit_direction.y + 1.0f);
     // 从白色(1,1,1)到蓝色(0.5,0.7,1.0)的线性插值
     return (1.0f - color) * Vector3f(1.0, 1.0, 1.0) + color * Vector3f(0.5, 0.7, 1.0);
+}
+
+void Integrator::SetNumThreads(int threads)
+{
+    num_threads = threads;
+}
+
+int Integrator::GetNumThreads() const
+{
+    return num_threads;
 }
 
 const uint8_t *Integrator::GetPixels() const

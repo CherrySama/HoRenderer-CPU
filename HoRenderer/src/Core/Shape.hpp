@@ -21,16 +21,15 @@ private:
 class Quad : public Hittable{
 public:
     Quad() {}
-    // 通过中心点、法向量、上向量和尺寸定义矩形
-    Quad(const Vector3f& center, const Vector3f& normal, const Vector3f& up, 
-             float width, float height)
+    // Define a rectangle by center point, normal vector, up vector and size
+    Quad(const Vector3f& center, const Vector3f& normal, const Vector3f& up, float width, float height)
         : center(center), normal(glm::normalize(normal)), width(width), height(height)
     {
-        // 计算右向量和上向量，确保它们正交
+        // Calculate the right and up vectors, making sure they are orthogonal
         right = glm::normalize(glm::cross(up, normal));
         up_vector = glm::normalize(glm::cross(normal, right));
         
-        // 计算半宽和半高
+        // Calculate half width and half height
         half_width = width * 0.5f;
         half_height = height * 0.5f;
     }
@@ -38,42 +37,40 @@ public:
     bool isHit(const Ray &r, Vector2f t_interval, Hit_Payload &rec) const override;
 
 private:
-    Vector3f center;     // 矩形中心
-    Vector3f normal;     // 法向量
-    Vector3f right;      // 右方向向量
-    Vector3f up_vector;  // 上方向向量
-    float width;         // 宽度
-    float height;        // 高度
-    float half_width;    // 半宽
-    float half_height;   // 半高
+    Vector3f center;     
+    Vector3f normal;    
+    Vector3f right;      
+    Vector3f up_vector;  
+    float width;       
+    float height;      
+    float half_width;  
+    float half_height; 
 };
 
 class Box : public Hittable {
 public:
     Box() {}
-    
-    // 唯一的构造方法：使用中心点和尺寸
     Box(const Vector3f& center, const Vector3f& dimensions) : center(center), dimensions(dimensions)
     {
-        // 计算最小和最大点（用于内部计算和调试）
+        // Calculate minimum and maximum points
         min_corner = center - dimensions * 0.5f;
         max_corner = center + dimensions * 0.5f;
         
-        // 创建6个面
+        // Create 6 faces
         CreateSides();
     }
 
     bool isHit(const Ray &r, Vector2f t_interval, Hit_Payload &rec) const override;
 
 private:
-    Vector3f center;      // 长方体的中心点
-    Vector3f dimensions;  // 长方体的尺寸 (x=宽, y=高, z=长)
-    Vector3f min_corner;  // 最小点 (内部计算用)
-    Vector3f max_corner;  // 最大点 (内部计算用)
+    Vector3f center;      // The center point of the cuboid
+    Vector3f dimensions;  // The dimensions of the cuboid (x=width, y=height, z=length)
+    Vector3f min_corner;  // Minimum point (for internal calculation)
+    Vector3f max_corner;  // Maximum point (for internal calculation)
     
-    // 长方体的6个面（存储为矩形）
+    // The 6 faces of a cuboid (stored as rectangles)
     std::vector<std::shared_ptr<Quad>> sides;
     
-    // 计算6个面的辅助函数
+    // Auxiliary functions for calculating 6 faces
     void CreateSides();
 };

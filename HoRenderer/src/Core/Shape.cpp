@@ -38,35 +38,35 @@ bool Sphere::isHit(const Ray &r, Vector2f t_interval, Hit_Payload &rec) const
 
 bool Quad::isHit(const Ray &r, Vector2f t_interval, Hit_Payload &rec) const
 {
-    // 计算光线与平面的交点
+    // Compute the intersection of a ray and a plane
     float denom = glm::dot(normal, r.direction());
     
-    // 如果光线与平面平行或接近平行，则无交点
+    // If the ray is parallel or nearly parallel to the plane, there is no intersection
     if (std::fabs(denom) < 1e-6)
         return false;
     
-    // 计算交点参数t
+    // Calculate the intersection parameter t
     float t = glm::dot(center - r.origin(), normal) / denom;
     
-    // 检查t是否在有效范围内
+    // Check if t is in the valid range
     if (t < t_interval.x || t > t_interval.y)
         return false;
     
-    // 计算交点
+    // Calculate intersection points
     Vector3f hit_point = r.at(t);
     
-    // 计算交点到中心的向量
+    // Calculate the vector from the intersection point to the center
     Vector3f to_hit = hit_point - center;
     
-    // 计算在局部坐标系中的位置
+    // Calculate the position in the local coordinate system
     float u = glm::dot(to_hit, right);
     float v = glm::dot(to_hit, up_vector);
     
-    // 检查是否在矩形范围内
+    // Check if it is within the rectangle
     if (std::fabs(u) > half_width || std::fabs(v) > half_height)
         return false;
     
-    // 填充记录
+    
     rec.t = t;
     rec.p = hit_point;
     rec.set_face_normal(r, normal);
@@ -79,7 +79,7 @@ bool Box::isHit(const Ray &r, Vector2f t_interval, Hit_Payload &rec) const {
     bool hit_anything = false;
     float closest_t = t_interval.y;
     
-    // 检查射线与各个面的交点
+    // Check the intersection of the ray with each face
     for (const auto& side : sides) {
         if (side->isHit(r, Vector2f(t_interval.x, closest_t), temp_rec)) {
             hit_anything = true;
@@ -95,54 +95,54 @@ void Box::CreateSides()
 {
     sides.clear();
     
-    // 计算半尺寸(从中心点到各个方向的距离)
+    // Calculate the half size (the distance from the center point in all directions)
     Vector3f half_dim = dimensions * 0.5f;
     
-    // 1. 前面 (z方向正面)
+    // Front (front of Z direction)
     sides.push_back(std::make_shared<Quad>(
-        center + Vector3f(0, 0, half_dim.z),  // 中心点 + z方向偏移
-        Vector3f(0, 0, 1),                    // 法向量(z轴正方向)
-        Vector3f(0, 1, 0),                    // 上向量(y轴正方向)
-        dimensions.x, dimensions.y            // 宽度和高度
+        center + Vector3f(0, 0, half_dim.z),  
+        Vector3f(0, 0, 1),                   
+        Vector3f(0, 1, 0),                   
+        dimensions.x, dimensions.y      
     ));
     
-    // 2. 后面 (z方向负面)
+    // Back 
     sides.push_back(std::make_shared<Quad>(
-        center - Vector3f(0, 0, half_dim.z),  // 中心点 - z方向偏移
-        Vector3f(0, 0, -1),                   // 法向量(z轴负方向)
-        Vector3f(0, 1, 0),                    // 上向量(y轴正方向)
-        dimensions.x, dimensions.y            // 宽度和高度
+        center - Vector3f(0, 0, half_dim.z),  
+        Vector3f(0, 0, -1),                  
+        Vector3f(0, 1, 0),                   
+        dimensions.x, dimensions.y      
     ));
     
-    // 3. 顶面 (y方向正面)
+    // Top
     sides.push_back(std::make_shared<Quad>(
-        center + Vector3f(0, half_dim.y, 0),  // 中心点 + y方向偏移
-        Vector3f(0, 1, 0),                    // 法向量(y轴正方向)
-        Vector3f(0, 0, 1),                    // 上向量(z轴正方向)
-        dimensions.x, dimensions.z            // 宽度和长度
+        center + Vector3f(0, half_dim.y, 0),  
+        Vector3f(0, 1, 0),                   
+        Vector3f(0, 0, 1),                   
+        dimensions.x, dimensions.z      
     ));
     
-    // 4. 底面 (y方向负面)
+    // Bottom
     sides.push_back(std::make_shared<Quad>(
-        center - Vector3f(0, half_dim.y, 0),  // 中心点 - y方向偏移
-        Vector3f(0, -1, 0),                   // 法向量(y轴负方向)
-        Vector3f(0, 0, 1),                    // 上向量(z轴正方向)
-        dimensions.x, dimensions.z            // 宽度和长度
+        center - Vector3f(0, half_dim.y, 0),  
+        Vector3f(0, -1, 0),                  
+        Vector3f(0, 0, 1),                   
+        dimensions.x, dimensions.z      
     ));
     
-    // 5. 右面 (x方向正面)
+    // Right (positive X direction)
     sides.push_back(std::make_shared<Quad>(
-        center + Vector3f(half_dim.x, 0, 0),  // 中心点 + x方向偏移
-        Vector3f(1, 0, 0),                    // 法向量(x轴正方向)
-        Vector3f(0, 1, 0),                    // 上向量(y轴正方向)
-        dimensions.z, dimensions.y            // 长度和高度
+        center + Vector3f(half_dim.x, 0, 0),  
+        Vector3f(1, 0, 0),                   
+        Vector3f(0, 1, 0),                   
+        dimensions.z, dimensions.y      
     ));
     
-    // 6. 左面 (x方向负面)
+    // Left
     sides.push_back(std::make_shared<Quad>(
-        center - Vector3f(half_dim.x, 0, 0),  // 中心点 - x方向偏移
-        Vector3f(-1, 0, 0),                   // 法向量(x轴负方向)
-        Vector3f(0, 1, 0),                    // 上向量(y轴正方向)
-        dimensions.z, dimensions.y            // 长度和高度
+        center - Vector3f(half_dim.x, 0, 0),  
+        Vector3f(-1, 0, 0),                  
+        Vector3f(0, 1, 0),                   
+        dimensions.z, dimensions.y      
     ));
 }

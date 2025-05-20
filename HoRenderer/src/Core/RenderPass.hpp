@@ -11,7 +11,6 @@ public:
 	unsigned int fbo = 0;
 	unsigned int vao, vbo;
 	std::vector<unsigned int> colorAttachments;
-	// unsigned int program;
 	Shader m_shader;
 	int width = 0;
 	int height = 0;

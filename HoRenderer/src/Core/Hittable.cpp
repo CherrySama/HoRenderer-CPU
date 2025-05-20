@@ -7,8 +7,7 @@ void Hit_Payload::set_face_normal(const Ray &r, const Vector3f &outward_normal)
 {
         // Sets the hit record normal vector.
         // NOTE: the parameter `outward_normal` is assumed to have unit length.
-        // make sure outward_normal is unit vector
-        // Vector3f normalized_normal = glm::normalize(outward_normal);
+        // Vector3f normalized_normal = glm::normalize(outward_normal); // make sure outward_normal is unit vector
         front_face = dot(r.direction(), outward_normal) < 0.0f;
         normal = front_face ? outward_normal : -outward_normal;
 }

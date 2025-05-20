@@ -9,8 +9,8 @@
 struct CameraParams
 {
     float aspect_ratio;
-    float viewport_height;     // 视口高度
-    float focal_length;        // 焦距
+    float viewport_height;     
+    float focal_length;        
     int image_width;
 };
 
@@ -27,8 +27,8 @@ public:
     Ray GenerateRay(int u, int v);
 
 private:
-    Vector3f cameraPos;     // 相机位置
-    float aspect_ratio;
+    Vector3f cameraPos;        // 相机位置
+    float aspect_ratio;        // 宽高比
     float viewport_height;     // 视口高度
     float focal_length;        // 焦距
 

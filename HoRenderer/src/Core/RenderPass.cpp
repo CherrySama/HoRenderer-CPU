@@ -19,14 +19,14 @@ void RenderPass::BindData(bool finalPass)
 	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 
 	float quadVertices[] = {
-		//positions   //texCoords
-		-1.0f, -1.0f,       0.0f, 1.0f, // 左下
-		1.0f, -1.0f,       1.0f, 1.0f, // 右下
-		-1.0f,  1.0f,       0.0f, 0.0f, // 左上
-		// 第二个三角形
-		1.0f, -1.0f,       1.0f, 1.0f, // 右下
-		1.0f,  1.0f,       1.0f, 0.0f, // 右上
-		-1.0f,  1.0f,       0.0f, 0.0f  // 左上
+		//positions        //texCoords
+		-1.0f, -1.0f,      0.0f, 1.0f,  // Bottom left
+		1.0f, -1.0f,       1.0f, 1.0f,  // Bottom right
+		-1.0f,  1.0f,      0.0f, 0.0f,  // Top left
+		
+		1.0f, -1.0f,       1.0f, 1.0f,  // Bottom right
+		1.0f,  1.0f,       1.0f, 0.0f,  // Top right
+		-1.0f,  1.0f,      0.0f, 0.0f   // Top left
 	};
 
 	glGenVertexArrays(1, &vao);
@@ -65,7 +65,6 @@ void RenderPass::Draw(const std::vector<unsigned int>& texPassArray) {
 		glActiveTexture(GL_TEXTURE0 + i);
 		glBindTexture(GL_TEXTURE_2D, texPassArray[i]);
 		std::string uName = "texPass" + std::to_string(i);
-		// glUniform1i(glGetUniformLocation(program, uName.c_str()), i);
 		m_shader.SetInt(uName.c_str(), i);
 	}
 	glViewport(0, 0, width, height);

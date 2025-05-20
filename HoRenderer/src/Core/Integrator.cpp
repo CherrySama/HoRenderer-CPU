@@ -14,10 +14,11 @@ void Integrator::RenderImage(Camera &cam, Scene &world, Sampler &sampler)
     omp_set_num_threads(num_threads);
     std::cout << "Rendering with " << num_threads << " threads..." << std::endl;
     progress.Initialize(height);
+    const int samples_per_pixel = sampler.get_samples_per_pixel();
 
     #pragma omp parallel
     {   
-        #pragma omp for schedule(dynamic, 1)
+        // #pragma omp for schedule(static, 16)
         for (int j = 0; j < height; ++j)
         {                  
             if (omp_get_thread_num() == 0) 
@@ -25,7 +26,7 @@ void Integrator::RenderImage(Camera &cam, Scene &world, Sampler &sampler)
             
             for (int i = 0; i < width; i++) {
                 Vector3f pixel_color(0, 0, 0);
-                for (int s = 0; s < sampler.get_samples_per_pixel(); s++)
+                for (int s = 0; s < samples_per_pixel; s++)
                 {
                     Vector2f offset = sampler.sample_square();
                     Ray r = cam.GenerateRay(i, j, offset);
@@ -36,7 +37,7 @@ void Integrator::RenderImage(Camera &cam, Scene &world, Sampler &sampler)
             }
         }
     }
-    std::clog << "\rDone.                 \n"; 
+    // std::clog << "\rDone.                 \n"; 
 }
 
 void Integrator::write_color(int u, int v, const Vector3f &color)

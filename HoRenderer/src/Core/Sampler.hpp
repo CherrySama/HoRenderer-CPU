@@ -9,13 +9,13 @@ class Sampler {
 public:
     Sampler(int sample) : samples_per_pixel(sample) {
         pixel_samples_scale = 1.0f / float(samples_per_pixel);
-        // 初始化时使用一个基本种子
+        // Initialize with a basic seed
         std::random_device rd;
         generator_seed = rd();
     }
     
     inline float random_float() const {
-        // 使用thread_local保证每个线程有自己的生成器
+        // Using thread_local to ensure each thread has its own generator
         thread_local static std::mt19937 thread_generator(generator_seed + omp_get_thread_num() * 1000);
         thread_local static std::uniform_real_distribution<float> distribution(0.0f, 1.0f);
         
@@ -35,5 +35,5 @@ public:
 private:
     int samples_per_pixel; // Count of random samples for each pixel
     float pixel_samples_scale;  // Color scale factor for a sum of pixel samples
-    unsigned int generator_seed; // 仅用于初始化线程本地生成器
+    unsigned int generator_seed; // Only used to initialize thread-local generators
 };

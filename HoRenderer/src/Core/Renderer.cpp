@@ -10,7 +10,7 @@ Renderer::Renderer()
 	camera = std::make_unique<Camera>(Vector3f(0.0f, 0.0f, 0.0f));
 	camera->Create(camParams);
 	integrator = std::make_unique<Integrator>(camera->image_width, camera->image_height);
-	sampler = std::make_unique<Sampler>(100);
+	sampler = std::make_unique<Sampler>(64);
 	scene = std::make_unique<Scene>(); 
 	PipelineConfiguration(FileManager::getInstance());
 	SceneConfig();

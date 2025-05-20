@@ -45,13 +45,13 @@ void Integrator::write_color(int u, int v, const Vector3f &color)
     int offset = v * width * 4 + u * 4;
     uint8_t* pixel = pixels.get() + offset;
     
-    int ir = int(255.999f * color.r);
-    int ig = int(255.999f * color.g);
-    int ib = int(255.999f * color.b);
+    // int ir = int(255.99f * color.r);
+    // int ig = int(255.99f * color.g);
+    // int ib = int(255.99f * color.b);
     
-    pixel[0] = static_cast<uint8_t>(ir);  // R
-    pixel[1] = static_cast<uint8_t>(ig);  // G
-    pixel[2] = static_cast<uint8_t>(ib);  // B
+    pixel[0] = static_cast<uint8_t>(255.99f * color.r);  // R
+    pixel[1] = static_cast<uint8_t>(255.99f * color.g);  // G
+    pixel[2] = static_cast<uint8_t>(255.99f * color.b);  // B
     pixel[3] = 255;                       // A
 }
 

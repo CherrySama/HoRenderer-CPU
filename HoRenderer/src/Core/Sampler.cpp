@@ -15,12 +15,12 @@ Vector3f Sampler::scale_color(const Vector3f &pixel_color) const
     auto g = pixel_color.g * pixel_samples_scale;
     auto b = pixel_color.b * pixel_samples_scale;
 
-    // 进行gamma=2的校正 (简单取平方根)
-    // r = r > 0.0f ? std::sqrt(r) : 0.0f;
-    // g = g > 0.0f ? std::sqrt(g) : 0.0f;
-    // b = b > 0.0f ? std::sqrt(b) : 0.0f;
+    // Perform a gamma=2 correction (simply take the square root)
+    r = r > 0.0f ? std::sqrt(r) : 0.0f;
+    g = g > 0.0f ? std::sqrt(g) : 0.0f;
+    b = b > 0.0f ? std::sqrt(b) : 0.0f;
 
-    // 将颜色限制在[0, 1]范围内
+    // Limit the color to the range [0, 1].
     return Vector3f(std::clamp(r, 0.0f, 0.999f),
                     std::clamp(g, 0.0f, 0.999f),
                     std::clamp(b, 0.0f, 0.999f));

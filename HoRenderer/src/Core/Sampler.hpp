@@ -5,6 +5,7 @@
 
 #include "Util.hpp"
 
+
 class Sampler {
 public:
     Sampler(int sample) : samples_per_pixel(sample) {
@@ -25,6 +26,24 @@ public:
     inline float random_float(float min, float max) const {
         // Returns a random real in [min,max).
         return min + (max - min) * random_float();
+    }
+
+    // Generate random unit vectors for Lambertian reflection
+    inline Vector3f random_unit_vector() const {
+        // Generate random points in the unit sphere using rejection sampling
+        while (true) {
+            auto p = Vector3f(
+                random_float(-1.0f, 1.0f),
+                random_float(-1.0f, 1.0f),
+                random_float(-1.0f, 1.0f)
+            );
+            
+            auto len_squared = glm::length2(p);
+            // Avoid vectors very close to zero, 
+            // and also make sure to stay within the unit sphere
+            if (len_squared > 1e-6f && len_squared <= 1.0f)
+                return p / std::sqrt(len_squared);
+        }
     }
 
     inline int get_samples_per_pixel() const { return samples_per_pixel; }

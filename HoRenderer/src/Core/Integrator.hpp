@@ -10,6 +10,7 @@
 #include "Shape.hpp"
 #include "Camera.hpp"
 #include "Sampler.hpp"
+#include "Material.hpp"
 #include "../Common/ProgressTracker.hpp"
 
 
@@ -17,13 +18,13 @@ class Integrator{
 public:
     Integrator(int width, int height) : width(width), height(height), 
                 pixels(std::make_unique<uint8_t[]>(width * height * 4)),
-                num_threads(omp_get_max_threads()) {}
+                num_threads(omp_get_max_threads()), max_depth(10) {}
     ~Integrator();
 
     void RenderImage(Camera &cam, Scene &world, Sampler &sampler);
     void write_color(int u, int v, const Vector3f &color);
     // Calculate ray color (background)
-    Vector3f ray_color(const Ray &r, const Hittable &world);
+    Vector3f ray_color(const Ray &r, int depth, const Hittable &world, Sampler &sampler);
     
     // Set the number of threads
     void SetNumThreads(int threads);
@@ -38,4 +39,5 @@ private:
     std::unique_ptr<uint8_t[]> pixels;
     ProgressTracker progress;
     int num_threads;
+    int max_depth;
 };

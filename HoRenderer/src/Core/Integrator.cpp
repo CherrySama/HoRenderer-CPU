@@ -30,7 +30,7 @@ void Integrator::RenderImage(Camera &cam, Scene &world, Sampler &sampler)
                 {
                     Vector2f offset = sampler.sample_square();
                     Ray r = cam.GenerateRay(i, j, offset);
-                    pixel_color += ray_color(r, world);
+                    pixel_color += ray_color(r, max_depth, world, sampler);
                 }
             Vector3f color = sampler.scale_color(pixel_color);
             write_color(i, j, color);  
@@ -55,18 +55,27 @@ void Integrator::write_color(int u, int v, const Vector3f &color)
     pixel[3] = 255;                       // A
 }
 
-Vector3f Integrator::ray_color(const Ray &r, const Hittable &world)
+Vector3f Integrator::ray_color(const Ray &r, int depth, const Hittable &world, Sampler &sampler)
 {
+    if (depth <= 0)
+        return Vector3f(0, 0, 0);
+
     Hit_Payload rec;
-    if (world.isHit(r, Vector2f(0, Infinity), rec)) {
+    if (world.isHit(r, Vector2f(0.0f, Infinity), rec)) {
+        Ray scattered;
+        Vector3f attenuation;
+
+        // If the object has a material and can scatter light
+        if (rec.mat && rec.mat->scatter(r, rec, attenuation, scattered, sampler))
+            return attenuation * ray_color(scattered, depth-1, world, sampler);
+        
+        // If there is no material, use the normal color
         return 0.5f * (rec.normal + Vector3f(1,1,1));
     }
     
-    // 获取射线的单位方向向量
+    // Background Color - Sky Gradient
     Vector3f unit_direction = glm::normalize(r.direction());
-    // 基于y分量做线性插值，范围从0到1
     float color = 0.5f * (unit_direction.y + 1.0f);
-    // 从白色(1,1,1)到蓝色(0.5,0.7,1.0)的线性插值
     return (1.0f - color) * Vector3f(1.0, 1.0, 1.0) + color * Vector3f(0.5, 0.7, 1.0);
 }
 

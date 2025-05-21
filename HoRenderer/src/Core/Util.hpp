@@ -20,6 +20,8 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/quaternion.hpp>
 
 
 class FileManager;
@@ -37,6 +39,9 @@ class Box;
 class Camera;
 class Sampler;
 class ProgressTracker;
+class Material;
+class Lambertian;
+
 
 using Vector2u = glm::uvec2;
 using Vector2i = glm::ivec2;

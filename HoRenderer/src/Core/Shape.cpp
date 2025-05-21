@@ -21,6 +21,7 @@ bool Sphere::isHit(const Ray &r, Vector2f t_interval, Hit_Payload &rec) const
             // rec.normal = (rec.p - center) / radius;
             Vector3f outward_normal = (rec.p - center) / radius;
             rec.set_face_normal(r, outward_normal);
+            rec.mat = mat;
             return true;
         }
         root = (h + sqrt_d) / a;
@@ -29,6 +30,7 @@ bool Sphere::isHit(const Ray &r, Vector2f t_interval, Hit_Payload &rec) const
             rec.p = r.at(rec.t);
             Vector3f outward_normal = (rec.p - center) / radius;
             rec.set_face_normal(r, outward_normal);
+            rec.mat = mat;
             return true;
         }
     }
@@ -70,6 +72,7 @@ bool Quad::isHit(const Ray &r, Vector2f t_interval, Hit_Payload &rec) const
     rec.t = t;
     rec.p = hit_point;
     rec.set_face_normal(r, normal);
+    rec.mat = mat;
     
     return true;
 }
@@ -85,6 +88,7 @@ bool Box::isHit(const Ray &r, Vector2f t_interval, Hit_Payload &rec) const {
             hit_anything = true;
             closest_t = temp_rec.t;
             rec = temp_rec;
+            rec.mat = mat;
         }
     }
     
@@ -103,7 +107,8 @@ void Box::CreateSides()
         center + Vector3f(0, 0, half_dim.z),  
         Vector3f(0, 0, 1),                   
         Vector3f(0, 1, 0),                   
-        dimensions.x, dimensions.y      
+        dimensions.x, dimensions.y,
+        mat      
     ));
     
     // Back 
@@ -111,7 +116,8 @@ void Box::CreateSides()
         center - Vector3f(0, 0, half_dim.z),  
         Vector3f(0, 0, -1),                  
         Vector3f(0, 1, 0),                   
-        dimensions.x, dimensions.y      
+        dimensions.x, dimensions.y,
+        mat      
     ));
     
     // Top
@@ -119,7 +125,8 @@ void Box::CreateSides()
         center + Vector3f(0, half_dim.y, 0),  
         Vector3f(0, 1, 0),                   
         Vector3f(0, 0, 1),                   
-        dimensions.x, dimensions.z      
+        dimensions.x, dimensions.z,
+        mat      
     ));
     
     // Bottom
@@ -127,7 +134,8 @@ void Box::CreateSides()
         center - Vector3f(0, half_dim.y, 0),  
         Vector3f(0, -1, 0),                  
         Vector3f(0, 0, 1),                   
-        dimensions.x, dimensions.z      
+        dimensions.x, dimensions.z,
+        mat      
     ));
     
     // Right (positive X direction)
@@ -135,7 +143,8 @@ void Box::CreateSides()
         center + Vector3f(half_dim.x, 0, 0),  
         Vector3f(1, 0, 0),                   
         Vector3f(0, 1, 0),                   
-        dimensions.z, dimensions.y      
+        dimensions.z, dimensions.y,
+        mat      
     ));
     
     // Left
@@ -143,6 +152,7 @@ void Box::CreateSides()
         center - Vector3f(half_dim.x, 0, 0),  
         Vector3f(-1, 0, 0),                  
         Vector3f(0, 1, 0),                   
-        dimensions.z, dimensions.y      
+        dimensions.z, dimensions.y,
+        mat      
     ));
 }

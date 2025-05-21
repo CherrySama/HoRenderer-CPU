@@ -53,16 +53,20 @@ void Renderer::WindowInit()
 
 void Renderer::SceneConfig()
 {
-	scene->Add(std::make_shared<Sphere>(Vector3f(0, 0,-1), 0.5));
-    scene->Add(std::make_shared<Sphere>(Vector3f(0,-100.5,-1), 100));
+	auto material_ground = std::make_shared<Lambertian>(Vector3f(0.8f, 0.8f, 0.0f));
+    auto material_center = std::make_shared<Lambertian>(Vector3f(0.5f, 0.5f, 0.5f));
+	scene->Add(std::make_shared<Sphere>(Vector3f(0, 0,-1), 0.5f, material_center));
+    scene->Add(std::make_shared<Sphere>(Vector3f(0,-100.5,-1), 100.0f, material_ground));
 	// scene->Add(std::make_shared<Box>(Vector3f(0.0f, 0.0f, -3.0f),      
-    //                                 Vector3f(2.0f, 1.0f, 3.0f)));
-    // scene->Add(std::make_shared<Quad>(
-    //                                 Vector3f(0, -2, 0), // Center point is at the y=-2 plane
-    //                                 Vector3f(0, 1, 0),  // Normal vector up
-    //                                 Vector3f(0, 0, 1),  // Forward vector
-    //                                 20.0f,              // width
-    //                                 20.0f));            // length
+    //                                  Vector3f(2.0f, 1.0f, 3.0f),
+	// 								 material_center));
+
+    // scene->Add(std::make_shared<Quad>(Vector3f(0, -2, 0), // Center point is at the y=-2 plane
+    //                                   Vector3f(0, 1, 0),  // Normal vector up
+    //                                   Vector3f(0, 0, 1),  // Forward vector
+    //                                   20.0f,              // width
+    //                                   20.0f,			  // length
+	// 								  material_ground));            
 }
 
 void Renderer::PipelineConfiguration(FileManager *fm)

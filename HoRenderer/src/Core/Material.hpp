@@ -26,3 +26,14 @@ public:
 private:
     Vector3f albedo; // Diffuse Color
 };
+
+class DiffuseBRDF : public Material {
+public:
+    DiffuseBRDF(const Vector3f& a, float rough = 0.0f) : albedo(a), roughness(rough) {}
+
+    virtual bool scatter(const Ray& r_in, const Hit_Payload& rec, Vector3f& attenuation, Ray& scattered, Sampler& sampler) const override;
+
+private:
+    Vector3f albedo; // Diffuse Color
+    float roughness;     // Surface roughness (0 = perfect Lambertian, 1 = very rough)
+};

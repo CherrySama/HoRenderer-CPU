@@ -41,7 +41,7 @@ class Sampler;
 class ProgressTracker;
 class Material;
 class Lambertian;
-
+class DiffuseBRDF;
 
 using Vector2u = glm::uvec2;
 using Vector2i = glm::ivec2;

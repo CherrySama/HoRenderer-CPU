@@ -32,8 +32,8 @@ void Integrator::RenderImage(Camera &cam, Scene &world, Sampler &sampler)
                     Ray r = cam.GenerateRay(i, j, offset);
                     pixel_color += ray_color(r, max_depth, world, sampler);
                 }
-            Vector3f color = sampler.scale_color(pixel_color);
-            write_color(i, j, color);  
+                Vector3f color = sampler.scale_color(pixel_color);
+                write_color(i, j, color);  
             }
         }
     }

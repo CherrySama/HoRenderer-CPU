@@ -46,6 +46,10 @@ public:
         }
     }
 
+    inline Vector3f Reflect(const Vector3f& v,const Vector3f& n) {
+        return v - 2 * glm::dot(v, n) * n;
+    }
+
     inline int get_samples_per_pixel() const { return samples_per_pixel; }
     
     Vector3f sample_square() const;

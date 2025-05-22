@@ -54,20 +54,25 @@ void Renderer::WindowInit()
 void Renderer::SceneConfig()
 {
 	auto material_ground = std::make_shared<Lambertian>(Vector3f(0.8f, 0.8f, 0.0f));
-    // auto material_center = std::make_shared<Lambertian>(Vector3f(0.5f, 0.5f, 0.5f));
-	auto material_rough = std::make_shared<DiffuseBRDF>(Vector3f(0.5f, 0.5f, 0.5f), 0.8f);
-	scene->Add(std::make_shared<Sphere>(Vector3f(0, 0,-1), 0.5f, material_rough));
-    scene->Add(std::make_shared<Sphere>(Vector3f(0,-100.5,-1), 100.0f, material_ground));
+    auto material_center = std::make_shared<Lambertian>(Vector3f(0.1f, 0.2f, 0.5f));
+	// auto material_rough = std::make_shared<DiffuseBRDF>(Vector3f(0.5f, 0.5f, 0.5f), 0.8f);
+	auto material_left   = std::make_shared<Metal>(Vector3f(0.8f, 0.8f, 0.8f), 0.3f);
+    auto material_right  = std::make_shared<Metal>(Vector3f(0.8f, 0.6f, 0.2f), 1.0f);
+	
+	scene->Add(std::make_shared<Sphere>(Vector3f(0.0f, 0.0f, -1.5f), 0.5f, material_center));
+	scene->Add(std::make_shared<Sphere>(Vector3f(-1.1f, 0.0f, -1.0f), 0.5f, material_left));
+	scene->Add(std::make_shared<Sphere>(Vector3f(1.1f, 0.0f, -1.0f), 0.5f, material_right));
+
 	// scene->Add(std::make_shared<Box>(Vector3f(0.0f, 0.0f, -3.0f),      
     //                                  Vector3f(2.0f, 1.0f, 3.0f),
 	// 								 material_center));
 
-    // scene->Add(std::make_shared<Quad>(Vector3f(0, -2, 0), // Center point is at the y=-2 plane
-    //                                   Vector3f(0, 1, 0),  // Normal vector up
-    //                                   Vector3f(0, 0, 1),  // Forward vector
-    //                                   20.0f,              // width
-    //                                   20.0f,			  // length
-	// 								  material_ground));            
+    scene->Add(std::make_shared<Quad>(Vector3f(0, -2, 0), // Center point is at the y=-2 plane
+                                      Vector3f(0, 1, 0),  // Normal vector up
+                                      Vector3f(0, 0, 1),  // Forward vector
+                                      20.0f,              // width
+                                      20.0f,			  // length
+									  material_ground));            
 }
 
 void Renderer::PipelineConfiguration(FileManager *fm)

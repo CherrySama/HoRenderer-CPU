@@ -66,7 +66,7 @@ Vector3f Integrator::ray_color(const Ray &r, int depth, const Hittable &world, S
         Vector3f attenuation;
 
         // If the object has a material and can scatter light
-        if (rec.mat && rec.mat->scatter(r, rec, attenuation, scattered, sampler))
+        if (rec.mat && rec.mat->Scatter(r, rec, attenuation, scattered, sampler))
             return attenuation * ray_color(scattered, depth-1, world, sampler);
         
         // If there is no material, use the normal color

@@ -3,7 +3,7 @@
 */
 #include "Material.hpp"
 
-bool Lambertian::scatter(const Ray &r_in, const Hit_Payload &rec, Vector3f &attenuation, Ray &scattered, Sampler &sampler) const
+bool Lambertian::Scatter(const Ray &r_in, const Hit_Payload &rec, Vector3f &attenuation, Ray &scattered, Sampler &sampler) const
 {
 	// Generate random scattering directions (Lambertian distribution)
 	Vector3f scatter_direction = rec.normal + sampler.random_unit_vector();
@@ -20,7 +20,7 @@ bool Lambertian::scatter(const Ray &r_in, const Hit_Payload &rec, Vector3f &atte
     return true;
 }
 
-bool DiffuseBRDF::scatter(const Ray &r_in, const Hit_Payload &rec, Vector3f &attenuation, Ray &scattered, Sampler &sampler) const
+bool DiffuseBRDF::Scatter(const Ray &r_in, const Hit_Payload &rec, Vector3f &attenuation, Ray &scattered, Sampler &sampler) const
 {
 	// Generate random scattering directions (Lambertian distribution)
 	Vector3f scatter_direction = rec.normal + sampler.random_unit_vector();
@@ -95,4 +95,14 @@ bool DiffuseBRDF::scatter(const Ray &r_in, const Hit_Payload &rec, Vector3f &att
     attenuation = oren_nayar * PI;
 
 	return true;
+}
+
+bool Metal::Scatter(const Ray& r_in, const Hit_Payload& rec, Vector3f& attenuation, Ray& scattered, Sampler& sampler) const
+{
+	Vector3f reflected = reflect(r_in.direction(), rec.normal);
+	reflected = glm::normalize(reflected) + (fuzz * sampler.random_unit_vector());
+	scattered = Ray(rec.p, reflected);
+	attenuation = albedo;
+
+	return (glm::dot(scattered.direction(), rec.normal) > 0.0f);
 }

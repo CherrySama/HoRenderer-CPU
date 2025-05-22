@@ -42,6 +42,8 @@ class ProgressTracker;
 class Material;
 class Lambertian;
 class DiffuseBRDF;
+class Metal;
+
 
 using Vector2u = glm::uvec2;
 using Vector2i = glm::ivec2;

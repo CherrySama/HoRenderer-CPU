@@ -13,7 +13,7 @@ public:
     virtual ~Material() = default;
 
     // Core Scattering Function
-    virtual bool scatter(const Ray& r_in, const Hit_Payload& rec, Vector3f& attenuation, Ray& scattered, Sampler& sampler) const = 0;
+    virtual bool Scatter(const Ray& r_in, const Hit_Payload& rec, Vector3f& attenuation, Ray& scattered, Sampler& sampler) const = 0;
 };
 
 // Lambertian
@@ -21,7 +21,7 @@ class Lambertian : public Material {
 public:
     Lambertian(const Vector3f& a) : albedo(a) {}
 
-    virtual bool scatter(const Ray& r_in, const Hit_Payload& rec, Vector3f& attenuation, Ray& scattered, Sampler& sampler) const override;
+    virtual bool Scatter(const Ray& r_in, const Hit_Payload& rec, Vector3f& attenuation, Ray& scattered, Sampler& sampler) const override;
 
 private:
     Vector3f albedo; // Diffuse Color
@@ -31,9 +31,21 @@ class DiffuseBRDF : public Material {
 public:
     DiffuseBRDF(const Vector3f& a, float rough = 0.0f) : albedo(a), roughness(rough) {}
 
-    virtual bool scatter(const Ray& r_in, const Hit_Payload& rec, Vector3f& attenuation, Ray& scattered, Sampler& sampler) const override;
+    virtual bool Scatter(const Ray& r_in, const Hit_Payload& rec, Vector3f& attenuation, Ray& scattered, Sampler& sampler) const override;
 
 private:
     Vector3f albedo; // Diffuse Color
     float roughness;     // Surface roughness (0 = perfect Lambertian, 1 = very rough)
+};
+
+// Not physically correct
+class Metal : public Material {
+public:
+    Metal(const Vector3f& a, float fu = 0.0f) : albedo(a), fuzz(fu < 1.0f ? fu : 1.0f) {}
+
+    virtual bool Scatter(const Ray& r_in, const Hit_Payload& rec, Vector3f& attenuation, Ray& scattered, Sampler& sampler) const override;
+
+private:
+    Vector3f albedo; // Diffuse Color
+    float fuzz;
 };

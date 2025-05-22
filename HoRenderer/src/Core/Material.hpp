@@ -49,3 +49,15 @@ private:
     Vector3f albedo; // Diffuse Color
     float fuzz;
 };
+
+class Dielectric : public Material {
+public:
+    Dielectric(float refract) : refractive_index(refract) {}
+
+    virtual bool Scatter(const Ray& r_in, const Hit_Payload& rec, Vector3f& attenuation, Ray& scattered, Sampler& sampler) const override;
+private:
+    float refractive_index;
+
+    // Use Schlick's approximation for reflectance.
+    static float Reflectance(float cosine, float refraction_index);
+};

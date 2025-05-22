@@ -99,10 +99,38 @@ bool DiffuseBRDF::Scatter(const Ray &r_in, const Hit_Payload &rec, Vector3f &att
 
 bool Metal::Scatter(const Ray& r_in, const Hit_Payload& rec, Vector3f& attenuation, Ray& scattered, Sampler& sampler) const
 {
-	Vector3f reflected = reflect(r_in.direction(), rec.normal);
+	Vector3f reflected = sampler.Reflect(r_in.direction(), rec.normal);
 	reflected = glm::normalize(reflected) + (fuzz * sampler.random_unit_vector());
-	scattered = Ray(rec.p, reflected);
+	scattered = Ray::SpawnRay(rec.p, reflected, rec.normal);
 	attenuation = albedo;
 
 	return (glm::dot(scattered.direction(), rec.normal) > 0.0f);
+}
+
+bool Dielectric::Scatter(const Ray& r_in, const Hit_Payload& rec, Vector3f& attenuation, Ray& scattered, Sampler& sampler) const
+{
+	attenuation = Vector3f(1.0f, 1.0f, 1.0f);
+	float ri = rec.front_face ? (1.0f / refractive_index) : refractive_index;
+
+	Vector3f unit_direction = glm::normalize(r_in.direction());
+	float cos_theta = std::fmin(dot(-unit_direction, rec.normal), 1.0);
+	float sin_theta = std::sqrt(1.0 - cos_theta*cos_theta);
+
+	bool cannot_refract = ri * sin_theta > 1.0;
+	Vector3f direction;
+
+	if (cannot_refract || Reflectance(cos_theta, ri) > sampler.random_float())
+		direction = sampler.Reflect(unit_direction, rec.normal);
+	else
+		direction = sampler.Refract(unit_direction, rec.normal, ri);
+
+	scattered = Ray::SpawnRay(rec.p, direction, rec.normal);
+	return true;
+}
+
+float Dielectric::Reflectance(float cosine, float refraction_index)
+{
+	auto r0 = (1.0f - refraction_index) / (1.0f + refraction_index);
+	r0 = r0 * r0;
+	return r0 + (1.0f - r0) * std::pow((1.0f - cosine), 5.0f);
 }

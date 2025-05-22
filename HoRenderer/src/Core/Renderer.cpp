@@ -56,13 +56,16 @@ void Renderer::SceneConfig()
 	auto material_ground = std::make_shared<Lambertian>(Vector3f(0.8f, 0.8f, 0.0f));
     auto material_center = std::make_shared<Lambertian>(Vector3f(0.1f, 0.2f, 0.5f));
 	// auto material_rough = std::make_shared<DiffuseBRDF>(Vector3f(0.5f, 0.5f, 0.5f), 0.8f);
-	auto material_left   = std::make_shared<Metal>(Vector3f(0.8f, 0.8f, 0.8f), 0.3f);
+	// auto material_left   = std::make_shared<Metal>(Vector3f(0.8f, 0.8f, 0.8f), 0.3f);
     auto material_right  = std::make_shared<Metal>(Vector3f(0.8f, 0.6f, 0.2f), 1.0f);
+	auto material_left   = std::make_shared<Dielectric>(1.50f);
+	auto material_bubble = std::make_shared<Dielectric>(1.00f / 1.50f);
+
 	
 	scene->Add(std::make_shared<Sphere>(Vector3f(0.0f, 0.0f, -1.5f), 0.5f, material_center));
-	scene->Add(std::make_shared<Sphere>(Vector3f(-1.1f, 0.0f, -1.0f), 0.5f, material_left));
 	scene->Add(std::make_shared<Sphere>(Vector3f(1.1f, 0.0f, -1.0f), 0.5f, material_right));
-
+	scene->Add(std::make_shared<Sphere>(Vector3f(-1.1f, 0.0f, -1.0f), 0.5f, material_left));
+	scene->Add(std::make_shared<Sphere>(Vector3f(-1.1f, 0.0f, -1.0f), 0.4f, material_bubble));
 	// scene->Add(std::make_shared<Box>(Vector3f(0.0f, 0.0f, -3.0f),      
     //                                  Vector3f(2.0f, 1.0f, 3.0f),
 	// 								 material_center));

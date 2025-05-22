@@ -43,6 +43,7 @@ class Material;
 class Lambertian;
 class DiffuseBRDF;
 class Metal;
+class Dielectric;
 
 
 using Vector2u = glm::uvec2;

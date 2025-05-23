@@ -78,3 +78,5 @@ build/
 # VS Code files for those working on multiple tools
 .vscode/*
 *.code-workspace
+
+.clang-format

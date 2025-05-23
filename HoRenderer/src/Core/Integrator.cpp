@@ -3,6 +3,7 @@
 */
 #include "Integrator.hpp"
 
+
 Integrator::~Integrator()
 {
     Clean();
@@ -29,7 +30,7 @@ void Integrator::RenderImage(Camera &cam, Scene &world, Sampler &sampler)
                 for (int s = 0; s < samples_per_pixel; s++)
                 {
                     Vector2f offset = sampler.sample_square();
-                    Ray r = cam.GenerateRay(i, j, offset);
+                    Ray r = cam.GenerateRay(i, j, sampler, offset);
                     pixel_color += ray_color(r, max_depth, world, sampler);
                 }
                 Vector3f color = sampler.scale_color(pixel_color);

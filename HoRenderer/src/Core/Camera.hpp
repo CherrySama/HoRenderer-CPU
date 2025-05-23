@@ -4,33 +4,42 @@
 #pragma once
 
 #include "Util.hpp"
-#include "Ray.hpp"
+#include "Sampler.hpp"
 
 struct CameraParams
 {
     float aspect_ratio;
-    float viewport_height;     
-    float focal_length;        
     int image_width;
+    float vfov;
+    Vector3f lookfrom;
+    Vector3f lookat;
+    Vector3f vup;
+    float defocus_angle;
+    float focus_dist;
 };
 
 
 class Camera {
 public:
-    Camera(Vector3f pos) : cameraPos(pos) {}
+    Camera() {}
     ~Camera() {};
 
     void Create(const CameraParams& params);
-    void Initialize();
     void Move(Vector3f pos);
 
-    Ray GenerateRay(int u, int v, const Vector2f& offset = Vector2f(0, 0));
+    Vector3f DefocusDisk(Sampler &sampler);
+
+    Ray GenerateRay(int u, int v, Sampler &sampler, const Vector2f& offset = Vector2f(0, 0));
 
 private:
-    Vector3f cameraPos;        // 相机位置
-    float aspect_ratio;        // 宽高比
-    float viewport_height;     // 视口高度
-    float focal_length;        // 焦距
+    Vector3f cameraPos;        // pos of camera center point
+    float aspect_ratio;        
+    float viewport_height;     
+    float vfov;                // field of view
+    Vector3f u, v, w;
+    float defocus_angle;
+    Vector3f defocus_disk_u;   // Defocus disk horizontal radius
+    Vector3f defocus_disk_v;   // Defocus disk vertical radius
 
 public:
     int image_width, image_height;

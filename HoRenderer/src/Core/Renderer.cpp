@@ -5,13 +5,25 @@
 
 Renderer::Renderer()
 {
-	WindowInit();
-	CameraParams camParams = {16.0f / 9.0f, 2.0f, 1.0f, 1600};
-	camera = std::make_unique<Camera>(Vector3f(0.0f, 0.0f, 0.0f));
-	camera->Create(camParams);
+    CameraParams camParams = { 16.0f / 9.0f,
+                               1200,
+                               20.0f,
+                               Vector3f(-2.0f, 2.0f, 1.0f),
+                               Vector3f(0.0f, 0.0f, -1.0f),
+                               Vector3f(0.0f, 1.0f, 0.0f),
+                               10.0f,
+                               2.0f};
+    
+    camera = std::make_unique<Camera>();
+    camera->Create(camParams);
+    width = camera->image_width;
+    height = camera->image_height;
+    
 	integrator = std::make_unique<Integrator>(camera->image_width, camera->image_height);
 	sampler = std::make_unique<Sampler>(64);
-	scene = std::make_unique<Scene>(); 
+    scene = std::make_unique<Scene>();
+    
+    WindowInit();
 	PipelineConfiguration(FileManager::getInstance());
 	SceneConfig();
 }
@@ -62,20 +74,20 @@ void Renderer::SceneConfig()
 	auto material_bubble = std::make_shared<Dielectric>(1.00f / 1.50f);
 
 	
-	scene->Add(std::make_shared<Sphere>(Vector3f(0.0f, 0.0f, -1.5f), 0.5f, material_center));
-	scene->Add(std::make_shared<Sphere>(Vector3f(1.1f, 0.0f, -1.0f), 0.5f, material_right));
-	scene->Add(std::make_shared<Sphere>(Vector3f(-1.1f, 0.0f, -1.0f), 0.5f, material_left));
-	scene->Add(std::make_shared<Sphere>(Vector3f(-1.1f, 0.0f, -1.0f), 0.4f, material_bubble));
+	scene->Add(std::make_shared<Sphere>(Vector3f(0.0f, 0.0f, -1.0f), 0.5f, material_center));
+	scene->Add(std::make_shared<Sphere>(Vector3f(1.0f, 0.0f, -1.0f), 0.5f, material_right));
+	scene->Add(std::make_shared<Sphere>(Vector3f(-1.0f, 0.0f, -1.0f), 0.5f, material_left));
+	scene->Add(std::make_shared<Sphere>(Vector3f(-1.0f, 0.0f, -1.0f), 0.4f, material_bubble));
 	// scene->Add(std::make_shared<Box>(Vector3f(0.0f, 0.0f, -3.0f),      
     //                                  Vector3f(2.0f, 1.0f, 3.0f),
 	// 								 material_center));
 
-    scene->Add(std::make_shared<Quad>(Vector3f(0, -2, 0), // Center point is at the y=-2 plane
-                                      Vector3f(0, 1, 0),  // Normal vector up
-                                      Vector3f(0, 0, 1),  // Forward vector
-                                      20.0f,              // width
-                                      20.0f,			  // length
-									  material_ground));            
+    scene->Add(std::make_shared<Quad>(Vector3f(0.0f, -1.0f, 0.0f), // Center point is at the y=-2 plane
+											Vector3f(0.0f, 1.0f, 0.0f),  // Normal vector up
+											Vector3f(0.0f, 0.0f, 1.0f),  // Forward vector
+											20.0f,              // width
+											20.0f,			  // length
+											material_ground));            
 }
 
 void Renderer::PipelineConfiguration(FileManager *fm)

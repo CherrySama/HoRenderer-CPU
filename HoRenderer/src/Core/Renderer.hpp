@@ -18,7 +18,6 @@ public:
 	void WindowInit();
 	void SceneConfig();
 	void PipelineConfiguration(FileManager *fm);
-	void test(FileManager *fm);
 	void Run();
 
 public:

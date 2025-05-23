@@ -92,11 +92,6 @@ void Renderer::PipelineConfiguration(FileManager *fm)
 					   fm->getShaderPath("FirstPass.frag").c_str());
 }
 
-void Renderer::test(FileManager *fm)
-{
-
-}
-
 void Renderer::Run()
 {
 	// start to render

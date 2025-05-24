@@ -25,11 +25,11 @@ public:
     ~Camera() {};
 
     void Create(const CameraParams& params);
-    void Move(Vector3f pos);
+    void MoveTo(Vector3f pos);
 
-    Vector3f DefocusDisk(Sampler &sampler);
+    Vector3f DefocusDisk(Sampler &sampler) const;
 
-    Ray GenerateRay(int u, int v, Sampler &sampler, const Vector2f& offset = Vector2f(0, 0));
+    Ray GenerateRay(int u, int v, Sampler &sampler, const Vector2f& offset = Vector2f(0, 0)) const;
 
 private:
     Vector3f cameraPos;        // pos of camera center point

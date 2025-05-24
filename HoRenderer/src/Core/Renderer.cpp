@@ -2,6 +2,8 @@
     Created by Yinghao He on 2025-05-15
 */
 #include "Renderer.hpp"
+#include "Material.hpp"
+#include "Shape.hpp"
 
 Renderer::Renderer()
 {

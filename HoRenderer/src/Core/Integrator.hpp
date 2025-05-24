@@ -6,11 +6,7 @@
 #include "Util.hpp"
 #include "Ray.hpp"
 #include "Scene.hpp"
-#include "Hittable.hpp"
-#include "Shape.hpp"
 #include "Camera.hpp"
-#include "Sampler.hpp"
-#include "Material.hpp"
 #include "../Common/ProgressTracker.hpp"
 
 

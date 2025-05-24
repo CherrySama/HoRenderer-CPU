@@ -5,9 +5,7 @@
 
 #include "Util.hpp"
 #include "RenderPass.hpp"
-#include "Camera.hpp"
 #include "Integrator.hpp"
-#include "Sampler.hpp"
 #include "../Common/FileManager.hpp"
 
 GLuint GetTextureRGB32F(int width, int height, const Integrator &integrator);

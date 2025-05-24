@@ -2,6 +2,7 @@
     Created by Yinghao He on 2025-05-16
 */
 #include "Integrator.hpp"
+#include "Material.hpp"
 
 
 Integrator::~Integrator()

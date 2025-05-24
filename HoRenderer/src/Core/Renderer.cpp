@@ -76,7 +76,9 @@ void Renderer::SceneConfig()
     for (int a = -6; a < 6; a++) {
         for (int b = -6; b < 6; b++) {
             auto choose_mat = sampler->random_float();
-            Vector3f center(a + 0.9f * sampler->random_float(), 0.2f, b + 0.9f * sampler->random_float());
+            Vector3f center(a + 0.9f * sampler->random_float(),
+                            0.2f,
+                            b + 0.9f * sampler->random_float());
 
             if (glm::length(center - Vector3f(4.0f, 0.2f, 0.0f)) > 0.9f) {
                 std::shared_ptr<Material> sphere_material;

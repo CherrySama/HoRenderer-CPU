@@ -14,6 +14,8 @@ void Camera::Create(const CameraParams &params)
     image_width = params.image_width;
     image_height = int(image_width / aspect_ratio);
     image_height = (image_height < 1) ? 1 : image_height;
+    float inv_image_width = 1.0f / float(image_width);
+    float inv_image_height = 1.0f / float(image_height);
 
     cameraPos = params.lookfrom;
     // focal_length = glm::length(params.lookfrom - params.lookat);
@@ -26,14 +28,14 @@ void Camera::Create(const CameraParams &params)
     viewport_height = 2.0f * h * params.focus_dist;
 
 
-    float viewport_width = viewport_height * (static_cast<float>(image_width) / image_height);
+    float viewport_width = viewport_height * image_width * inv_image_height;
     // auto viewport_u = Vector3f(viewport_width, 0, 0);
     // auto viewport_v = Vector3f(0, -viewport_height, 0);
     Vector3f viewport_u = viewport_width * u;
     Vector3f viewport_v = viewport_height * -v;
     // Calculate delta pixel of u and v
-    pixel_delta_u = viewport_u / float(image_width);
-    pixel_delta_v = viewport_v / float(image_height);
+    pixel_delta_u = viewport_u * inv_image_width;
+    pixel_delta_v = viewport_v * inv_image_height;
 
     auto viewport_upper_left = cameraPos - (params.focus_dist * w) - viewport_u / 2.0f - viewport_v / 2.0f;
     // Calculate the center of the first pixel

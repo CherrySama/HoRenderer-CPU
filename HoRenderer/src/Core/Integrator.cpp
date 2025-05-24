@@ -18,8 +18,9 @@ void Integrator::RenderImage(Camera &cam, Scene &world, Sampler &sampler)
     const int samples_per_pixel = sampler.get_samples_per_pixel();
 
     #pragma omp parallel
-    {   
+    {
         // #pragma omp for schedule(static, 16)
+        #pragma omp for schedule(dynamic, 4)
         for (int j = 0; j < height; ++j)
         {                  
             if (omp_get_thread_num() == 0) 

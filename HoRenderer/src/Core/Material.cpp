@@ -39,19 +39,19 @@ bool DiffuseBRDF::Scatter(const Ray &r_in, const Hit_Payload &rec, Vector3f &att
 	Vector3f H = glm::normalize(V + L);
 
 	// Calculate dot products
-	float NdotV = glm::dot(N, V);
-	float NdotL = glm::dot(N, L);
-	float VdotH = glm::dot(V, H);
+	float NdotV = glm::clamp(glm::dot(N, V), 0.0f, 1.0f);
+	float NdotL = glm::clamp(glm::dot(N, L), 0.0f, 1.0f);
+	float VdotH = glm::clamp(glm::dot(V, H), 0.0f, 1.0f);
 
 	// Ensure correct hemisphere
-	if (NdotV <= 0.0f || NdotL <= 0.0f) {
-		attenuation = Vector3f(0.0f);
-		return false;
+	if (NdotV <= Epsilon || NdotL <= Epsilon) {
+		attenuation = albedo * 0.1f;
+		return true;
 	}
 
 	// Oren Nayar Params
-    float theta_i = std::acos(NdotV);
-    float theta_r = std::acos(NdotL);
+    float theta_i = std::acos(glm::clamp(NdotV, 0.0f, 1.0f));
+    float theta_r = std::acos(glm::clamp(NdotL, 0.0f, 1.0f));
     float alpha = std::max(theta_i, theta_r);
     float beta = std::min(theta_i, theta_r);
 

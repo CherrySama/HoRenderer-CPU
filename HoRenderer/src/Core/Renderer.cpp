@@ -6,13 +6,13 @@
 Renderer::Renderer()
 {
     CameraParams camParams = { 16.0f / 9.0f,
-                               1200,
+                               1600,
                                20.0f,
-                               Vector3f(-2.0f, 2.0f, 1.0f),
-                               Vector3f(0.0f, 0.0f, -1.0f),
+                               Vector3f(13.0f, 2.0f, 3.0f),
+                               Vector3f(0.0f, 0.0f, 0.0f),
                                Vector3f(0.0f, 1.0f, 0.0f),
-                               10.0f,
-                               2.0f};
+                               0.6f,
+                               10.0f};
     
     camera = std::make_unique<Camera>();
     camera->Create(camParams);
@@ -65,29 +65,55 @@ void Renderer::WindowInit()
 
 void Renderer::SceneConfig()
 {
-	auto material_ground = std::make_shared<Lambertian>(Vector3f(0.8f, 0.8f, 0.0f));
-    auto material_center = std::make_shared<Lambertian>(Vector3f(0.1f, 0.2f, 0.5f));
-	// auto material_rough = std::make_shared<DiffuseBRDF>(Vector3f(0.5f, 0.5f, 0.5f), 0.8f);
-	// auto material_left   = std::make_shared<Metal>(Vector3f(0.8f, 0.8f, 0.8f), 0.3f);
-    auto material_right  = std::make_shared<Metal>(Vector3f(0.8f, 0.6f, 0.2f), 1.0f);
-	auto material_left   = std::make_shared<Dielectric>(1.50f);
-	auto material_bubble = std::make_shared<Dielectric>(1.00f / 1.50f);
+    auto ground_material = std::make_shared<DiffuseBRDF>(Vector3f(0.5f, 0.5f, 0.5f), 0.3f);
+    scene->Add(std::make_shared<Quad>(Vector3f(0.0f, 0.0f, 0.0f), 
+											Vector3f(0.0f, 1.0f, 0.0f),  
+											Vector3f(0.0f, 0.0f, 1.0f),  
+											100.0f,                      
+											100.0f,                      
+											ground_material));
 
-	
-	scene->Add(std::make_shared<Sphere>(Vector3f(0.0f, 0.0f, -1.0f), 0.5f, material_center));
-	scene->Add(std::make_shared<Sphere>(Vector3f(1.0f, 0.0f, -1.0f), 0.5f, material_right));
-	scene->Add(std::make_shared<Sphere>(Vector3f(-1.0f, 0.0f, -1.0f), 0.5f, material_left));
-	scene->Add(std::make_shared<Sphere>(Vector3f(-1.0f, 0.0f, -1.0f), 0.4f, material_bubble));
-	// scene->Add(std::make_shared<Box>(Vector3f(0.0f, 0.0f, -3.0f),      
-    //                                  Vector3f(2.0f, 1.0f, 3.0f),
-	// 								 material_center));
+    for (int a = -6; a < 6; a++) {
+        for (int b = -6; b < 6; b++) {
+            auto choose_mat = sampler->random_float();
+            Vector3f center(a + 0.9f * sampler->random_float(), 0.2f, b + 0.9f * sampler->random_float());
 
-    scene->Add(std::make_shared<Quad>(Vector3f(0.0f, -1.0f, 0.0f), // Center point is at the y=-2 plane
-											Vector3f(0.0f, 1.0f, 0.0f),  // Normal vector up
-											Vector3f(0.0f, 0.0f, 1.0f),  // Forward vector
-											20.0f,              // width
-											20.0f,			  // length
-											material_ground));            
+            if (glm::length(center - Vector3f(4.0f, 0.2f, 0.0f)) > 0.9f) {
+                std::shared_ptr<Material> sphere_material;
+
+                if (choose_mat < 0.8f) {
+                    // diffuse
+					float r = sampler->random_float();
+                    float g = sampler->random_float();  
+                    float b = sampler->random_float();
+                    Vector3f albedo = Vector3f(r * r, g * g, b * b);
+                    sphere_material = std::make_shared<DiffuseBRDF>(albedo);
+                    scene->Add(std::make_shared<Sphere>(center, 0.2f, sphere_material));
+                } else if (choose_mat < 0.95f) {
+                    // metal
+                    Vector3f albedo(sampler->random_float(0.5f, 1.0f),
+                                    sampler->random_float(0.5f, 1.0f),
+                                    sampler->random_float(0.5f, 1.0f));
+                    float fuzz = sampler->random_float(0.0f, 0.5f);
+					sphere_material = std::make_shared<Metal>(albedo, fuzz);
+					scene->Add(std::make_shared<Sphere>(center, 0.2f, sphere_material));
+                } else {
+                    // glass
+                    sphere_material = std::make_shared<Dielectric>(1.5f);
+                    scene->Add(std::make_shared<Sphere>(center, 0.2f, sphere_material));
+				}
+			}
+		}
+    }
+
+    auto material1 = std::make_shared<Dielectric>(1.5f);
+    scene->Add(std::make_shared<Sphere>(Vector3f(0.0f, 1.0f, 0.0f), 1.0f, material1));
+
+    auto material2 = std::make_shared<DiffuseBRDF>(Vector3f(0.4f, 0.2f, 0.1f));
+    scene->Add(std::make_shared<Sphere>(Vector3f(-4.0f, 1.0f, 0.0f), 1.0f, material2));
+
+    auto material3 = std::make_shared<Metal>(Vector3f(0.7f, 0.6f, 0.5f), 0.0f);
+    scene->Add(std::make_shared<Sphere>(Vector3f(4.0f, 1.0f, 0.0f), 1.0f, material3));
 }
 
 void Renderer::PipelineConfiguration(FileManager *fm)

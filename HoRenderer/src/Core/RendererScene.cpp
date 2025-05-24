@@ -87,4 +87,52 @@ namespace RendererScene
 
         return renderer;
     }
+    
+    std::shared_ptr<Renderer> TestScene()
+    {
+        // camera
+        CameraParams camParams = { 16.0f / 9.0f,
+                        1600,
+                        20.0f,
+                        Vector3f(-2.0f, 2.0f, 1.0f),
+                        Vector3f(0.0f, 0.0f, -1.0f),
+                        Vector3f(0.0f, 1.0f, 0.0f),
+                        0.0f,
+                        3.4f};
+    
+        std::unique_ptr<Camera> camera = std::make_unique<Camera>();
+        camera->Create(camParams);
+
+        // Integrator
+        std::unique_ptr<Integrator> integrator = std::make_unique<Integrator>(camera->image_width, camera->image_height);
+
+        // Sampler
+        std::unique_ptr<Sampler> sampler = std::make_unique<Sampler>(64);
+
+        // Scene
+        std::unique_ptr<Scene> scene = std::make_unique<Scene>();
+
+        auto material_ground = std::make_shared<Lambertian>(Vector3f(0.8f, 0.8f, 0.0f));
+        auto material_center = std::make_shared<Lambertian>(Vector3f(0.1f, 0.2f, 0.5f));
+        auto material_left   = std::make_shared<Dielectric>(1.50f);
+        auto material_bubble = std::make_shared<Dielectric>(1.00f / 1.50f);
+        auto material_right  = std::make_shared<Metal>(Vector3f(0.8f, 0.6f, 0.2f), 0.0f);
+
+        scene->Add(std::make_shared<Quad>(Vector3f(0.0f, 0.0f, 0.0f),
+                                          Vector3f(0.0f, 1.0f, 0.0f),
+                                          Vector3f(0.0f, 0.0f, 1.0f),
+                                          100.0f,
+                                          100.0f,
+                                          material_ground));
+
+        scene->Add(std::make_shared<Sphere>(Vector3f(0.0f, 0.5f, -1.2f), 0.5f, material_center));
+        scene->Add(std::make_shared<Sphere>(Vector3f(-1.0f, 0.5f, -1.0f), 0.5f, material_left));
+        scene->Add(std::make_shared<Sphere>(Vector3f(-1.0f, 0.5f, -1.0f), 0.4f, material_bubble));
+        scene->Add(std::make_shared<Sphere>(Vector3f(1.0f, 0.5f, -1.0f), 0.5f, material_right));
+
+        // Renderer
+        auto renderer = std::make_shared<Renderer>(std::move(camera), std::move(integrator), std::move(sampler), std::move(scene));
+
+        return renderer;
+    }
 }

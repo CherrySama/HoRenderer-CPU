@@ -14,7 +14,6 @@ class Renderer{
 public:
     Renderer(std::unique_ptr<Camera> cam, std::unique_ptr<Integrator> it, std::unique_ptr<Sampler> sam, std::unique_ptr<Scene> sc);
 	void WindowInit();
-	void SceneConfig();
 	void PipelineConfiguration(FileManager *fm);
 	void Run();
 

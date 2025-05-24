@@ -2,8 +2,6 @@
     Created by Yinghao He on 2025-05-15
 */
 #include "Renderer.hpp"
-#include "Material.hpp"
-#include "Shape.hpp"
 
 
 Renderer::Renderer(std::unique_ptr<Camera> cam, std::unique_ptr<Integrator> it, std::unique_ptr<Sampler> sam, std::unique_ptr<Scene> sc)
@@ -52,61 +50,6 @@ void Renderer::WindowInit()
         std::cout << "Failed to initialize GLAD" << std::endl;
 		return;
 	}
-}
-
-void Renderer::SceneConfig()
-{
-    auto ground_material = std::make_shared<DiffuseBRDF>(Vector3f(0.5f, 0.5f, 0.5f), 0.3f);
-    scene->Add(std::make_shared<Quad>(Vector3f(0.0f, 0.0f, 0.0f), 
-											Vector3f(0.0f, 1.0f, 0.0f),  
-											Vector3f(0.0f, 0.0f, 1.0f),  
-											100.0f,                      
-											100.0f,                      
-											ground_material));
-
-    for (int a = -6; a < 6; a++) {
-        for (int b = -6; b < 6; b++) {
-            auto choose_mat = sampler->random_float();
-            Vector3f center(a + 0.9f * sampler->random_float(),
-                            0.2f,
-                            b + 0.9f * sampler->random_float());
-
-            if (glm::length(center - Vector3f(4.0f, 0.2f, 0.0f)) > 0.9f) {
-                std::shared_ptr<Material> sphere_material;
-
-                if (choose_mat < 0.8f) {
-                    // diffuse
-					float r = sampler->random_float();
-                    float g = sampler->random_float();  
-                    float b = sampler->random_float();
-                    Vector3f albedo = Vector3f(r * r, g * g, b * b);
-                    sphere_material = std::make_shared<DiffuseBRDF>(albedo);
-                    scene->Add(std::make_shared<Sphere>(center, 0.2f, sphere_material));
-                } else if (choose_mat < 0.95f) {
-                    // metal
-                    Vector3f albedo(sampler->random_float(0.5f, 1.0f),
-                                    sampler->random_float(0.5f, 1.0f),
-                                    sampler->random_float(0.5f, 1.0f));
-                    float fuzz = sampler->random_float(0.0f, 0.5f);
-					sphere_material = std::make_shared<Metal>(albedo, fuzz);
-					scene->Add(std::make_shared<Sphere>(center, 0.2f, sphere_material));
-                } else {
-                    // glass
-                    sphere_material = std::make_shared<Dielectric>(1.5f);
-                    scene->Add(std::make_shared<Sphere>(center, 0.2f, sphere_material));
-				}
-			}
-		}
-    }
-
-    auto material1 = std::make_shared<Dielectric>(1.5f);
-    scene->Add(std::make_shared<Sphere>(Vector3f(0.0f, 1.0f, 0.0f), 1.0f, material1));
-
-    auto material2 = std::make_shared<DiffuseBRDF>(Vector3f(0.4f, 0.2f, 0.1f));
-    scene->Add(std::make_shared<Sphere>(Vector3f(-4.0f, 1.0f, 0.0f), 1.0f, material2));
-
-    auto material3 = std::make_shared<Metal>(Vector3f(0.7f, 0.6f, 0.5f), 0.0f);
-    scene->Add(std::make_shared<Sphere>(Vector3f(4.0f, 1.0f, 0.0f), 1.0f, material3));
 }
 
 void Renderer::PipelineConfiguration(FileManager *fm)

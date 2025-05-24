@@ -7,7 +7,7 @@
 
 int testRenderer()
 {
-    auto renderer = RendererScene::RayTracingInOneWeekendCover();
+    auto renderer = RendererScene::TestScene();
     renderer->Run();
 
     return 0;

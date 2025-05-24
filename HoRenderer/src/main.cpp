@@ -2,13 +2,13 @@
 	Created by Yinghao He on 2025-05-15
 */
 #include "Core/Util.hpp"
-#include "Core/Renderer.hpp"
+#include "Core/RendererScene.hpp"
 
 
 int testRenderer()
 {
-    Renderer renderer;
-    renderer.Run();
+    auto renderer = RendererScene::RayTracingInOneWeekendCover();
+    renderer->Run();
 
     return 0;
 }

@@ -5,29 +5,18 @@
 #include "Material.hpp"
 #include "Shape.hpp"
 
-Renderer::Renderer()
+
+Renderer::Renderer(std::unique_ptr<Camera> cam, std::unique_ptr<Integrator> it, std::unique_ptr<Sampler> sam, std::unique_ptr<Scene> sc)
 {
-    CameraParams camParams = { 16.0f / 9.0f,
-                               1600,
-                               20.0f,
-                               Vector3f(13.0f, 2.0f, 3.0f),
-                               Vector3f(0.0f, 0.0f, 0.0f),
-                               Vector3f(0.0f, 1.0f, 0.0f),
-                               0.6f,
-                               10.0f};
-    
-    camera = std::make_unique<Camera>();
-    camera->Create(camParams);
+    camera = std::move(cam);
+    integrator = std::move(it);
+    sampler = std::move(sam);
+    scene = std::move(sc);
+
     width = camera->image_width;
     height = camera->image_height;
-    
-	integrator = std::make_unique<Integrator>(camera->image_width, camera->image_height);
-	sampler = std::make_unique<Sampler>(64);
-    scene = std::make_unique<Scene>();
-    
     WindowInit();
 	PipelineConfiguration(FileManager::getInstance());
-	SceneConfig();
 }
 
 void Renderer::WindowInit()

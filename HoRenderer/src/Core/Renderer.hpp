@@ -12,7 +12,7 @@ GLuint GetTextureRGB32F(int width, int height, const Integrator &integrator);
 
 class Renderer{
 public:
-	Renderer();
+    Renderer(std::unique_ptr<Camera> cam, std::unique_ptr<Integrator> it, std::unique_ptr<Sampler> sam, std::unique_ptr<Scene> sc);
 	void WindowInit();
 	void SceneConfig();
 	void PipelineConfiguration(FileManager *fm);
@@ -22,8 +22,8 @@ public:
 	RenderPass pass1;
     std::unique_ptr<Camera> camera;
     std::unique_ptr<Integrator> integrator;
-	std::unique_ptr<Scene> scene;
 	std::unique_ptr<Sampler> sampler;
+	std::unique_ptr<Scene> scene;
 
 private:
 	GLFWwindow *window;

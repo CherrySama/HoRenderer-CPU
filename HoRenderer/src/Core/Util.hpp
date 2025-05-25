@@ -4,6 +4,7 @@
 #pragma once
 
 #include <iostream>
+#include <algorithm>
 #include <memory>
 #include <cstdlib>
 #include <random>
@@ -44,6 +45,8 @@ class Lambertian;
 class DiffuseBRDF;
 class Metal;
 class Dielectric;
+class AABB;
+class BVHnode;
 
 
 using Vector2u = glm::uvec2;
@@ -125,8 +128,11 @@ inline float degrees_to_radians(float degrees) {
     return degrees * PI / 180.0;
 }
 
-inline bool isInInterval(Vector2f interval, float x)
-{
+inline bool isInInterval(Vector2f interval, float x) {
 	return interval.x < x && x < interval.y;
 }
 
+inline Vector2f IntervalExpand(Vector2f interval, float delta) {
+    float padding = delta / 2.0f;
+    return Vector2f(interval.x - padding, interval.y + padding);
+}

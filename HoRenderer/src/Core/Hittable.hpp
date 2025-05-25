@@ -4,6 +4,7 @@
 #pragma once
 
 #include "Ray.hpp"
+#include "AABB.hpp"
 
 class Hit_Payload {
 public:    
@@ -21,4 +22,5 @@ class Hittable{
 public:
     virtual ~Hittable() = default;
     virtual bool isHit(const Ray &r, Vector2f t_interval, Hit_Payload &rec) const = 0;
+    virtual AABB getBoundingBox() const = 0;
 };

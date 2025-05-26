@@ -37,12 +37,11 @@ bool DiffuseBRDF::Scatter(const Ray &r_in, const Hit_Payload &rec, Vector3f &att
 	Vector3f V = -glm::normalize(r_in.direction());  // Incident direction (pointing toward surface)
 	Vector3f L = glm::normalize(scatter_direction);   // Outgoing direction
 	Vector3f N = rec.normal;                          // Surface normal
-	Vector3f H = glm::normalize(V + L);
 
 	// Calculate dot products
 	float NdotV = glm::clamp(glm::dot(N, V), 0.0f, 1.0f);
 	float NdotL = glm::clamp(glm::dot(N, L), 0.0f, 1.0f);
-	float VdotH = glm::clamp(glm::dot(V, H), 0.0f, 1.0f);
+	float LdotV = glm::dot(L, V);
 
 	// Ensure correct hemisphere
 	if (NdotV <= Epsilon || NdotL <= Epsilon) {
@@ -50,52 +49,23 @@ bool DiffuseBRDF::Scatter(const Ray &r_in, const Hit_Payload &rec, Vector3f &att
 		return true;
 	}
 
-	// Oren Nayar Params
-    float theta_i = std::acos(glm::clamp(NdotV, 0.0f, 1.0f));
-    float theta_r = std::acos(glm::clamp(NdotL, 0.0f, 1.0f));
-    float alpha = std::max(theta_i, theta_r);
-    float beta = std::min(theta_i, theta_r);
+	// A tiny improvement of Oren-Nayar reflectance model: https://mimosa-pudica.net/improved-oren-nayar.html
+    float s = LdotV - NdotL * NdotV;
+    float t = (s <= 0.0f) ? 1.0f : (1.0f / std::max(NdotL, NdotV));
+    float sigma_prime = glm::clamp(roughness, 0.0f, 1.0f);
 
-	// Calculate the azimuth difference cos(φᵢ - φᵣ)
-    // Vector3f V_perp = V - NdotV * N;
-    // Vector3f L_perp = L - NdotL * N;
-    // float cos_phi_diff = 0.0f;
+	// A = 1 / (π + (π/2 - 2/3)σ')
+    // B = σ' / (π + (π/2 - 2/3)σ')
+    float denominator = PI + (PI * 0.5f - 2.0f / 3.0f) * sigma_prime;
+    float A = 1.0f / denominator;
+    float B = sigma_prime / denominator;
 
-	// float V_perp_len = glm::length(V_perp);
-    // float L_perp_len = glm::length(L_perp);
-    // if (V_perp_len > 1e-6f && L_perp_len > 1e-6f) {
-    //     cos_phi_diff = glm::dot(V_perp, L_perp) / (V_perp_len * L_perp_len);
-    // }
+	// L_ION(N,L,V) = ρ(N·L)(A + B·s/t)
+    float oren_nayar_factor = A + B * s * t;
+    Vector3f brdf_result = (albedo / PI) * NdotL * oren_nayar_factor;    
+    attenuation = brdf_result;
 
-	// Simplified calculation of cos_phi_diff using half-vector
-	float cos_phi_diff = 2.0f * VdotH * VdotH - 1.0f;
-
-    float sigma2 = roughness * roughness;
-
-	// Calculation coefficient
-	float C1 = 1.0f - 0.5f * sigma2 / (sigma2 + 0.33f);
-    
-    float C2 = 0.45f * sigma2 / (sigma2 + 0.09f) * std::sin(alpha);
-    // if (cos_phi_diff >= 0.0f) {
-    //     C2 = 0.45f * sigma2 / (sigma2 + 0.09f) * std::sin(alpha);
-    // } else {
-    //     C2 = 0.45f * sigma2 / (sigma2 + 0.09f) * (std::sin(alpha) - std::pow(2.0f * beta / PI, 3.0f));
-    // }
-    
-    // float C3 = 0.125f * sigma2 / (sigma2 + 0.09f) * std::pow(4.0f * alpha * beta / (PI * PI), 2.0f);
-	// float C3 = 0.0f;
-
-	// L1 item (primary reflex)
-    // Vector3f L1 = (albedo / PI) * (C1 + C2 * cos_phi_diff * std::tan(beta) + C3 * (1.0f - std::abs(cos_phi_diff)) * std::tan((alpha + beta) / 2.0f));
-	Vector3f L1 = (albedo / PI) * (C1 + C2 * cos_phi_diff * std::tan(beta));
-
-    // L2 term (multiple scattering)
-    // Vector3f L2 = 0.17f *  (albedo * albedo / PI) * sigma2 / (sigma2 + 0.13f) * (1.0f - cos_phi_diff * std::pow(2.0f * beta / PI, 2.0f));
-
-    Vector3f oren_nayar = L1;
-    attenuation = oren_nayar * PI;
-
-	return true;
+    return true;
 }
 
 bool Metal::Scatter(const Ray& r_in, const Hit_Payload& rec, Vector3f& attenuation, Ray& scattered, Sampler& sampler) const

@@ -32,12 +32,10 @@ namespace RendererScene
         std::unique_ptr<Scene> scene = std::make_unique<Scene>();
 
         auto ground_material = std::make_shared<DiffuseBRDF>(Vector3f(0.5f, 0.5f, 0.5f), 0.3f);
-        scene->Add(std::make_shared<Quad>(Vector3f(0.0f, 0.0f, 0.0f),
-                                          Vector3f(0.0f, 1.0f, 0.0f),
-                                          Vector3f(0.0f, 0.0f, 1.0f),
-                                          100.0f,
-                                          100.0f,
-                                          ground_material));
+        scene->Add(std::make_shared<Quad>(Vector3f(-50.0f, 0.0f, -50.0f), 
+                                                Vector3f(100.0f, 0.0f, 0.0f),   
+                                                Vector3f(0.0f, 0.0f, 100.0f),   
+                                                ground_material));              
 
         for (int a = -6; a < 6; a++) {
             for (int b = -6; b < 6; b++) {
@@ -120,12 +118,10 @@ namespace RendererScene
         auto material_bubble = std::make_shared<Dielectric>(1.00f / 1.50f);
         auto material_right  = std::make_shared<Metal>(Vector3f(0.8f, 0.6f, 0.2f), 0.0f);
 
-        scene->Add(std::make_shared<Quad>(Vector3f(0.0f, 0.0f, 0.0f),
-                                          Vector3f(0.0f, 1.0f, 0.0f),
-                                          Vector3f(0.0f, 0.0f, 1.0f),
-                                          100.0f,
-                                          100.0f,
-                                          material_ground));
+        scene->Add(std::make_shared<Quad>(Vector3f(-50.0f, 0.0f, -50.0f), 
+                                                Vector3f(100.0f, 0.0f, 0.0f),   
+                                                Vector3f(0.0f, 0.0f, 100.0f),   
+                                                material_ground));   
 
         scene->Add(std::make_shared<Sphere>(Vector3f(0.0f, 0.5f, -1.2f), 0.5f, material_center));
         scene->Add(std::make_shared<Sphere>(Vector3f(-1.0f, 0.5f, -1.0f), 0.5f, material_left));

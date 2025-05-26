@@ -48,7 +48,7 @@ bool Quad::isHit(const Ray &r, Vector2f t_interval, Hit_Payload &rec) const
         return false;
     
     // Calculate the intersection parameter t
-    float t = glm::dot(center - r.origin(), normal) / denom;
+    float t = (D - glm::dot(normal, r.origin())) / denom;
     
     // Check if t is in the valid range
     if (t < t_interval.x || t > t_interval.y)
@@ -58,16 +58,15 @@ bool Quad::isHit(const Ray &r, Vector2f t_interval, Hit_Payload &rec) const
     Vector3f hit_point = r.at(t);
     
     // Calculate the vector from the intersection point to the center
-    Vector3f to_hit = hit_point - center;
+    Vector3f hit_vec = hit_point - Q;
     
-    // Calculate the position in the local coordinate system
-    float u = glm::dot(to_hit, right);
-    float v = glm::dot(to_hit, up_vector);
+    // Compute parameter coordinates (alpha, beta)
+    float alpha = glm::dot(w, glm::cross(hit_vec, v));
+    float beta = glm::dot(w, glm::cross(u, hit_vec));
     
     // Check if it is within the rectangle
-    if (std::fabs(u) > half_width || std::fabs(v) > half_height)
+    if (alpha < 0 || alpha > 1 || beta < 0 || beta > 1)
         return false;
-    
     
     rec.t = t;
     rec.p = hit_point;
@@ -98,61 +97,49 @@ bool Box::isHit(const Ray &r, Vector2f t_interval, Hit_Payload &rec) const {
 void Box::CreateSides()
 {
     sides.clear();
-    
+
     // Calculate the half size (the distance from the center point in all directions)
     Vector3f half_dim = dimensions * 0.5f;
-    
-    // Front (front of Z direction)
+
+    // Front (z+)
     sides.push_back(std::make_shared<Quad>(
-        center + Vector3f(0, 0, half_dim.z),  
-        Vector3f(0, 0, 1),                   
-        Vector3f(0, 1, 0),                   
-        dimensions.x, dimensions.y,
-        mat      
-    ));
-    
-    // Back 
+        Vector3f(center.x - half_dim.x, center.y - half_dim.y, center.z + half_dim.z), 
+        Vector3f(dimensions.x, 0, 0),                                                  
+        Vector3f(0, dimensions.y, 0),                                                  
+        mat));
+
+    // back (z-)
     sides.push_back(std::make_shared<Quad>(
-        center - Vector3f(0, 0, half_dim.z),  
-        Vector3f(0, 0, -1),                  
-        Vector3f(0, 1, 0),                   
-        dimensions.x, dimensions.y,
-        mat      
-    ));
-    
-    // Top
+        Vector3f(center.x + half_dim.x, center.y - half_dim.y, center.z - half_dim.z),
+        Vector3f(-dimensions.x, 0, 0),
+        Vector3f(0, dimensions.y, 0),
+        mat));
+
+    // top (y+)
     sides.push_back(std::make_shared<Quad>(
-        center + Vector3f(0, half_dim.y, 0),  
-        Vector3f(0, 1, 0),                   
-        Vector3f(0, 0, 1),                   
-        dimensions.x, dimensions.z,
-        mat      
-    ));
-    
-    // Bottom
+        Vector3f(center.x - half_dim.x, center.y + half_dim.y, center.z + half_dim.z),
+        Vector3f(dimensions.x, 0, 0),
+        Vector3f(0, 0, -dimensions.z),
+        mat));
+
+    // bottom (y-)
     sides.push_back(std::make_shared<Quad>(
-        center - Vector3f(0, half_dim.y, 0),  
-        Vector3f(0, -1, 0),                  
-        Vector3f(0, 0, 1),                   
-        dimensions.x, dimensions.z,
-        mat      
-    ));
-    
-    // Right (positive X direction)
+        Vector3f(center.x - half_dim.x, center.y - half_dim.y, center.z - half_dim.z),
+        Vector3f(dimensions.x, 0, 0),
+        Vector3f(0, 0, dimensions.z),
+        mat));
+
+    // right (x+)
     sides.push_back(std::make_shared<Quad>(
-        center + Vector3f(half_dim.x, 0, 0),  
-        Vector3f(1, 0, 0),                   
-        Vector3f(0, 1, 0),                   
-        dimensions.z, dimensions.y,
-        mat      
-    ));
-    
-    // Left
+        Vector3f(center.x + half_dim.x, center.y - half_dim.y, center.z + half_dim.z),
+        Vector3f(0, 0, -dimensions.z),
+        Vector3f(0, dimensions.y, 0),
+        mat));
+
+    // left (x-)
     sides.push_back(std::make_shared<Quad>(
-        center - Vector3f(half_dim.x, 0, 0),  
-        Vector3f(-1, 0, 0),                  
-        Vector3f(0, 1, 0),                   
-        dimensions.z, dimensions.y,
-        mat      
-    ));
+        Vector3f(center.x - half_dim.x, center.y - half_dim.y, center.z - half_dim.z),
+        Vector3f(0, 0, dimensions.z),
+        Vector3f(0, dimensions.y, 0),
+        mat));
 }

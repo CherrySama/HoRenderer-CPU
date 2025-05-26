@@ -2,6 +2,7 @@
 	Created by Yinghao He on 2025-05-21
 */
 #include "Material.hpp"
+#include "Hittable.hpp"
 
 bool Lambertian::Scatter(const Ray &r_in, const Hit_Payload &rec, Vector3f &attenuation, Ray &scattered, Sampler &sampler) const
 {

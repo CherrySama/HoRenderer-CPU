@@ -5,7 +5,6 @@
 
 #include "Util.hpp"
 #include "Ray.hpp"
-#include "Hittable.hpp"
 #include "Sampler.hpp"
 
 class Material {

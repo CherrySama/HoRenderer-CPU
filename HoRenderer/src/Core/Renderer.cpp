@@ -26,7 +26,7 @@ void Renderer::WindowInit()
 		return;
 	}
     
-    // 设置OpenGL版本
+    // OpenGL setting
 	glfwWindowHint(GLFW_SAMPLES, max_samples);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
@@ -43,9 +43,8 @@ void Renderer::WindowInit()
 		return;
 	}
     glfwMakeContextCurrent(window);
-	// glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED); // 隐藏鼠标光标
     
-    // 初始化GLAD
+    // initialize GLAD
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
         std::cout << "Failed to initialize GLAD" << std::endl;
 		return;

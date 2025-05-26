@@ -95,10 +95,10 @@ namespace RendererScene
                         1600,
                         20.0f,
                         Vector3f(-2.0f, 2.0f, 1.0f),
-                        Vector3f(0.0f, 0.0f, -1.0f),
+                        Vector3f(0.5f, 0.0f, -2.0f),
                         Vector3f(0.0f, 1.0f, 0.0f),
                         0.0f,
-                        3.4f};
+                        2.0f};
     
         std::unique_ptr<Camera> camera = std::make_unique<Camera>();
         camera->Create(camParams);
@@ -128,7 +128,7 @@ namespace RendererScene
         scene->Add(std::make_shared<Sphere>(Vector3f(-1.0f, 0.5f, -1.0f), 0.4f, material_bubble));
         scene->Add(std::make_shared<Sphere>(Vector3f(1.0f, 0.5f, -1.0f), 0.5f, material_right));
 
-        scene->BuildBVH();
+        // scene->BuildBVH();
         
         // Renderer
         auto renderer = std::make_shared<Renderer>(std::move(camera), std::move(integrator), std::move(sampler), std::move(scene));

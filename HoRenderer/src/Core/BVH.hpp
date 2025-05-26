@@ -21,6 +21,12 @@ private:
     std::shared_ptr<Hittable> right;
     AABB bbox;
 
+    // Calculate the surface area of ​​the bounding box
+    float calculateSurfaceArea(const AABB &bbox);
+
+    // Calculating SAH costs
+    float computeSAHCost(size_t N_left, const AABB& box_left, size_t N_right, const AABB& box_right, const AABB& box_parent);
+
     // compare function
     static bool box_compare(const std::shared_ptr<Hittable> a, const std::shared_ptr<Hittable> b, int axis_index);
     static bool box_x_compare(const std::shared_ptr<Hittable> a, const std::shared_ptr<Hittable> b);

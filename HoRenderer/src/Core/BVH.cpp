@@ -38,7 +38,7 @@ BVHnode::BVHnode(std::vector<std::shared_ptr<Hittable>>& objects, size_t start, 
 
         std::sort(objects.begin() + start, objects.begin() + end, comparator);
 
-        // 简单中点分割
+        // Simple midpoint split
         auto mid = start + object_span / 2;
 
         #pragma omp task shared(left)
@@ -49,8 +49,6 @@ BVHnode::BVHnode(std::vector<std::shared_ptr<Hittable>>& objects, size_t start, 
 
         #pragma omp taskwait
     } else {
-        // Multiple objects: segmentation required
-        
         // Select the longest axis to split
         int axis = 0;
         Vector3f extent = bbox.max() - bbox.min();
@@ -82,7 +80,7 @@ BVHnode::BVHnode(std::vector<std::shared_ptr<Hittable>>& objects, size_t start, 
             size_t N_left = i + 1;
             size_t N_right = object_span - N_left;
 
-            // 计算右子树包围盒
+            // Calculate the bounding box of the right subtree
             AABB right_box = boxes[i + 1];
             for (size_t j = i + 2; j < object_span; ++j) {
                 right_box = calculateSurroundingBox(right_box, boxes[j]);
@@ -127,8 +125,8 @@ float BVHnode::calculateSurfaceArea(const AABB &bbox)
 
 float BVHnode::computeSAHCost(size_t N_left, const AABB &box_left, size_t N_right, const AABB &box_right, const AABB &box_parent)
 {
-    const float C_t = 1.0f;  // 遍历成本
-    const float C_i = 1.0f;  // 相交测试成本
+    const float C_t = 1.0f;  // Traversal Cost
+    const float C_i = 1.0f;  // Intersection test cost
     float SA_parent = calculateSurfaceArea(box_parent);
     float SA_left = calculateSurfaceArea(box_left);
     float SA_right = calculateSurfaceArea(box_right);

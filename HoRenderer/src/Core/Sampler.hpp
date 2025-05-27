@@ -47,9 +47,6 @@ public:
     }
 
     inline Vector3f random_unit_2Dvector() const {
-            // auto p = Vector3f(random_float(-1.0f, 1.0f), random_float(-1.0f, 1.0f), 0.0f);
-            // if (glm::length2(p) < 1.0f)
-            //     return p;
             float theta = random_float(0.0f, 2.0f * PI);
             float r = std::sqrt(random_float());
             return Vector3f(r * std::cos(theta), r * std::sin(theta), 0.0f);

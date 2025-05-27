@@ -22,9 +22,7 @@ public:
     // Calculate ray color (background)
     Vector3f ray_color(const Ray &r, int depth, const Hittable &world, Sampler &sampler);
     
-    // Set the number of threads
     void SetNumThreads(int threads);
-    // Get the current number of threads
     int GetNumThreads() const;
 
     const uint8_t *GetPixels() const;

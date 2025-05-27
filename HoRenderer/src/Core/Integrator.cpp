@@ -37,38 +37,6 @@ void Integrator::RenderSingleSample(Camera &cam, Scene &world, Sampler &sampler,
         }
     }
 }
-    
-void Integrator::RenderImage(Camera &cam, Scene &world, Sampler &sampler)
-{    
-    // Set the number of threads for OpenMP
-    omp_set_num_threads(num_threads);
-    std::cout << "Rendering with " << num_threads << " threads..." << std::endl;
-    progress.Initialize(height);
-    const int samples_per_pixel = sampler.get_samples_per_pixel();
-
-    #pragma omp parallel
-    {
-        // #pragma omp for schedule(static, 16)
-        #pragma omp for schedule(dynamic, 4)
-        for (int j = 0; j < height; ++j)
-        {                  
-            if (omp_get_thread_num() == 0) 
-                progress.Update(1);
-            
-            for (int i = 0; i < width; i++) {
-                Vector3f pixel_color(0, 0, 0);
-                for (int s = 0; s < samples_per_pixel; s++)
-                {
-                    Vector2f offset = sampler.sample_square();
-                    Ray r = cam.GenerateRay(i, j, sampler, offset);
-                    pixel_color += ray_color(r, max_depth, world, sampler);
-                }
-                Vector3f color = sampler.scale_color(pixel_color);
-                write_color(i, j, color);  
-            }
-        }
-    }
-}
 
 void Integrator::write_color_float(int u, int v, const Vector3f &color)
 {
@@ -79,17 +47,6 @@ void Integrator::write_color_float(int u, int v, const Vector3f &color)
     pixel[1] = glm::clamp(color.g, 0.0f, 1.0f);  // G  
     pixel[2] = glm::clamp(color.b, 0.0f, 1.0f);  // B
     pixel[3] = 1.0f;     // A
-}
-
-void Integrator::write_color(int u, int v, const Vector3f &color)
-{
-    int offset = v * width * 4 + u * 4;
-    uint8_t* pixel = pixels.get() + offset;
-    
-    pixel[0] = static_cast<uint8_t>(255.99f * color.r);  // R
-    pixel[1] = static_cast<uint8_t>(255.99f * color.g);  // G
-    pixel[2] = static_cast<uint8_t>(255.99f * color.b);  // B
-    pixel[3] = 255;                                      // A
 }
 
 Vector3f Integrator::ray_color(const Ray &r, int depth, const Hittable &world, Sampler &sampler)

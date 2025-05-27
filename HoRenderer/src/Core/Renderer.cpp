@@ -88,6 +88,13 @@ void Renderer::Run() {
         if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
             glfwSetWindowShouldClose(window, true);
 
+        t2 = clock();
+		dt = (double)(t2 - t1) / CLOCKS_PER_SEC;
+		fps = 1.0 / dt;
+		std::cout << "\r";
+		std::cout << std::fixed << std::setprecision(2) << "FPS : " << fps << "    FrameCounter: " << frameCounter;
+		t1 = t2;
+
         integrator->RenderSingleSample(*camera, *scene, *sampler, frameCounter);
         glBindTexture(GL_TEXTURE_2D, nowFrame);
         glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RGBA, GL_FLOAT, integrator->GetFloatPixels());
@@ -118,25 +125,6 @@ void Renderer::Run() {
     glDeleteTextures(1, &nowFrame);
     glfwDestroyWindow(window);
     glfwTerminate();
-}
-
-GLuint GetTextureRGB32F(int width, int height, const Integrator &integrator)
-{
-	// Creating Textures
-    GLuint renderTexture;
-    glGenTextures(1, &renderTexture);
-    glBindTexture(GL_TEXTURE_2D, renderTexture);
-    // Setting texture parameters
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-	// Loading image data into a texture
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, integrator.GetPixels());
-    glGenerateMipmap(GL_TEXTURE_2D);
-
-	return renderTexture;
 }
 
 GLuint CreateTextureRGB32F(int w, int h)

@@ -8,7 +8,6 @@
 #include "Integrator.hpp"
 #include "../Common/FileManager.hpp"
 
-GLuint GetTextureRGB32F(int width, int height, const Integrator &integrator);
 GLuint CreateTextureRGB32F(int w, int h);
 
 class Renderer{
@@ -21,6 +20,8 @@ public:
 public:
     RenderPass pass1, pass2, pass3;
     GLuint lastFrame, nowFrame;
+    clock_t t1, t2;
+	float dt, fps;
     unsigned int frameCounter;
     std::unique_ptr<Camera> camera;
     std::unique_ptr<Integrator> integrator;

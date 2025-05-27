@@ -9,23 +9,6 @@ Vector3f Sampler::sample_square() const
     return Vector3f(random_float() - 0.5f, random_float() - 0.5f, 0.0f);
 }
 
-Vector3f Sampler::scale_color(const Vector3f &pixel_color) const
-{
-    auto r = pixel_color.r * pixel_samples_scale;
-    auto g = pixel_color.g * pixel_samples_scale;
-    auto b = pixel_color.b * pixel_samples_scale;
-
-    // Perform a gamma=2 correction (simply take the square root)
-    r = r > 0.0f ? glm::sqrt(r) : 0.0f;
-    g = g > 0.0f ? glm::sqrt(g) : 0.0f;
-    b = b > 0.0f ? glm::sqrt(b) : 0.0f;
-
-    // Limit the color to the range [0, 1].
-    return Vector3f(glm::clamp(r, 0.0f, 0.999f),
-                    glm::clamp(g, 0.0f, 0.999f),
-                    glm::clamp(b, 0.0f, 0.999f));
-}
-
 Vector3f Sampler::scale_color_single_sample(const Vector3f &pixel_color) const
 {
     // For progressive rendering, don't scale by samples_per_pixel

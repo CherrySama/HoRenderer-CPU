@@ -20,9 +20,7 @@ public:
     ~Integrator();
 
     void RenderSingleSample(Camera &cam, Scene &world, Sampler &sampler, int sample_index);
-    void RenderImage(Camera &cam, Scene &world, Sampler &sampler);
     void write_color_float(int u, int v, const Vector3f &color);
-    void write_color(int u, int v, const Vector3f &color);
     // Calculate ray color (background)
     Vector3f ray_color(const Ray &r, int depth, const Hittable &world, Sampler &sampler);
     

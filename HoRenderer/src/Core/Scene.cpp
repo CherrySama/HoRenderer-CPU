@@ -25,7 +25,7 @@ void Scene::BuildBVH()
 {
     if (!hit_objects.empty()) 
     {
-        std::cout << "Start to build BVH tree..." << std::endl;
+        // std::cout << "Start to build BVH tree..." << std::endl;
         bvh_tree = std::make_shared<BVHnode>(hit_objects, 0, hit_objects.size());
     }
 }

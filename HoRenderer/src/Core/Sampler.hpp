@@ -73,7 +73,6 @@ public:
     inline int get_samples_per_pixel() const { return samples_per_pixel; }
     
     Vector3f sample_square() const;
-    Vector3f scale_color(const Vector3f &pixel_color) const;
     Vector3f scale_color_single_sample(const Vector3f &pixel_color) const;
     void SetCurrentSample(int sample_index);
     

@@ -9,6 +9,7 @@
 #include "../Common/FileManager.hpp"
 
 GLuint GetTextureRGB32F(int width, int height, const Integrator &integrator);
+GLuint CreateTextureRGB32F(int w, int h);
 
 class Renderer{
 public:
@@ -18,7 +19,9 @@ public:
 	void Run();
 
 public:
-	RenderPass pass1;
+    RenderPass pass1, pass2, pass3;
+    GLuint lastFrame, nowFrame;
+    unsigned int frameCounter;
     std::unique_ptr<Camera> camera;
     std::unique_ptr<Integrator> integrator;
 	std::unique_ptr<Sampler> sampler;
@@ -26,8 +29,6 @@ public:
 
 private:
 	GLFWwindow *window;
-	bool isfullscreen = false;
-	int max_samples = 8;
-    int width = 1600;
-    int height = 900;
+    int width;
+    int height;
 };

@@ -97,8 +97,7 @@ void Renderer::Run() {
 
         integrator->RenderSingleSample(*camera, *scene, *sampler, frameCounter);
         glBindTexture(GL_TEXTURE_2D, nowFrame);
-        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RGBA, GL_FLOAT, integrator->GetFloatPixels());
-        glFinish();
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, width, height, 0, GL_RGBA, GL_FLOAT, integrator->GetFloatPixels());
 
         pass1.m_shader.Use();
         pass1.m_shader.SetUnInt("frameCounter", frameCounter++);
@@ -133,8 +132,8 @@ GLuint CreateTextureRGB32F(int w, int h)
     glGenTextures(1, &renderTexture);
     glBindTexture(GL_TEXTURE_2D, renderTexture);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, w, h, 0, GL_RGBA, GL_FLOAT, nullptr);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glBindTexture(GL_TEXTURE_2D, 0);

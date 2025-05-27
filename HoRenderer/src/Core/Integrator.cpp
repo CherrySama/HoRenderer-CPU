@@ -14,18 +14,13 @@ void Integrator::RenderSingleSample(Camera &cam, Scene &world, Sampler &sampler,
 {
     sampler.SetCurrentSample(sample_index);
     omp_set_num_threads(num_threads);
-    // std::cout << "Rendering with " << num_threads << " threads..." << std::endl;
-    // progress.Initialize(height);
 
    #pragma omp parallel
     {
-        // #pragma omp for schedule(static, 16)
-        #pragma omp for schedule(dynamic, 4)
+        // #pragma omp for schedule(dynamic, 4)
+        #pragma omp for schedule(static, 16)
         for (int j = 0; j < height; ++j)
         {                  
-            // if (omp_get_thread_num() == 0) 
-            //     progress.Update(1);
-            
             for (int i = 0; i < width; i++) {
                 Vector2f offset = sampler.sample_square();
                 Ray r = cam.GenerateRay(i, j, sampler, offset);

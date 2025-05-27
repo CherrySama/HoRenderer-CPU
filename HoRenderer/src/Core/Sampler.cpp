@@ -16,12 +16,12 @@ Vector3f Sampler::scale_color(const Vector3f &pixel_color) const
     auto b = pixel_color.b * pixel_samples_scale;
 
     // Perform a gamma=2 correction (simply take the square root)
-    r = r > 0.0f ? std::sqrt(r) : 0.0f;
-    g = g > 0.0f ? std::sqrt(g) : 0.0f;
-    b = b > 0.0f ? std::sqrt(b) : 0.0f;
+    r = r > 0.0f ? glm::sqrt(r) : 0.0f;
+    g = g > 0.0f ? glm::sqrt(g) : 0.0f;
+    b = b > 0.0f ? glm::sqrt(b) : 0.0f;
 
     // Limit the color to the range [0, 1].
-    return Vector3f(std::clamp(r, 0.0f, 0.999f),
-                    std::clamp(g, 0.0f, 0.999f),
-                    std::clamp(b, 0.0f, 0.999f));
+    return Vector3f(glm::clamp(r, 0.0f, 0.999f),
+                    glm::clamp(g, 0.0f, 0.999f),
+                    glm::clamp(b, 0.0f, 0.999f));
 }

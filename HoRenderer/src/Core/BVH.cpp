@@ -11,7 +11,7 @@ BVHnode::BVHnode(const Scene& scene) {
 }
 
 BVHnode::BVHnode(std::vector<std::shared_ptr<Hittable>>& objects, size_t start, size_t end) {
-        // Build the bounding box of the current node
+    // Build the bounding box of the current node
     bbox = objects[start]->getBoundingBox();
     for (size_t i = start + 1; i < end; i++) 
         bbox = calculateSurroundingBox(bbox, objects[i]->getBoundingBox());

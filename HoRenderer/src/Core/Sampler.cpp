@@ -17,11 +17,6 @@ Vector3f Sampler::scale_color_single_sample(const Vector3f &pixel_color) const
     auto g = pixel_color.g;
     auto b = pixel_color.b;
 
-    // Perform gamma=2 correction
-    r = r > 0.0f ? glm::sqrt(r) : 0.0f;
-    g = g > 0.0f ? glm::sqrt(g) : 0.0f;
-    b = b > 0.0f ? glm::sqrt(b) : 0.0f;
-
     return Vector3f(glm::clamp(r, 0.0f, 0.999f),
                     glm::clamp(g, 0.0f, 0.999f),
                     glm::clamp(b, 0.0f, 0.999f));

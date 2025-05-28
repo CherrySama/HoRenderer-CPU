@@ -10,6 +10,7 @@
 #include <random>
 #include <cmath>
 #include <omp.h>
+#include <immintrin.h>
 #include <string>
 #include <fstream>
 #include <filesystem>

@@ -14,26 +14,25 @@ class Integrator{
 public:
     Integrator(int width, int height) :
         width(width), height(height),
-        pixels(std::make_unique<uint8_t[]>(width * height * 4)),
         float_pixels(std::make_unique<float[]>(width * height * 4)),
-        num_threads(omp_get_max_threads()), max_depth(10) {}
+        num_threads(16), max_depth(10) {
+        std::fill(float_pixels.get(), float_pixels.get() + width * height * 4, 0.0f);
+    }
     ~Integrator();
 
-    void RenderSingleSample(Camera &cam, Scene &world, Sampler &sampler, int sample_index);
-    void write_color_float(int u, int v, const Vector3f &color);
+    void RenderImage(Camera &cam, Scene &world, Sampler &sampler, int sample_index);
+    void write_color(int u, int v, const Vector3f &color);
     // Calculate ray color (background)
     Vector3f ray_color(const Ray &r, int depth, const Hittable &world, Sampler &sampler);
     
     void SetNumThreads(int threads);
     int GetNumThreads() const;
 
-    const uint8_t *GetPixels() const;
     const float* GetFloatPixels() const;
     void Clean();
 
 private:
     int width, height;
-    std::unique_ptr<uint8_t[]> pixels;
     std::unique_ptr<float[]> float_pixels;
     ProgressTracker progress;
     int num_threads;

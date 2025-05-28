@@ -89,16 +89,15 @@ void Renderer::Run() {
             glfwSetWindowShouldClose(window, true);
 
         t2 = clock();
-		dt = (double)(t2 - t1) / CLOCKS_PER_SEC;
+		dt = (float)(t2 - t1) / CLOCKS_PER_SEC;
 		fps = 1.0 / dt;
 		std::cout << "\r";
-		std::cout << std::fixed << std::setprecision(2) << "FPS : " << fps << "    FrameCounter: " << frameCounter;
-		t1 = t2;
+        std::cout << std::fixed << std::setprecision(2) << "FPS : " << fps << "    FrameCounter: " << frameCounter << "    Application average: " << 1000.0f * dt << " ms/frame";
+        t1 = t2;
 
-        integrator->RenderSingleSample(*camera, *scene, *sampler, frameCounter);
+        integrator->RenderImage(*camera, *scene, *sampler, frameCounter);
         glBindTexture(GL_TEXTURE_2D, nowFrame);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, width, height, 0, GL_RGBA, GL_FLOAT, integrator->GetFloatPixels());
-
+        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RGBA, GL_FLOAT, integrator->GetFloatPixels());
         pass1.m_shader.Use();
         pass1.m_shader.SetUnInt("frameCounter", frameCounter++);
 

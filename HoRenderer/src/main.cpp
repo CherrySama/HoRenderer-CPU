@@ -5,17 +5,11 @@
 #include "Core/RendererScene.hpp"
 
 
-int testRenderer()
+int main()
 {
-    auto renderer = RendererScene::TestScene();
+    // auto renderer = RendererScene::TestScene();
+    auto renderer = RendererScene::RayTracingInOneWeekendCover();
     renderer->Run();
 
     return 0;
-}
-
-int main()
-{
-    // render();
-    // testFileManager();
-    testRenderer();
 }

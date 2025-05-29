@@ -1,6 +1,6 @@
 add_rules("mode.debug", "mode.release")
 
-add_requires("glfw", "glad", "imgui", "glm")
+add_requires("glfw", "glad", "glm")
 add_rules("plugin.compile_commands.autoupdate", {outputdir = "../.vscode"})
 set_languages("c++23") 
 
@@ -19,7 +19,7 @@ target("HoRenderer")
         os.cp("Shader/*.frag", target:targetdir())
     end)
 
-    add_packages("glfw", "glad", "imgui", "glm")
+    add_packages("glfw", "glad", "glm")
 --
 -- If you want to known more usage about xmake, please see https://xmake.io
 --

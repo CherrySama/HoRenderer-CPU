@@ -31,7 +31,7 @@ namespace RendererScene
         // Scene
         std::unique_ptr<Scene> scene = std::make_unique<Scene>();
 
-        auto ground_material = std::make_shared<DiffuseBRDF>(Vector3f(0.5f, 0.5f, 0.5f), 0.3f);
+        auto ground_material = std::make_shared<Lambertian>(Vector3f(0.5f, 0.5f, 0.5f));
         scene->Add(std::make_shared<Quad>(Vector3f(-50.0f, 0.0f, -50.0f), 
                                                 Vector3f(100.0f, 0.0f, 0.0f),   
                                                 Vector3f(0.0f, 0.0f, 100.0f),   
@@ -53,7 +53,7 @@ namespace RendererScene
                         float g = sampler->random_float();  
                         float b = sampler->random_float();
                         Vector3f albedo = Vector3f(r * r, g * g, b * b);
-                        sphere_material = std::make_shared<DiffuseBRDF>(albedo);
+                        sphere_material = std::make_shared<Lambertian>(albedo);
                         scene->Add(std::make_shared<Sphere>(center, 0.2f, sphere_material));
                     } else if (choose_mat < 0.95f) {
                         // metal

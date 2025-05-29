@@ -8,10 +8,14 @@ uniform sampler2D lastFrame;
 uniform sampler2D nowFrame;
 
 void main() {
-    vec3 lastColor = texture(lastFrame, TexCoord).rgb;
-    vec3 nowColor = texture(nowFrame, TexCoord).rgb;
-    float blend_factor = 1.0f / float(frameCounter + 1.0f);
-    vec3 color = mix(lastColor, nowColor, blend_factor);
-    
-    FragColor = vec4(color, 1.0f);
+    vec4 lastColor = texture(lastFrame, TexCoord);
+    vec4 nowColor = texture(nowFrame, TexCoord);
+    if (frameCounter == 0u) {
+        // 第一帧直接使用当前帧
+        FragColor = nowColor;
+    } else {
+        // 累积平均
+        float weight = float(frameCounter) / float(frameCounter + 1u);
+        FragColor = lastColor * weight + nowColor * (1.0 - weight);
+    }
 }

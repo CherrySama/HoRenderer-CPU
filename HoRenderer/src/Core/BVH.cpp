@@ -87,12 +87,19 @@ float BVHnode::calculateSurfaceArea(const AABB &bbox)
 
 float BVHnode::computeSAHCost(size_t N_left, const AABB &box_left, size_t N_right, const AABB &box_right, const AABB &box_parent)
 {
-    const float C_t = 1.0f;  // Traversal Cost
+    const float C_t = 0.5f;  // Traversal Cost
     const float C_i = 1.0f;  // Intersection test cost
     float SA_parent = calculateSurfaceArea(box_parent);
+    if (SA_parent < 1e-6f)
+        return std::numeric_limits<float>::max();
     float SA_left = calculateSurfaceArea(box_left);
     float SA_right = calculateSurfaceArea(box_right);
-    float cost = C_t + (SA_left / SA_parent) * N_left * C_i + (SA_right / SA_parent) * N_right * C_i;
+    float balance_penalty = 0.0f;
+    float ratio = std::min(N_left, N_right) / float(std::max(N_left, N_right));
+    if (ratio < 0.1f) 
+        balance_penalty = 0.5f;
+
+    float cost = C_t + (SA_left / SA_parent) * N_left * C_i + (SA_right / SA_parent) * N_right * C_i + balance_penalty;
     return cost;
 }
 

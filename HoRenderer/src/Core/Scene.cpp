@@ -25,7 +25,7 @@ void Scene::BuildBVH()
 {
     if (!hit_objects.empty()) 
     {
-        // std::cout << "Start to build BVH tree..." << std::endl;
+        // auto start_time = std::chrono::high_resolution_clock::now();
         bvh_tree = std::make_shared<BVHnode>(hit_objects, 0, hit_objects.size());
         // auto end_time = std::chrono::high_resolution_clock::now();
         // auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);

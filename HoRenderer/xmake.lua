@@ -6,7 +6,8 @@ set_languages("c++23")
 
 target("HoRenderer")
     set_kind("binary")
-   
+    set_symbols("debug")
+    set_strip("all") 
     add_files("src/*.cpp",
               "src/Core/*.cpp",
               "src/Common/*.cpp")

@@ -36,12 +36,10 @@ void Integrator::RenderImage(Camera &cam, Scene &world, Sampler &sampler, int sa
 void Integrator::write_color(int u, int v, const Vector3f &color)
 {
     int offset = v * width * 4 + u * 4;
-    // float *pixel = float_pixels.get() + offset;
-    // pixel[0] = glm::clamp(color.r, 0.0f, 1.0f);  // R
-    // pixel[1] = glm::clamp(color.g, 0.0f, 1.0f);  // G
-    // pixel[2] = glm::clamp(color.b, 0.0f, 1.0f);  // B
-    // pixel[3] = 1.0f;     // A
-    __m128 c = _mm_set_ps(1.0f, color.b, color.g, color.r); // RGBA
+    Vector3f tone_mapped = ACESFilmicToneMapping(color);
+    Vector3f srgb_color = LinearToSRGB(tone_mapped);
+
+    __m128 c = _mm_set_ps(1.0f, srgb_color.b, srgb_color.g, srgb_color.r); // RGBA
     __m128 zero = _mm_setzero_ps();
     __m128 one = _mm_set1_ps(1.0f);
     c = _mm_max_ps(c, zero); // clamp to [0, 1]

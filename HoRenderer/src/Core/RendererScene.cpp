@@ -4,6 +4,7 @@
 #include "RendererScene.hpp"
 #include "Shape.hpp"
 #include "Material.hpp"
+#include "Filter.hpp"
 
 namespace RendererScene
 {
@@ -26,7 +27,7 @@ namespace RendererScene
         std::unique_ptr<Integrator> integrator = std::make_unique<Integrator>(camera->image_width, camera->image_height);
 
         // Sampler
-        std::unique_ptr<Sampler> sampler = std::make_unique<Sampler>();
+        std::unique_ptr<Sampler> sampler = std::make_unique<Sampler>(FilterType::GAUSSIAN);
 
         // Scene
         std::unique_ptr<Scene> scene = std::make_unique<Scene>();
@@ -107,7 +108,7 @@ namespace RendererScene
         std::unique_ptr<Integrator> integrator = std::make_unique<Integrator>(camera->image_width, camera->image_height);
 
         // Sampler
-        std::unique_ptr<Sampler> sampler = std::make_unique<Sampler>();
+        std::unique_ptr<Sampler> sampler = std::make_unique<Sampler>(FilterType::TENT);
 
         // Scene
         std::unique_ptr<Scene> scene = std::make_unique<Scene>();

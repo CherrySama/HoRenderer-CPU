@@ -48,6 +48,10 @@ class Metal;
 class Dielectric;
 class AABB;
 class BVHnode;
+class Filter;
+class Uniform;
+class Gaussian;
+class Tent;
 
 
 using Vector2u = glm::uvec2;

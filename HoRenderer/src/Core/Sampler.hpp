@@ -21,17 +21,6 @@ public:
         return min + (max - min) * random_float();
     }   
 
-    inline Vector3f Reflect(const Vector3f& v,const Vector3f& n) {
-        return v - 2.0f * glm::dot(v, n) * n;
-    }
-
-    inline Vector3f Refract(const Vector3f& uv, const Vector3f& n, float etai_over_etat) {
-        auto cos_theta = glm::fmin(glm::dot(-uv, n), 1.0f);
-        Vector3f r_out_perp = etai_over_etat * (uv + cos_theta * n);
-        Vector3f r_out_parallel = -std::sqrt(std::fabs(1.0f - glm::length2(r_out_perp))) * n;
-        return r_out_perp + r_out_parallel;
-    }
-
     float random_float() const;
     // Generate random unit vectors for Lambertian reflection
     Vector3f random_unit_vector() const;

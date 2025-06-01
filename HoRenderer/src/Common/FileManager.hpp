@@ -3,10 +3,8 @@
 */
 #pragma once
 
-#include <iostream>
 #include <string>
 #include <unordered_map>
-#include <filesystem>
 #include <Windows.h>
 
 class FileManager {
@@ -20,14 +18,12 @@ private:
     FileManager();
 
 public:
-    static FileManager* getInstance();
+    static FileManager *getInstance();
+    static void DestroyInstance();
     
     // Initialization Path
     void init();
     
     // Get paths to different types of resources
     std::string getShaderPath(const std::string& filename);
-    
-    // Print the current working directory and executable file path
-    // void printPaths();
 };

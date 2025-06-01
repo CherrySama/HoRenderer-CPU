@@ -3,6 +3,7 @@
 */
 // FileManager.cpp
 #include "FileManager.hpp"
+#include <filesystem>
 #define PATH_SEPARATOR "/"
 
 FileManager* FileManager::instance = nullptr;
@@ -17,6 +18,13 @@ FileManager* FileManager::getInstance() {
     return instance;
 }
 
+void FileManager::DestroyInstance() {
+    if (instance != nullptr) {
+        delete instance;
+        instance = nullptr;
+    }
+}
+
 void FileManager::init() {
     // Get the executable file path
     char execPath[1024] = {0};
@@ -29,8 +37,6 @@ void FileManager::init() {
     parentPath = parentPath.parent_path();   // windows
     parentPath = parentPath.parent_path();   // build
     projectRoot = parentPath.parent_path().generic_string(); // HoRenderer
-    
-    // std::cout << "Project root: " << projectRoot << std::endl;
 }
 
 std::string FileManager::getShaderPath(const std::string& filename) {

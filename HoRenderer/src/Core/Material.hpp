@@ -7,12 +7,29 @@
 #include "Ray.hpp"
 #include "Sampler.hpp"
 
+enum class MaterialType {
+    LAMBERTIAN,
+    DIFFUSE_BRDF,
+    METAL,
+    DIELECTRIC
+};
+
+struct MaterialParams {
+    MaterialType type;
+    Vector3f albedo;
+    float roughness;
+    float fuzz;
+    float refractive_index;
+};
+
 class Material {
 public:
+    Material() = default;
     virtual ~Material() = default;
 
     // Core Scattering Function
     virtual bool Scatter(const Ray& r_in, const Hit_Payload& rec, Vector3f& attenuation, Ray& scattered, Sampler& sampler) const = 0;
+    static std::shared_ptr<Material> Create(const MaterialParams& params);
 };
 
 // Lambertian

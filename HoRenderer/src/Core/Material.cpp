@@ -70,7 +70,7 @@ bool DiffuseBRDF::Scatter(const Ray &r_in, const Hit_Payload &rec, Vector3f &att
 
 bool Metal::Scatter(const Ray& r_in, const Hit_Payload& rec, Vector3f& attenuation, Ray& scattered, Sampler& sampler) const
 {
-	Vector3f reflected = sampler.Reflect(r_in.direction(), rec.normal);
+	Vector3f reflected = glm::reflect(r_in.direction(), rec.normal);
 	reflected = glm::normalize(reflected) + (fuzz * sampler.random_unit_vector());
 	scattered = Ray::SpawnRay(rec.p, reflected, rec.normal);
 	attenuation = albedo;
@@ -91,9 +91,9 @@ bool Dielectric::Scatter(const Ray& r_in, const Hit_Payload& rec, Vector3f& atte
 	Vector3f direction;
 
 	if (cannot_refract || Reflectance(cos_theta, ri) > sampler.random_float())
-		direction = sampler.Reflect(unit_direction, rec.normal);
+		direction = glm::reflect(unit_direction, rec.normal);
 	else
-		direction = sampler.Refract(unit_direction, rec.normal, ri);
+		direction = glm::refract(unit_direction, rec.normal, ri);
 
 	scattered = Ray::SpawnRay(rec.p, direction, rec.normal);
 	return true;
@@ -104,4 +104,20 @@ float Dielectric::Reflectance(float cosine, float refraction_index)
 	auto r0 = (1.0f - refraction_index) / (1.0f + refraction_index);
 	r0 = r0 * r0;
 	return r0 + (1.0f - r0) * std::pow((1.0f - cosine), 5.0f);
+}
+
+std::shared_ptr<Material> Material::Create(const MaterialParams& params)
+{
+    switch (params.type) {
+    case MaterialType::LAMBERTIAN:
+        return std::make_shared<Lambertian>(params.albedo);
+    case MaterialType::DIFFUSE_BRDF:
+        return std::make_shared<DiffuseBRDF>(params.albedo, params.roughness);
+    case MaterialType::METAL:
+        return std::make_shared<Metal>(params.albedo, params.fuzz);
+    case MaterialType::DIELECTRIC:
+        return std::make_shared<Dielectric>(params.refractive_index);
+    default:
+        return std::make_shared<Lambertian>(params.albedo);
+    }
 }

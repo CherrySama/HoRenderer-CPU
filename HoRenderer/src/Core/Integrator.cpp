@@ -24,9 +24,8 @@ void Integrator::RenderImage(Camera &cam, Scene &world, Sampler &sampler, int sa
             for (int i = 0; i < width; i++) {
                 Vector2f offset = sampler.sample_square();
                 Ray r = cam.GenerateRay(i, j, sampler, offset);
-                Vector3f pixel_color = ray_color(r, max_depth, world, sampler);
+                Vector3f pixel_color = ray_color(r, max_bounce, world, sampler);
 
-                // Vector3f final_color = sampler.scale_color_single_sample(pixel_color);
                 write_color(i, j, pixel_color);  
             }
         }
@@ -47,9 +46,9 @@ void Integrator::write_color(int u, int v, const Vector3f &color)
     _mm_store_ps(float_pixels.get() + offset, c);
 }
 
-Vector3f Integrator::ray_color(const Ray &r, int depth, const Hittable &world, Sampler &sampler)
+Vector3f Integrator::ray_color(const Ray &r, int bounce, const Hittable &world, Sampler &sampler)
 {
-    if (depth <= 0)
+    if (bounce <= 0)
         return Vector3f(0, 0, 0);
 
     Hit_Payload rec;
@@ -59,7 +58,7 @@ Vector3f Integrator::ray_color(const Ray &r, int depth, const Hittable &world, S
 
         // If the object has a material and can scatter light
         if (rec.mat && rec.mat->Scatter(r, rec, attenuation, scattered, sampler))
-            return attenuation * ray_color(scattered, depth-1, world, sampler);
+            return attenuation * ray_color(scattered, bounce-1, world, sampler);
         
         // If there is no material, use the normal color
         return 0.5f * (rec.normal + Vector3f(1,1,1));

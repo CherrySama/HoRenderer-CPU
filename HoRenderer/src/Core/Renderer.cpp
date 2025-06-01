@@ -18,6 +18,14 @@ Renderer::Renderer(std::unique_ptr<Camera> cam, std::unique_ptr<Integrator> it, 
 	PipelineConfiguration(FileManager::getInstance());
 }
 
+Renderer::~Renderer()
+{
+    glDeleteTextures(1, &lastFrame);
+    glDeleteTextures(1, &nowFrame);
+    glfwDestroyWindow(window);
+    glfwTerminate();
+}
+
 void Renderer::WindowInit()
 {
 	// glfw: initialize and configure
@@ -81,6 +89,7 @@ void Renderer::PipelineConfiguration(FileManager *fm)
     pass3.BindData(true);
 
     nowFrame = CreateTextureRGB32F(width, height);
+    FileManager::DestroyInstance();
 }
 
 void Renderer::Run() {
@@ -118,11 +127,6 @@ void Renderer::Run() {
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
-    
-    glDeleteTextures(1, &lastFrame);
-    glDeleteTextures(1, &nowFrame);
-    glfwDestroyWindow(window);
-    glfwTerminate();
 }
 
 GLuint CreateTextureRGB32F(int w, int h)

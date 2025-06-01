@@ -21,20 +21,20 @@ private:
     FilterType filter_type;
 };
 
-class Uniform : public Filter {
+class UniformFilter : public Filter {
 public:
-    Uniform() : Filter(FilterType::UNIFORM) {}
+    UniformFilter() : Filter(FilterType::UNIFORM) {}
     virtual Vector2f SampleOffset(const Vector2f& sample) override;
 };
 
-class Gaussian : public Filter {
+class GaussianFilter : public Filter {
 public:
-    Gaussian() : Filter(FilterType::GAUSSIAN) {}
+    GaussianFilter() : Filter(FilterType::GAUSSIAN) {}
     virtual Vector2f SampleOffset(const Vector2f& sample) override;
 };
 
-class Tent : public Filter {
+class TentFilter : public Filter {
 public:
-    Tent() : Filter(FilterType::TENT) {}
+    TentFilter() : Filter(FilterType::TENT) {}
     virtual Vector2f SampleOffset(const Vector2f& sample) override;
 };

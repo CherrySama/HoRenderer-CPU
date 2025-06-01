@@ -49,9 +49,9 @@ class Dielectric;
 class AABB;
 class BVHnode;
 class Filter;
-class Uniform;
-class Gaussian;
-class Tent;
+class UniformFilter;
+class GaussianFilter;
+class TentFilter;
 
 
 using Vector2u = glm::uvec2;

@@ -7,21 +7,21 @@
 std::shared_ptr<Filter> Filter::Create(const FilterType& type) {
     switch (type) {
         case FilterType::UNIFORM:
-            return std::make_shared<Uniform>();
+            return std::make_shared<UniformFilter>();
         case FilterType::GAUSSIAN:
-            return std::make_shared<Gaussian>();
+            return std::make_shared<GaussianFilter>();
         case FilterType::TENT:
-            return std::make_shared<Tent>();
+            return std::make_shared<TentFilter>();
     }
 	return NULL;
 }
 
-Vector2f Uniform::SampleOffset(const Vector2f &sample)
+Vector2f UniformFilter::SampleOffset(const Vector2f &sample)
 {
     return sample - Vector2f(0.5f, 0.5f);
 }
 
-Vector2f Gaussian::SampleOffset(const Vector2f &sample)
+Vector2f GaussianFilter::SampleOffset(const Vector2f &sample)
 {
     float r1 = std::max(1e-6f, sample.x);  // 避免log(0)
     float r = std::sqrt(-2.0f * std::log(r1));
@@ -31,7 +31,7 @@ Vector2f Gaussian::SampleOffset(const Vector2f &sample)
     return gaussian_sample * 0.375f;
 }
 
-Vector2f Tent::SampleOffset(const Vector2f &sample)
+Vector2f TentFilter::SampleOffset(const Vector2f &sample)
 {
     Vector2f j = sample * 2.0f;
     

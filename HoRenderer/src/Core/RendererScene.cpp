@@ -113,12 +113,24 @@ namespace RendererScene
         // Scene
         std::unique_ptr<Scene> scene = std::make_unique<Scene>();
 
-        auto material_ground = std::make_shared<Lambertian>(Vector3f(0.8f, 0.8f, 0.0f));
-        auto material_center = std::make_shared<Lambertian>(Vector3f(0.1f, 0.2f, 0.5f));
-        auto material_left   = std::make_shared<Dielectric>(1.50f);
-        auto material_bubble = std::make_shared<Dielectric>(1.00f / 1.50f);
-        auto material_right  = std::make_shared<Metal>(Vector3f(0.8f, 0.6f, 0.2f), 0.0f);
+        // Material
+        MaterialParams mp;
+        mp.type = MaterialType::LAMBERTIAN;
+        mp.albedo = Vector3f(0.8f, 0.8f, 0.0f);
+        auto material_ground = Material::Create(mp);
+        mp.albedo = Vector3f(0.1f, 0.2f, 0.5f);
+        auto material_center = Material::Create(mp);
+        mp.type = MaterialType::DIELECTRIC;
+        mp.refractive_index = 1.50f;
+        auto material_left = Material::Create(mp);
+        mp.refractive_index = 1.00f / 1.50f;
+        auto material_bubble = Material::Create(mp);
+        mp.type = MaterialType::METAL;
+        mp.albedo = Vector3f(0.8f, 0.6f, 0.2f);
+        mp.fuzz = 0.0f;
+        auto material_right = Material::Create(mp);
 
+        // Scene
         scene->Add(std::make_shared<Quad>(Vector3f(-50.0f, 0.0f, -50.0f), 
                                                 Vector3f(100.0f, 0.0f, 0.0f),   
                                                 Vector3f(0.0f, 0.0f, 100.0f),   

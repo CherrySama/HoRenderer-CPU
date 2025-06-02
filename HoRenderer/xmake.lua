@@ -13,7 +13,8 @@ target("HoRenderer")
               "src/Common/*.cpp")
     
     add_headerfiles("src/Core/*.hpp",
-                    "src/Common/*.hpp")
+                    "src/Common/*.hpp",
+                    "src/Common/*.h")
 
     after_build(function (target)
         os.cp("Shader/*.vert", target:targetdir())

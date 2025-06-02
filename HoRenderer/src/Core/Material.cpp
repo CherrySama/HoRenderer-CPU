@@ -16,14 +16,15 @@ bool Lambertian::Scatter(const Ray &r_in, const Hit_Payload &rec, Vector3f &atte
 	// SpawnRay could avoid self-intersection problem
 	scattered = Ray::SpawnRay(rec.p, scatter_direction, rec.normal);
 
-	attenuation = albedo; // Simplified Lambertian BRDF
+	attenuation = albedo_texture->GetColor(rec.uv.x, rec.uv.y);
     
     return true;
 }
 
 bool DiffuseBRDF::Scatter(const Ray &r_in, const Hit_Payload &rec, Vector3f &attenuation, Ray &scattered, Sampler &sampler) const
 {
-	// Generate random scattering directions (Lambertian distribution)
+    Vector3f albedo = albedo_texture->GetColor(rec.uv.x, rec.uv.y);
+    // Generate random scattering directions (Lambertian distribution)
 	Vector3f scatter_direction = rec.normal + sampler.random_unit_vector();
 
 	// Preventing numerical problems caused by generating zero vectors
@@ -110,9 +111,9 @@ std::shared_ptr<Material> Material::Create(const MaterialParams& params)
 {
     switch (params.type) {
     case MaterialType::LAMBERTIAN:
-        return std::make_shared<Lambertian>(params.albedo);
+        return std::make_shared<Lambertian>(params.albedo_texture);
     case MaterialType::DIFFUSE_BRDF:
-        return std::make_shared<DiffuseBRDF>(params.albedo, params.roughness);
+        return std::make_shared<DiffuseBRDF>(params.albedo_texture, params.roughness);
     case MaterialType::METAL:
         return std::make_shared<Metal>(params.albedo, params.fuzz);
     case MaterialType::DIELECTRIC:

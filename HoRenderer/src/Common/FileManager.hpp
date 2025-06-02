@@ -9,13 +9,14 @@
 
 class FileManager {
 private:
+    FileManager() = default;
+
     // Singleton Pattern
     static FileManager* instance;
     
     std::string projectRoot;
     std::unordered_map<std::string, std::string> pathCache;
     
-    FileManager();
 
 public:
     static FileManager *getInstance();
@@ -25,5 +26,6 @@ public:
     void init();
     
     // Get paths to different types of resources
-    std::string getShaderPath(const std::string& filename);
+    std::string getShaderPath(const std::string &filename);
+    std::string getTexturePath(const std::string &filename);
 };

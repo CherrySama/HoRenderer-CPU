@@ -6,6 +6,7 @@
 #include "Util.hpp"
 #include "Ray.hpp"
 #include "Sampler.hpp"
+#include "Texture.hpp"
 
 enum class MaterialType {
     LAMBERTIAN,
@@ -17,6 +18,7 @@ enum class MaterialType {
 struct MaterialParams {
     MaterialType type;
     Vector3f albedo;
+    std::shared_ptr<Texture> albedo_texture;
     float roughness;
     float fuzz;
     float refractive_index;
@@ -35,23 +37,25 @@ public:
 // Lambertian
 class Lambertian : public Material {
 public:
-    Lambertian(const Vector3f& a) : albedo(a) {}
+    Lambertian(const Vector3f& a) : albedo_texture(std::make_shared<SolidTexture>(a)) {}
+    Lambertian(std::shared_ptr<Texture> tex) : albedo_texture(tex) {}
 
     virtual bool Scatter(const Ray& r_in, const Hit_Payload& rec, Vector3f& attenuation, Ray& scattered, Sampler& sampler) const override;
 
 private:
-    Vector3f albedo; // Diffuse Color
+    std::shared_ptr<Texture> albedo_texture;
 };
 
 class DiffuseBRDF : public Material {
 public:
-    DiffuseBRDF(const Vector3f& a, float rough = 0.0f) : albedo(a), roughness(rough) {}
+    DiffuseBRDF(const Vector3f &a, float rough = 0.0f) : albedo_texture(std::make_shared<SolidTexture>(a)), roughness(rough) {}
+    DiffuseBRDF(std::shared_ptr<Texture> tex, float rough = 0.0f) : albedo_texture(tex), roughness(rough) {}
 
     virtual bool Scatter(const Ray& r_in, const Hit_Payload& rec, Vector3f& attenuation, Ray& scattered, Sampler& sampler) const override;
 
 private:
-    Vector3f albedo; // Diffuse Color
-    float roughness;     // Surface roughness (0 = perfect Lambertian, 1 = very rough)
+    std::shared_ptr<Texture> albedo_texture;
+    float roughness;
 };
 
 // Not physically correct
@@ -62,7 +66,7 @@ public:
     virtual bool Scatter(const Ray& r_in, const Hit_Payload& rec, Vector3f& attenuation, Ray& scattered, Sampler& sampler) const override;
 
 private:
-    Vector3f albedo; // Diffuse Color
+    Vector3f albedo; 
     float fuzz;
 };
 

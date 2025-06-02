@@ -5,6 +5,7 @@
 #include "Shape.hpp"
 #include "Material.hpp"
 #include "Filter.hpp"
+#include "../Common/FileManager.hpp"
 
 namespace RendererScene
 {
@@ -114,17 +115,31 @@ namespace RendererScene
         std::unique_ptr<Scene> scene = std::make_unique<Scene>();
 
         // Material
+        FileManager *fm = FileManager::getInstance();
+        fm->init();
+        TextureParams imageParams;
+        imageParams.type = TextureType::IMAGE;
+        imageParams.filepath = fm->getTexturePath("paper-cuts.jpg");
+        auto imageTexture = Texture::Create(imageParams);
+
+        TextureParams solidParams;
+        solidParams.type = TextureType::SOLIDCOLOR;
+        solidParams.color = Vector3f(0.8f, 0.8f, 0.0f);
+        auto solidTexture = Texture::Create(solidParams);
+
         MaterialParams mp;
         mp.type = MaterialType::LAMBERTIAN;
-        mp.albedo = Vector3f(0.8f, 0.8f, 0.0f);
+        mp.albedo_texture = solidTexture;
         auto material_ground = Material::Create(mp);
-        mp.albedo = Vector3f(0.1f, 0.2f, 0.5f);
+        mp.albedo_texture = imageTexture;
         auto material_center = Material::Create(mp);
+
         mp.type = MaterialType::DIELECTRIC;
         mp.refractive_index = 1.50f;
         auto material_left = Material::Create(mp);
         mp.refractive_index = 1.00f / 1.50f;
         auto material_bubble = Material::Create(mp);
+
         mp.type = MaterialType::METAL;
         mp.albedo = Vector3f(0.8f, 0.6f, 0.2f);
         mp.fuzz = 0.0f;

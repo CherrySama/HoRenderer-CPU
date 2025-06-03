@@ -6,6 +6,9 @@
 #include "Util.hpp"
 #include "Filter.hpp"
 
+struct SamplerParams {
+    FilterType filter_type;
+};
 
 class Sampler {
 public:

@@ -8,13 +8,17 @@
 #include "Scene.hpp"
 #include "Camera.hpp"
 
+struct IntegratorParams {
+    int num_threads;
+    int max_bounce;
+};
 
 class Integrator{
 public:
-    Integrator(int width, int height) :
+    Integrator(int width, int height, int threads = 16, int bounce = 10) :
         width(width), height(height),
         float_pixels(std::make_unique<float[]>(width * height * 4)),
-        num_threads(16), max_bounce(10) {
+        num_threads(threads), max_bounce(bounce) {
         std::fill(float_pixels.get(), float_pixels.get() + width * height * 4, 0.0f);
     }
     ~Integrator();

@@ -22,6 +22,7 @@ bool Sphere::isHit(const Ray &r, Vector2f t_interval, Hit_Payload &rec) const
             Vector3f outward_normal = (rec.p - center) / radius;
             rec.set_face_normal(r, outward_normal);
             rec.mat = mat;
+            rec.uv = getSphereUV(rec.p);
             return true;
         }
         root = (h + sqrt_d) / a;
@@ -31,11 +32,26 @@ bool Sphere::isHit(const Ray &r, Vector2f t_interval, Hit_Payload &rec) const
             Vector3f outward_normal = (rec.p - center) / radius;
             rec.set_face_normal(r, outward_normal);
             rec.mat = mat;
+            rec.uv = getSphereUV(rec.p);
             return true;
         }
     }
 
     return false;
+}
+
+Vector2f Sphere::getSphereUV(const Vector3f &hit_point) const
+{
+    Vector3f unit_p = glm::normalize(hit_point - center);
+    float theta = std::acos(glm::clamp(unit_p.y, -1.0f, 1.0f));
+    float phi = std::atan2(unit_p.z, unit_p.x);
+
+    if (phi < 0)
+        phi += 2.0f * PI;
+
+    float u = phi / (2.0f * PI);
+    float v = theta / PI;
+    return Vector2f(u, v);
 }
 
 bool Quad::isHit(const Ray &r, Vector2f t_interval, Hit_Payload &rec) const
@@ -72,7 +88,8 @@ bool Quad::isHit(const Ray &r, Vector2f t_interval, Hit_Payload &rec) const
     rec.p = hit_point;
     rec.set_face_normal(r, normal);
     rec.mat = mat;
-    
+    rec.uv = Vector2f(alpha, beta);
+
     return true;
 }
 
@@ -87,7 +104,6 @@ bool Box::isHit(const Ray &r, Vector2f t_interval, Hit_Payload &rec) const {
             hit_anything = true;
             closest_t = temp_rec.t;
             rec = temp_rec;
-            rec.mat = mat;
         }
     }
     

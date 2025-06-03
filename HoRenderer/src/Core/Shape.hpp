@@ -19,6 +19,7 @@ public:
     AABB getBoundingBox() const override {
         return bbox;
     }
+    Vector2f getSphereUV(const Vector3f &hit_point) const;
 
 private:
     Vector3f center;

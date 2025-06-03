@@ -13,7 +13,9 @@ GLuint CreateTextureRGB32F(int w, int h);
 class Renderer{
 public:
     Renderer(std::unique_ptr<Camera> cam, std::unique_ptr<Integrator> it, std::unique_ptr<Sampler> sam, std::unique_ptr<Scene> sc);
-	void WindowInit();
+    ~Renderer();
+
+    void WindowInit();
 	void PipelineConfiguration(FileManager *fm);
 	void Run();
 

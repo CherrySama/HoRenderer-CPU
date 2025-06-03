@@ -3,6 +3,8 @@
 */
 #pragma once
 
+#include <utility>
+
 #include "Util.hpp"
 #include "Hittable.hpp"
 
@@ -10,7 +12,7 @@
 class Scene : public Hittable {
 public:
     Scene() {}
-    Scene(std::shared_ptr<Hittable> object) { Add(object); }
+    Scene(std::shared_ptr<Hittable> object) { Add(std::move(object)); }
 
     void Clean();
     void Add(std::shared_ptr<Hittable> object);

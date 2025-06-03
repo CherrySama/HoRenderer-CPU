@@ -4,6 +4,8 @@
 #include "RendererScene.hpp"
 #include "Shape.hpp"
 #include "Material.hpp"
+#include "Filter.hpp"
+#include "../Common/FileManager.hpp"
 
 namespace RendererScene
 {
@@ -26,7 +28,7 @@ namespace RendererScene
         std::unique_ptr<Integrator> integrator = std::make_unique<Integrator>(camera->image_width, camera->image_height);
 
         // Sampler
-        std::unique_ptr<Sampler> sampler = std::make_unique<Sampler>(64);
+        std::unique_ptr<Sampler> sampler = std::make_unique<Sampler>(FilterType::GAUSSIAN);
 
         // Scene
         std::unique_ptr<Scene> scene = std::make_unique<Scene>();
@@ -107,17 +109,45 @@ namespace RendererScene
         std::unique_ptr<Integrator> integrator = std::make_unique<Integrator>(camera->image_width, camera->image_height);
 
         // Sampler
-        std::unique_ptr<Sampler> sampler = std::make_unique<Sampler>(64);
+        std::unique_ptr<Sampler> sampler = std::make_unique<Sampler>(FilterType::TENT);
 
         // Scene
         std::unique_ptr<Scene> scene = std::make_unique<Scene>();
 
-        auto material_ground = std::make_shared<Lambertian>(Vector3f(0.8f, 0.8f, 0.0f));
-        auto material_center = std::make_shared<Lambertian>(Vector3f(0.1f, 0.2f, 0.5f));
-        auto material_left   = std::make_shared<Dielectric>(1.50f);
-        auto material_bubble = std::make_shared<Dielectric>(1.00f / 1.50f);
-        auto material_right  = std::make_shared<Metal>(Vector3f(0.8f, 0.6f, 0.2f), 0.0f);
+        // Material
+        FileManager *fm = FileManager::getInstance();
+        fm->init();
+        TextureParams imageParams;
+        imageParams.type = TextureType::IMAGE;
+        imageParams.filepath = fm->getTexturePath("paper-cuts.jpg");
+        auto imageTexture = Texture::Create(imageParams);
 
+        TextureParams solidParams;
+        solidParams.type = TextureType::SOLIDCOLOR;
+        solidParams.color = Vector3f(0.8f, 0.8f, 0.0f);
+        auto solidTexture = Texture::Create(solidParams);
+
+        MaterialParams mp;
+        mp.type = MaterialType::LAMBERTIAN;
+        mp.albedo_texture = solidTexture;
+        auto material_ground = Material::Create(mp);
+        mp.albedo_texture = imageTexture;
+        auto material_center = Material::Create(mp);
+
+        mp.type = MaterialType::DIELECTRIC;
+        mp.refractive_index = 1.50f;
+        auto material_left = Material::Create(mp);
+        mp.refractive_index = 1.00f / 1.50f;
+        auto material_bubble = Material::Create(mp);
+
+        solidParams.color = Vector3f(0.8f, 0.6f, 0.2f);
+        solidTexture = Texture::Create(solidParams);
+        mp.type = MaterialType::METAL;
+        mp.albedo_texture = solidTexture;
+        mp.fuzz = 0.0f;
+        auto material_right = Material::Create(mp);
+
+        // Scene
         scene->Add(std::make_shared<Quad>(Vector3f(-50.0f, 0.0f, -50.0f), 
                                                 Vector3f(100.0f, 0.0f, 0.0f),   
                                                 Vector3f(0.0f, 0.0f, 100.0f),   

@@ -1,25 +1,27 @@
 add_rules("mode.debug", "mode.release")
 
-add_requires("glfw", "glad", "glm")
+add_requires("glfw", "glad", "glm", "embree")
 add_rules("plugin.compile_commands.autoupdate", {outputdir = "../.vscode"})
 set_languages("c++23") 
 
 target("HoRenderer")
     set_kind("binary")
-   
+    set_symbols("debug")
+    set_strip("all") 
     add_files("src/*.cpp",
               "src/Core/*.cpp",
               "src/Common/*.cpp")
     
     add_headerfiles("src/Core/*.hpp",
-                    "src/Common/*.hpp")
+                    "src/Common/*.hpp",
+                    "src/Common/*.h")
 
     after_build(function (target)
         os.cp("Shader/*.vert", target:targetdir())
         os.cp("Shader/*.frag", target:targetdir())
     end)
 
-    add_packages("glfw", "glad", "glm")
+    add_packages("glfw", "glad", "glm", "embree")
 --
 -- If you want to known more usage about xmake, please see https://xmake.io
 --

@@ -48,6 +48,10 @@ class Metal;
 class Dielectric;
 class AABB;
 class BVHnode;
+class Filter;
+class UniformFilter;
+class GaussianFilter;
+class TentFilter;
 
 
 using Vector2u = glm::uvec2;
@@ -136,4 +140,32 @@ inline bool isInInterval(Vector2f interval, float x) {
 inline Vector2f IntervalExpand(Vector2f interval, float delta) {
     float padding = delta / 2.0f;
     return Vector2f(interval.x - padding, interval.y + padding);
+}
+
+inline float LinearToSRGB(float linear) {
+    if (linear <= 0.0031308f) {
+        return 12.92f * linear;
+    } else {
+        return 1.055f * std::pow(linear, 1.0f / 2.4f) - 0.055f;
+    }
+}
+
+inline Vector3f LinearToSRGB(const Vector3f& linear) {
+    return Vector3f(
+        LinearToSRGB(linear.r),
+        LinearToSRGB(linear.g),
+        LinearToSRGB(linear.b));
+}
+
+inline Vector3f ACESFilmicToneMapping(const Vector3f& color) {
+    const float a = 2.51f;
+    const float b = 0.03f;
+    const float c = 2.43f;
+    const float d = 0.59f;
+    const float e = 0.14f;
+    
+    Vector3f numerator = color * (a * color + Vector3f(b));
+    Vector3f denominator = color * (c * color + Vector3f(d)) + Vector3f(e);
+    
+    return glm::clamp(numerator / denominator, 0.0f, 1.0f);
 }

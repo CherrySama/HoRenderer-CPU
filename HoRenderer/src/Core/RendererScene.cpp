@@ -9,6 +9,7 @@
 
 namespace RendererScene
 {
+    // cannot be used yet
     std::shared_ptr<Renderer> RayTracingInOneWeekendCover()
     {
         // camera

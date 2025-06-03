@@ -17,14 +17,17 @@ void Integrator::RenderImage(Camera &cam, Scene &world, Sampler &sampler, int sa
 
    #pragma omp parallel
     {
+        Sampler thread_sampler = sampler;
+        thread_sampler.SetCurrentSample(sample_index);
         // #pragma omp for schedule(dynamic, 4)
         #pragma omp for schedule(guided)
         for (int j = 0; j < height; ++j)
-        {                  
+        {
             for (int i = 0; i < width; i++) {
-                Vector2f offset = sampler.sample_square();
-                Ray r = cam.GenerateRay(i, j, sampler, offset);
-                Vector3f pixel_color = ray_color(r, max_bounce, world, sampler);
+                thread_sampler.SetPixel(i, j);
+                Vector2f offset = thread_sampler.sample_square();
+                Ray r = cam.GenerateRay(i, j, thread_sampler, offset);
+                Vector3f pixel_color = ray_color(r, max_bounce, world, thread_sampler);
 
                 write_color(i, j, pixel_color);  
             }

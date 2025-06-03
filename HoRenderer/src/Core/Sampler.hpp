@@ -6,6 +6,10 @@
 #include "Util.hpp"
 #include "Filter.hpp"
 
+extern const int SobolMatricesDim;      // 1024
+extern const int SobolMatricesSize;     // 52
+extern const uint32_t SobolMatrices[];  
+
 struct SamplerParams {
     FilterType filter_type;
 };
@@ -13,9 +17,6 @@ struct SamplerParams {
 class Sampler {
 public:
     Sampler(FilterType filter_type) {
-        // Initialize with a basic seed
-        std::random_device rd;
-        generator_seed = rd();
         filter = Filter::Create(filter_type);
     }
 
@@ -28,12 +29,25 @@ public:
     // Generate random unit vectors for Lambertian reflection
     Vector3f random_unit_vector() const;
     Vector3f random_unit_2Dvector() const;
-
     Vector3f sample_square() const;
     void SetCurrentSample(int sample_index);
+    void SetPixel(int x, int y);
     
 private:
-    unsigned int generator_seed; // Only used to initialize thread-local generators
     int current_sample = 0;
     std::shared_ptr<Filter> filter;
+    int pixel_x = 0, pixel_y = 0;
 };
+
+// Sobol Sampling core function
+inline uint32_t SobolSample(uint64_t index, int dimension) {
+    if (dimension >= SobolMatricesDim) 
+        dimension = dimension % SobolMatricesDim;
+    
+    uint32_t result = 0;
+    for (int bit = 0; bit < SobolMatricesSize && index; index >>= 1, ++bit) 
+        if (index & 1) 
+            result ^= SobolMatrices[dimension * SobolMatricesSize + bit];
+        
+    return result;
+}

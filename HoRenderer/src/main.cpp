@@ -8,7 +8,6 @@
 int main()
 {
     auto renderer = RendererScene::TestScene();
-    // auto renderer = RendererScene::RayTracingInOneWeekendCover();
     renderer->Run();
 
     return 0;

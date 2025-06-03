@@ -11,7 +11,6 @@ float Sampler::random_float() const
     thread_local static int last_pixel_x = -1;
     thread_local static int last_pixel_y = -1;
     
-    // 当像素或样本改变时，重置维度计数
     if (last_sample != current_sample || last_pixel_x != pixel_x || last_pixel_y != pixel_y) {
         thread_dimension = 0;
         last_sample = current_sample;

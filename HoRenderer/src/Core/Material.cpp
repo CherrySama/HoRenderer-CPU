@@ -74,7 +74,7 @@ bool Metal::Scatter(const Ray& r_in, const Hit_Payload& rec, Vector3f& attenuati
 	Vector3f reflected = glm::reflect(r_in.direction(), rec.normal);
 	reflected = glm::normalize(reflected) + (fuzz * sampler.random_unit_vector());
 	scattered = Ray::SpawnRay(rec.p, reflected, rec.normal);
-	attenuation = albedo;
+	attenuation = albedo_texture->GetColor(rec.uv.x, rec.uv.y);
 
 	return (glm::dot(scattered.direction(), rec.normal) > 0.0f);
 }
@@ -115,10 +115,9 @@ std::shared_ptr<Material> Material::Create(const MaterialParams& params)
     case MaterialType::DIFFUSE_BRDF:
         return std::make_shared<DiffuseBRDF>(params.albedo_texture, params.roughness);
     case MaterialType::METAL:
-        return std::make_shared<Metal>(params.albedo, params.fuzz);
+        return std::make_shared<Metal>(params.albedo_texture, params.fuzz);
     case MaterialType::DIELECTRIC:
         return std::make_shared<Dielectric>(params.refractive_index);
-    default:
-        return std::make_shared<Lambertian>(params.albedo);
     }
+    return NULL;
 }

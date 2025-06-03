@@ -17,7 +17,6 @@ enum class MaterialType {
 
 struct MaterialParams {
     MaterialType type;
-    Vector3f albedo;
     std::shared_ptr<Texture> albedo_texture;
     float roughness;
     float fuzz;
@@ -61,12 +60,13 @@ private:
 // Not physically correct
 class Metal : public Material {
 public:
-    Metal(const Vector3f& a, float fu = 0.0f) : albedo(a), fuzz(fu < 1.0f ? fu : 1.0f) {}
+    Metal(const Vector3f& a, float fu = 0.0f) : albedo_texture(std::make_shared<SolidTexture>(a)), fuzz(fu < 1.0f ? fu : 1.0f) {}
+    Metal(std::shared_ptr<Texture> tex, float fu = 0.0f) : albedo_texture(tex), fuzz(fu < 1.0f ? fu : 1.0f) {}
 
     virtual bool Scatter(const Ray& r_in, const Hit_Payload& rec, Vector3f& attenuation, Ray& scattered, Sampler& sampler) const override;
 
 private:
-    Vector3f albedo; 
+    std::shared_ptr<Texture> albedo_texture; 
     float fuzz;
 };
 

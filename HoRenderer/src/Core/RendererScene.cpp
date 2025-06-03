@@ -140,8 +140,10 @@ namespace RendererScene
         mp.refractive_index = 1.00f / 1.50f;
         auto material_bubble = Material::Create(mp);
 
+        solidParams.color = Vector3f(0.8f, 0.6f, 0.2f);
+        solidTexture = Texture::Create(solidParams);
         mp.type = MaterialType::METAL;
-        mp.albedo = Vector3f(0.8f, 0.6f, 0.2f);
+        mp.albedo_texture = solidTexture;
         mp.fuzz = 0.0f;
         auto material_right = Material::Create(mp);
 

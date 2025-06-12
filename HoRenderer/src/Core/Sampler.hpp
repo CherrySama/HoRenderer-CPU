@@ -23,9 +23,10 @@ public:
     inline float random_float(float min, float max) const {
         // Returns a random real in [min,max).
         return min + (max - min) * random_float();
-    }   
+    }
 
     float random_float() const;
+    Vector2f get_2d_sample() const;
     // Generate random unit vectors for Lambertian reflection
     Vector3f random_unit_vector() const;
     Vector3f random_unit_2Dvector() const;
@@ -37,6 +38,13 @@ private:
     int current_sample = 0;
     std::shared_ptr<Filter> filter;
     int pixel_x = 0, pixel_y = 0;
+
+    mutable int dimension_pair_index = 0;
+    mutable bool use_second_sample = false;
+    mutable float cached_sample = 0.0f;
+    mutable int last_sample = -1;
+    mutable int last_pixel_x = -1;
+    mutable int last_pixel_y = -1;
 };
 
 // Sobol Sampling core function

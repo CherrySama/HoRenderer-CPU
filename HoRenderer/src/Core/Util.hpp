@@ -169,3 +169,14 @@ inline Vector3f ACESFilmicToneMapping(const Vector3f& color) {
     
     return glm::clamp(numerator / denominator, 0.0f, 1.0f);
 }
+
+inline uint32_t hash_pixel(int x, int y) {
+    uint32_t h = static_cast<uint32_t>(x);
+    h ^= static_cast<uint32_t>(y) << 16;
+    h ^= h >> 16;
+    h *= 0x85ebca6b;
+    h ^= h >> 13;
+    h *= 0xc2b2ae35;
+    h ^= h >> 16;
+    return h;
+}

@@ -6,50 +6,64 @@
 
 float Sampler::random_float() const
 {
-    thread_local static int thread_dimension = 0;
-    thread_local static int last_sample = -1;
-    thread_local static int last_pixel_x = -1;
-    thread_local static int last_pixel_y = -1;
-    
+    if (use_second_sample) {
+        use_second_sample = false;
+        return cached_sample;
+    } else {
+        Vector2f sample_2d = get_2d_sample();
+        cached_sample = sample_2d.y;
+        use_second_sample = true;
+        return sample_2d.x;
+    }    
+}
+
+Vector2f Sampler::get_2d_sample() const
+{
     if (last_sample != current_sample || last_pixel_x != pixel_x || last_pixel_y != pixel_y) {
-        thread_dimension = 0;
+        dimension_pair_index = 0;
         last_sample = current_sample;
         last_pixel_x = pixel_x;
         last_pixel_y = pixel_y;
     }
-    
+
     uint64_t sample_index = static_cast<uint64_t>(current_sample);
+    uint32_t pixel_hash = hash_pixel(pixel_x, pixel_y);
+    int pixel_dimension_offset = (pixel_hash % 512) * 2;
 
-    // 73856093 is the prime number for pixel hash function
-    uint32_t pixel_hash = static_cast<uint32_t>(pixel_x * 73856093) ^ static_cast<uint32_t>(pixel_y * 19349663);
-    int pixel_dimension_offset = (pixel_hash % 100) * 10; 
-    int final_dimension = pixel_dimension_offset + thread_dimension++;
-    final_dimension = final_dimension % SobolMatricesDim;
+    int dim1 = (pixel_dimension_offset + dimension_pair_index * 2) % SobolMatricesDim;
+    int dim2 = (pixel_dimension_offset + dimension_pair_index * 2 + 1) % SobolMatricesDim;
 
-    uint32_t sobol_value = SobolSample(sample_index, final_dimension);
-    
-    float result = static_cast<float>(sobol_value) * 0x1p-32f;
-    return std::min(result, 0.99999994f);      
+    uint32_t sobol_value1 = SobolSample(sample_index, dim1);
+    uint32_t sobol_value2 = SobolSample(sample_index, dim2);
+
+    float u = std::min(static_cast<float>(sobol_value1) * 0x1p-32f, 0.99999994f);
+    float v = std::min(static_cast<float>(sobol_value2) * 0x1p-32f, 0.99999994f);
+
+    dimension_pair_index++;
+
+    return Vector2f(u, v);
 }
 
 Vector3f Sampler::random_unit_vector() const
 {
-    float z = random_float(-1.0f, 1.0f);
+    Vector2f sample = get_2d_sample();  
+    float z = sample.x * 2.0f - 1.0f;          
+    float phi = sample.y * 2.0f * PI;           
     float r = std::sqrt(std::max(0.0f, 1.0f - z * z));
-    float phi = 2.0f * PI * random_float();
     return Vector3f(r * std::cos(phi), r * std::sin(phi), z);
 }
 
 Vector3f Sampler::random_unit_2Dvector() const
 {
-    float theta = random_float(0.0f, 2.0f * PI);
-    float r = std::sqrt(random_float());
+    Vector2f sample = get_2d_sample();  
+    float theta = sample.x * 2.0f * PI;
+    float r = std::sqrt(sample.y);
     return Vector3f(r * std::cos(theta), r * std::sin(theta), 0.0f);
 }
 
 Vector3f Sampler::sample_square() const
 {
-    Vector2f sample = Vector2f(random_float(), random_float());
+    Vector2f sample = get_2d_sample();
     sample = filter->SampleOffset(sample);
     return Vector3f(sample.x, sample.y, 0.0f);
 }

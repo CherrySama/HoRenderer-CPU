@@ -55,22 +55,20 @@ Vector3f Integrator::ray_color(const Ray &r, int bounce, const Hittable &world, 
         return Vector3f(0, 0, 0);
 
     Hit_Payload rec;
-    if (world.isHit(r, Vector2f(0.0f, Infinity), rec)) {
-        Ray scattered;
-        Vector3f attenuation;
-
-        // If the object has a material and can scatter light
-        if (rec.mat && rec.mat->Scatter(r, rec, attenuation, scattered, sampler))
-            return attenuation * ray_color(scattered, bounce-1, world, sampler);
-        
-        // If there is no material, use the normal color
-        return 0.5f * (rec.normal + Vector3f(1,1,1));
+    if (!world.isHit(r, Vector2f(0.0f, Infinity), rec)) {
+        return Vector3f(0.0, 0.0, 0.0);
     }
-    
-    // Background Color - Sky Gradient
-    Vector3f unit_direction = glm::normalize(r.direction());
-    float color = 0.5f * (unit_direction.y + 1.0f);
-    return (1.0f - color) * Vector3f(1.0, 1.0, 1.0) + color * Vector3f(0.5, 0.7, 1.0);
+
+    Ray scattered;
+    Vector3f attenuation;
+    Vector3f emission = rec.mat->Emit(rec.uv.x, rec.uv.y);
+
+    if (!rec.mat->Scatter(r, rec, attenuation, scattered, sampler))
+        return emission;
+
+    Vector3f scatter = attenuation * ray_color(scattered, bounce-1, world, sampler);
+
+    return emission + scatter;
 }
 
 void Integrator::SetNumThreads(int threads)

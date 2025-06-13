@@ -5,14 +5,14 @@
 
 #include "Util.hpp"
 #include "Ray.hpp"
-#include "Sampler.hpp"
 #include "Texture.hpp"
 
 enum class MaterialType {
     LAMBERTIAN,
     DIFFUSE_BRDF,
     METAL,
-    DIELECTRIC
+    DIELECTRIC,
+    DIFFUSELIGHT
 };
 
 struct MaterialParams {
@@ -28,7 +28,7 @@ public:
     Material() = default;
     virtual ~Material() = default;
 
-    // Core Scattering Function
+    virtual Vector3f Emit(float u, float v) const;
     virtual bool Scatter(const Ray& r_in, const Hit_Payload& rec, Vector3f& attenuation, Ray& scattered, Sampler& sampler) const = 0;
     static std::shared_ptr<Material> Create(const MaterialParams& params);
 };
@@ -80,4 +80,14 @@ private:
 
     // Use Schlick's approximation for reflectance.
     static float Reflectance(float cosine, float refraction_index);
+};
+
+class DiffuseLight : public Material {
+public:
+    DiffuseLight(std::shared_ptr<Texture> tex) : albedo_texture(tex) {}
+    DiffuseLight(const Vector3f& emit) : albedo_texture(std::make_shared<SolidTexture>(emit)) {}
+    virtual bool Scatter(const Ray &r_in, const Hit_Payload &rec, Vector3f &attenuation, Ray &scattered, Sampler &sampler) const override;
+    virtual Vector3f Emit(float u, float v) const override;
+private:
+    std::shared_ptr<Texture> albedo_texture;
 };

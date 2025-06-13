@@ -46,12 +46,17 @@ class Lambertian;
 class DiffuseBRDF;
 class Metal;
 class Dielectric;
+class DiffuseLight;
 class AABB;
 class BVHnode;
 class Filter;
 class UniformFilter;
 class GaussianFilter;
 class TentFilter;
+class Texture;
+class SolidTexture;
+class ImageTexture;
+class HDRTexture;
 
 
 using Vector2u = glm::uvec2;

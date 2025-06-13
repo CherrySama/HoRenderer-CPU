@@ -8,4 +8,5 @@
 
 namespace RendererScene {
     std::shared_ptr<Renderer> TestScene();
+    std::shared_ptr<Renderer> CornellBox();
 }

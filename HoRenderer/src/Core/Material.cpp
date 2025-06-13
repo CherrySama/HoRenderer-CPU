@@ -3,6 +3,29 @@
 */
 #include "Material.hpp"
 #include "Hittable.hpp"
+#include "Sampler.hpp"
+
+Vector3f Material::Emit(float u, float v) const
+{
+	return Vector3f(0);
+}
+
+std::shared_ptr<Material> Material::Create(const MaterialParams& params)
+{
+    switch (params.type) {
+    case MaterialType::LAMBERTIAN:
+        return std::make_shared<Lambertian>(params.albedo_texture);
+    case MaterialType::DIFFUSE_BRDF:
+        return std::make_shared<DiffuseBRDF>(params.albedo_texture, params.roughness);
+    case MaterialType::METAL:
+        return std::make_shared<Metal>(params.albedo_texture, params.fuzz);
+    case MaterialType::DIELECTRIC:
+        return std::make_shared<Dielectric>(params.refractive_index);
+    case MaterialType::DIFFUSELIGHT:
+        return std::make_shared<DiffuseLight>(params.albedo_texture);
+    }
+    return NULL;
+}
 
 bool Lambertian::Scatter(const Ray &r_in, const Hit_Payload &rec, Vector3f &attenuation, Ray &scattered, Sampler &sampler) const
 {
@@ -107,17 +130,12 @@ float Dielectric::Reflectance(float cosine, float refraction_index)
 	return r0 + (1.0f - r0) * std::pow((1.0f - cosine), 5.0f);
 }
 
-std::shared_ptr<Material> Material::Create(const MaterialParams& params)
+bool DiffuseLight::Scatter(const Ray &r_in, const Hit_Payload &rec, Vector3f &attenuation, Ray &scattered, Sampler &sampler) const
 {
-    switch (params.type) {
-    case MaterialType::LAMBERTIAN:
-        return std::make_shared<Lambertian>(params.albedo_texture);
-    case MaterialType::DIFFUSE_BRDF:
-        return std::make_shared<DiffuseBRDF>(params.albedo_texture, params.roughness);
-    case MaterialType::METAL:
-        return std::make_shared<Metal>(params.albedo_texture, params.fuzz);
-    case MaterialType::DIELECTRIC:
-        return std::make_shared<Dielectric>(params.refractive_index);
-    }
-    return NULL;
+	return false;
+}
+
+Vector3f DiffuseLight::Emit(float u, float v) const
+{
+	return albedo_texture->GetColor(u, v);
 }

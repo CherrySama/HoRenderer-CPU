@@ -59,11 +59,10 @@ namespace RendererScene
         mp.refractive_index = 1.00f / 1.50f;
         auto material_bubble = Material::Create(mp);
 
-        solidParams.color = Vector3f(0.8f, 0.6f, 0.2f);
+        solidParams.color = Vector3f(15.0f, 15.0f, 15.0f);
         solidTexture = Texture::Create(solidParams);
-        mp.type = MaterialType::METAL;
+        mp.type = MaterialType::DIFFUSELIGHT;
         mp.albedo_texture = solidTexture;
-        mp.fuzz = 0.0f;
         auto material_right = Material::Create(mp);
 
         // Scene
@@ -100,11 +99,11 @@ namespace RendererScene
         std::unique_ptr<Camera> camera = std::make_unique<Camera>();
         camera->Create(camParams);
 
-        std::unique_ptr<Integrator> integrator = std::make_unique<Integrator>(camera->image_width, camera->image_height, 16, 50);
-        std::unique_ptr<Sampler> sampler = std::make_unique<Sampler>(FilterType::TENT);
+        std::unique_ptr<Integrator> integrator = std::make_unique<Integrator>(camera->image_width, camera->image_height, 16, 30);
+        std::unique_ptr<Sampler> sampler = std::make_unique<Sampler>(FilterType::GAUSSIAN);
         std::unique_ptr<Scene> scene = std::make_unique<Scene>();
 
-        auto emitTexture = std::make_shared<SolidTexture>(Vector3f(50.0f, 50.0f, 50.0f));
+        auto emitTexture = std::make_shared<SolidTexture>(Vector3f(15.0f, 15.0f, 15.0f));
         auto redTexture = std::make_shared<SolidTexture>(Vector3f(0.65f, 0.05f, 0.05f));
         auto whiteTexture = std::make_shared<SolidTexture>(Vector3f(0.73f, 0.73f, 0.73f));
         auto greenTexture = std::make_shared<SolidTexture>(Vector3f(0.12f, 0.45f, 0.15f));
@@ -114,41 +113,43 @@ namespace RendererScene
         auto whiteMaterial =  std::make_shared<Lambertian>(whiteTexture);
         auto greenMaterial = std::make_shared<Lambertian>(greenTexture);
 
-        scene->Add(std::make_shared<Quad>(
-            Vector3f(555.0f, 0.0f, 0.0f), 
-            Vector3f(0.0f, 555.0f, 0.0f), 
-            Vector3f(0.0f, 0.0f, 555.0f), 
-            greenMaterial));
+        scene->Add(std::make_shared<Quad>(Vector3f(555.0f, 0.0f, 0.0f),
+                                          Vector3f(0.0f, 555.0f, 0.0f),
+                                          Vector3f(0.0f, 0.0f, 555.0f),
+                                          greenMaterial));
 
-        scene->Add(std::make_shared<Quad>(
-            Vector3f(0.0f, 0.0f, 0.0f),   
-            Vector3f(0.0f, 555.0f, 0.0f), 
-            Vector3f(0.0f, 0.0f, 555.0f), 
-            redMaterial));
+        scene->Add(std::make_shared<Quad>(Vector3f(0.0f, 0.0f, 0.0f),
+                                          Vector3f(0.0f, 555.0f, 0.0f),
+                                          Vector3f(0.0f, 0.0f, 555.0f),
+                                          redMaterial));
 
-        scene->Add(std::make_shared<Quad>(
-            Vector3f(343.0f, 554.0f, 332.0f), 
-            Vector3f(-130.0f, 0.0f, 0.0f),    
-            Vector3f(0.0f, 0.0f, -105.0f),    
-            emitMaterial));
+        scene->Add(std::make_shared<Quad>(Vector3f(127.5f, 554.0f, 127.5f),
+                                          Vector3f(300.0f, 0.0f, 0.0f),
+                                          Vector3f(0.0f, 0.0f, 300.0f),
+                                          emitMaterial));
 
-        scene->Add(std::make_shared<Quad>(
-            Vector3f(0.0f, 0.0f, 0.0f),   
-            Vector3f(555.0f, 0.0f, 0.0f), 
-            Vector3f(0.0f, 0.0f, 555.0f), 
-            whiteMaterial));
+        scene->Add(std::make_shared<Quad>(Vector3f(0.0f, 0.0f, 0.0f),
+                                          Vector3f(555.0f, 0.0f, 0.0f),
+                                          Vector3f(0.0f, 0.0f, 555.0f),
+                                          whiteMaterial));
 
-        scene->Add(std::make_shared<Quad>(
-            Vector3f(555.0f, 555.0f, 555.0f),
-            Vector3f(-555.0f, 0.0f, 0.0f),    
-            Vector3f(0.0f, 0.0f, -555.0f),   
-            whiteMaterial));
+        scene->Add(std::make_shared<Quad>(Vector3f(555.0f, 555.0f, 555.0f),
+                                          Vector3f(-555.0f, 0.0f, 0.0f),
+                                          Vector3f(0.0f, 0.0f, -555.0f),
+                                          whiteMaterial));
 
-        scene->Add(std::make_shared<Quad>(
-            Vector3f(0.0f, 0.0f, 555.0f), 
-            Vector3f(555.0f, 0.0f, 0.0f), 
-            Vector3f(0.0f, 555.0f, 0.0f), 
-            whiteMaterial));
+        scene->Add(std::make_shared<Quad>(Vector3f(0.0f, 0.0f, 555.0f),
+                                          Vector3f(555.0f, 0.0f, 0.0f),
+                                          Vector3f(0.0f, 555.0f, 0.0f),
+                                          whiteMaterial));
+
+        scene->Add(std::make_shared<Box>(Vector3f(212.5f, 82.5f, 147.5f),
+                                         Vector3f(165.0f, 165.0f, 165.0f),
+                                         whiteMaterial));
+
+        scene->Add(std::make_shared<Box>(Vector3f(347.5f, 165.0f, 377.5f),
+                                    Vector3f(165.0f, 330.0f, 165.0f),
+                                    whiteMaterial));
 
         auto renderer = std::make_shared<Renderer>(std::move(camera), std::move(integrator), std::move(sampler), std::move(scene));
         return renderer;

@@ -56,7 +56,7 @@ Vector3f Integrator::ray_color(const Ray &r, int bounce, const Hittable &world, 
 
     Hit_Payload rec;
     if (!world.isHit(r, Vector2f(0.0f, Infinity), rec)) {
-        return Vector3f(0.0, 0.0, 0.0);
+        return Vector3f(0.01, 0.01, 0.01);
     }
 
     Ray scattered;

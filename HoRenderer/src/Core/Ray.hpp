@@ -37,7 +37,7 @@ public:
 
     inline Vector3f at(float t) const { return orig + t * dir; }
 
-public:
+private:
     Vector3f orig;
     Vector3f dir;
 };

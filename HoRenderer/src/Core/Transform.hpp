@@ -83,18 +83,20 @@ private:
     AABB computeScaledBoundingBox();
 };
 
-inline std::shared_ptr<Translate> translate(std::shared_ptr<Hittable> object, const Vector3f& offset) {
-    return std::make_shared<Translate>(object, offset);
-}
-
-inline std::shared_ptr<Rotate> rotate(std::shared_ptr<Hittable> object, RotationAxis axis, float angle_degrees) {
-    return std::make_shared<Rotate>(object, axis, angle_degrees);
-}
-
-inline std::shared_ptr<Scale> scale(std::shared_ptr<Hittable> object, float scale_factor) {
-    return std::make_shared<Scale>(object, scale_factor);
-}
-
-inline std::shared_ptr<Scale> scale(std::shared_ptr<Hittable> object, const Vector3f& scale_factors) {
-    return std::make_shared<Scale>(object, scale_factors);
+namespace Transform {
+    inline std::shared_ptr<Translate> translate(std::shared_ptr<Hittable> object, const Vector3f& offset) {
+        return std::make_shared<Translate>(object, offset);
+    }
+    
+    inline std::shared_ptr<Rotate> rotate(std::shared_ptr<Hittable> object, RotationAxis axis, float angle_degrees) {
+        return std::make_shared<Rotate>(object, axis, angle_degrees);
+    }
+    
+    inline std::shared_ptr<Scale> scale(std::shared_ptr<Hittable> object, float scale_factor) {
+        return std::make_shared<Scale>(object, scale_factor);
+    }
+    
+    inline std::shared_ptr<Scale> scale(std::shared_ptr<Hittable> object, const Vector3f& scale_factors) {
+        return std::make_shared<Scale>(object, scale_factors);
+    }
 }

@@ -101,10 +101,9 @@ AABB Rotate::computeRotatedBoundingBox() {
     for (int i = 0; i < 2; i++) {
         for (int j = 0; j < 2; j++) {
             for (int k = 0; k < 2; k++) {
-                Vector3f vertex(
-                    (i == 0) ? min_point.x : max_point.x,
-                    (j == 0) ? min_point.y : max_point.y,
-                    (k == 0) ? min_point.z : max_point.z);
+                Vector3f vertex((i == 0) ? min_point.x : max_point.x,
+                                (j == 0) ? min_point.y : max_point.y,
+                                (k == 0) ? min_point.z : max_point.z);
 
                 Vector3f rotated_vertex;
                 switch (axis) {
@@ -147,15 +146,13 @@ bool Scale::isHit(const Ray &r, Vector2f t_interval, Hit_Payload &rec) const {
     if (!object->isHit(scaled_ray, t_interval, rec))
         return false;
 
-    Vector3f world_point = Vector3f(
-        rec.p.x * scale.x,
-        rec.p.y * scale.y,
-        rec.p.z * scale.z);
+    Vector3f world_point = Vector3f(rec.p.x * scale.x,
+                                    rec.p.y * scale.y,
+                                    rec.p.z * scale.z);
 
-    Vector3f world_normal = Vector3f(
-        rec.normal.x * inv_scale.x,
-        rec.normal.y * inv_scale.y,
-        rec.normal.z * inv_scale.z);
+    Vector3f world_normal = Vector3f(rec.normal.x * inv_scale.x,
+                                     rec.normal.y * inv_scale.y,
+                                     rec.normal.z * inv_scale.z);
 
     world_normal = glm::normalize(world_normal);
 

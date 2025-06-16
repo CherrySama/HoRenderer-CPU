@@ -147,15 +147,15 @@ namespace RendererScene
         auto box1 = std::make_shared<Box>(Vector3f(0.0f,0.0f,0.0f),
                                          Vector3f(165.0f, 165.0f, 165.0f),
                                          whiteMaterial);
-        auto rotate_box1 = rotate(box1, RotationAxis::Y,15.0f);
-        auto translated_box1 = translate(rotate_box1, Vector3f(212.5f,82.5f,147.5f));
+        auto rotate_box1 = Transform::rotate(box1, RotationAxis::Y,15.0f);
+        auto translated_box1 = Transform::translate(rotate_box1, Vector3f(212.5f,82.5f,147.5f));
         scene->Add(translated_box1);
 
         auto box2 = std::make_shared<Box>(Vector3f(0.0f, 0.0f, 0.0f),
                                           Vector3f(165.0f, 330.0f, 165.0f),
                                           whiteMaterial);
-        auto rotate_box2 = rotate(box2, RotationAxis::Y,-18.0f);
-        auto translated_box2 = translate(rotate_box2, Vector3f(347.5f, 165.0f, 377.5f));
+        auto rotate_box2 = Transform::rotate(box2, RotationAxis::Y,-18.0f);
+        auto translated_box2 = Transform::translate(rotate_box2, Vector3f(347.5f, 165.0f, 377.5f));
         scene->Add(translated_box2);
 
         auto renderer = std::make_shared<Renderer>(std::move(camera), std::move(integrator), std::move(sampler), std::move(scene));

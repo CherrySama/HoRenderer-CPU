@@ -5,6 +5,7 @@
 #include "Shape.hpp"
 #include "Material.hpp"
 #include "Filter.hpp"
+#include "Transform.hpp"
 #include "../Common/FileManager.hpp"
 
 namespace RendererScene
@@ -143,13 +144,19 @@ namespace RendererScene
                                           Vector3f(0.0f, 555.0f, 0.0f),
                                           whiteMaterial));
 
-        scene->Add(std::make_shared<Box>(Vector3f(212.5f, 82.5f, 147.5f),
+        auto box1 = std::make_shared<Box>(Vector3f(0.0f,0.0f,0.0f),
                                          Vector3f(165.0f, 165.0f, 165.0f),
-                                         whiteMaterial));
+                                         whiteMaterial);
+        auto rotate_box1 = std::make_shared<RotateY>(box1, 15.0f);
+        auto translated_box1 = std::make_shared<Translate>(rotate_box1, Vector3f(212.5f,82.5f,147.5f));
+        scene->Add(translated_box1);
 
-        scene->Add(std::make_shared<Box>(Vector3f(347.5f, 165.0f, 377.5f),
-                                    Vector3f(165.0f, 330.0f, 165.0f),
-                                    whiteMaterial));
+        auto box2 = std::make_shared<Box>(Vector3f(0.0f, 0.0f, 0.0f),
+                                          Vector3f(165.0f, 330.0f, 165.0f),
+                                          whiteMaterial);
+        auto rotate_box2 = std::make_shared<RotateY>(box2, -18.0f);
+        auto translated_box2 = std::make_shared<Translate>(rotate_box2, Vector3f(347.5f, 165.0f, 377.5f));
+        scene->Add(translated_box2);
 
         auto renderer = std::make_shared<Renderer>(std::move(camera), std::move(integrator), std::move(sampler), std::move(scene));
         return renderer;

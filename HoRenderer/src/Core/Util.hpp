@@ -57,6 +57,9 @@ class Texture;
 class SolidTexture;
 class ImageTexture;
 class HDRTexture;
+class Translate;
+class RotateY;
+class Scale;
 
 
 using Vector2u = glm::uvec2;

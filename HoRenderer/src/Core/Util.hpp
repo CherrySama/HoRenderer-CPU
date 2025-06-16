@@ -58,6 +58,7 @@ class SolidTexture;
 class ImageTexture;
 class HDRTexture;
 class Translate;
+class Rotate;
 class RotateY;
 class Scale;
 

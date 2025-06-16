@@ -27,23 +27,34 @@ private:
     AABB bbox;
 };
 
-class RotateY : public Hittable {
+enum class RotationAxis {
+    X, Y, Z
+};
+
+class Rotate : public Hittable {
 public:
-    RotateY(std::shared_ptr<Hittable> object, float angle_degrees) : object(object) {
+    Rotate(std::shared_ptr<Hittable> object, RotationAxis axis, float angle_degrees) : object(object), axis(axis) {
         float radians = degrees_to_radians(angle_degrees);
         sin_theta = std::sin(radians);
         cos_theta = std::cos(radians);
         bbox = computeRotatedBoundingBox();
     }
-
     virtual bool isHit(const Ray &r, Vector2f t_interval, Hit_Payload &rec) const override;
     AABB getBoundingBox() const override { return bbox; }
-    
+
 private:
     std::shared_ptr<Hittable> object;
+    RotationAxis axis;
     float sin_theta, cos_theta;
     AABB bbox;
 
+private:
+    Vector3f rotateX_inverse(const Vector3f &v) const;
+    Vector3f rotateX_forward(const Vector3f& v) const;
+    Vector3f rotateY_inverse(const Vector3f &v) const;
+    Vector3f rotateY_forward(const Vector3f& v) const;
+    Vector3f rotateZ_inverse(const Vector3f &v) const;
+    Vector3f rotateZ_forward(const Vector3f& v) const;
     AABB computeRotatedBoundingBox();
 };
 
@@ -71,3 +82,19 @@ private:
 
     AABB computeScaledBoundingBox();
 };
+
+inline std::shared_ptr<Translate> translate(std::shared_ptr<Hittable> object, const Vector3f& offset) {
+    return std::make_shared<Translate>(object, offset);
+}
+
+inline std::shared_ptr<Rotate> rotate(std::shared_ptr<Hittable> object, RotationAxis axis, float angle_degrees) {
+    return std::make_shared<Rotate>(object, axis, angle_degrees);
+}
+
+inline std::shared_ptr<Scale> scale(std::shared_ptr<Hittable> object, float scale_factor) {
+    return std::make_shared<Scale>(object, scale_factor);
+}
+
+inline std::shared_ptr<Scale> scale(std::shared_ptr<Hittable> object, const Vector3f& scale_factors) {
+    return std::make_shared<Scale>(object, scale_factors);
+}

@@ -59,8 +59,8 @@ class ImageTexture;
 class HDRTexture;
 class Translate;
 class Rotate;
-class RotateY;
 class Scale;
+class IsotropicPhase;
 
 
 using Vector2u = glm::uvec2;

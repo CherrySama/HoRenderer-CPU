@@ -6,6 +6,7 @@
 #include "Material.hpp"
 #include "Filter.hpp"
 #include "Transform.hpp"
+#include "Medium.hpp"
 #include "../Common/FileManager.hpp"
 
 namespace RendererScene
@@ -104,7 +105,7 @@ namespace RendererScene
         std::unique_ptr<Sampler> sampler = std::make_unique<Sampler>(FilterType::GAUSSIAN);
         std::unique_ptr<Scene> scene = std::make_unique<Scene>();
 
-        auto emitTexture = std::make_shared<SolidTexture>(Vector3f(15.0f, 15.0f, 15.0f));
+        auto emitTexture = std::make_shared<SolidTexture>(Vector3f(50.0f, 50.0f, 50.0f));
         auto redTexture = std::make_shared<SolidTexture>(Vector3f(0.65f, 0.05f, 0.05f));
         auto whiteTexture = std::make_shared<SolidTexture>(Vector3f(0.73f, 0.73f, 0.73f));
         auto greenTexture = std::make_shared<SolidTexture>(Vector3f(0.12f, 0.45f, 0.15f));
@@ -113,6 +114,7 @@ namespace RendererScene
         auto redMaterial = std::make_shared<Lambertian>(redTexture);
         auto whiteMaterial =  std::make_shared<Lambertian>(whiteTexture);
         auto greenMaterial = std::make_shared<Lambertian>(greenTexture);
+        auto mirrorMaterial = std::make_shared<Metal>(Vector3f(0.8f,0.8f,0.8f));
 
         scene->Add(std::make_shared<Quad>(Vector3f(555.0f, 0.0f, 0.0f),
                                           Vector3f(0.0f, 555.0f, 0.0f),
@@ -150,13 +152,15 @@ namespace RendererScene
         auto rotate_box1 = Transform::rotate(box1, RotationAxis::Y,15.0f);
         auto translated_box1 = Transform::translate(rotate_box1, Vector3f(212.5f,82.5f,147.5f));
         scene->Add(translated_box1);
+        // scene->Add(std::make_shared<ConstantMedium>(translated_box1, 0.01f, Vector3f(0)));
 
         auto box2 = std::make_shared<Box>(Vector3f(0.0f, 0.0f, 0.0f),
                                           Vector3f(165.0f, 330.0f, 165.0f),
-                                          whiteMaterial);
+                                          mirrorMaterial);
         auto rotate_box2 = Transform::rotate(box2, RotationAxis::Y,-18.0f);
         auto translated_box2 = Transform::translate(rotate_box2, Vector3f(347.5f, 165.0f, 377.5f));
         scene->Add(translated_box2);
+        // scene->Add(std::make_shared<ConstantMedium>(translated_box2, 0.01f, Vector3f(1)));
 
         auto renderer = std::make_shared<Renderer>(std::move(camera), std::move(integrator), std::move(sampler), std::move(scene));
         return renderer;

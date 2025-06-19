@@ -18,6 +18,9 @@ class Sampler {
 public:
     Sampler(FilterType filter_type) {
         filter = Filter::Create(filter_type);
+        current_sample = 0;
+        pixel_x = 0;
+        pixel_y = 0;
     }
 
     inline float random_float(float min, float max) const {
@@ -35,9 +38,9 @@ public:
     void SetPixel(int x, int y);
     
 private:
-    int current_sample = 0;
+    int current_sample;
+    int pixel_x, pixel_y;
     std::shared_ptr<Filter> filter;
-    int pixel_x = 0, pixel_y = 0;
 
     mutable int dimension_pair_index = 0;
     mutable bool use_second_sample = false;

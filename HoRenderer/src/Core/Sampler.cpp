@@ -21,6 +21,8 @@ Vector2f Sampler::get_2d_sample() const
 {
     if (last_sample != current_sample || last_pixel_x != pixel_x || last_pixel_y != pixel_y) {
         dimension_pair_index = 0;
+        use_second_sample = false;
+        cached_sample = 0.0f;
         last_sample = current_sample;
         last_pixel_x = pixel_x;
         last_pixel_y = pixel_y;

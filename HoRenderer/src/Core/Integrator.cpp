@@ -61,7 +61,7 @@ Vector3f Integrator::ray_color(const Ray &r, int bounce, const Hittable &world, 
 
     Ray scattered;
     Vector3f attenuation;
-    Vector3f emission = rec.mat->Emit(rec.uv.x, rec.uv.y);
+    Vector3f emission = rec.mat->Emit(r, rec, rec.uv.x, rec.uv.y);
 
     if (!rec.mat->Scatter(r, rec, attenuation, scattered, sampler))
         return emission;

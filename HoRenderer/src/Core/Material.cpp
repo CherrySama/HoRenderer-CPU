@@ -5,7 +5,7 @@
 #include "Hittable.hpp"
 #include "Sampler.hpp"
 
-Vector3f Material::Emit(float u, float v) const
+Vector3f Material::Emit(const Ray& r_in, const Hit_Payload& rec, float u, float v) const
 {
 	return Vector3f(0);
 }
@@ -118,7 +118,10 @@ bool DiffuseLight::Scatter(const Ray &r_in, const Hit_Payload &rec, Vector3f &at
 	return false;
 }
 
-Vector3f DiffuseLight::Emit(float u, float v) const
+Vector3f DiffuseLight::Emit(const Ray& r_in, const Hit_Payload& rec, float u, float v) const
 {
-	return albedo_texture->GetColor(u, v);
+    if (!rec.front_face)
+        return Vector3f(0);
+
+    return albedo_texture->GetColor(u, v);
 }

@@ -28,7 +28,7 @@ public:
     Material() = default;
     virtual ~Material() = default;
 
-    virtual Vector3f Emit(float u, float v) const;
+    virtual Vector3f Emit(const Ray& r_in, const Hit_Payload& rec, float u, float v) const;
     virtual bool Scatter(const Ray& r_in, const Hit_Payload& rec, Vector3f& attenuation, Ray& scattered, Sampler& sampler) const = 0;
 };
 
@@ -86,7 +86,7 @@ public:
     DiffuseLight(std::shared_ptr<Texture> tex) : albedo_texture(tex) {}
     DiffuseLight(const Vector3f& emit) : albedo_texture(std::make_shared<SolidTexture>(emit)) {}
     virtual bool Scatter(const Ray &r_in, const Hit_Payload &rec, Vector3f &attenuation, Ray &scattered, Sampler &sampler) const override;
-    virtual Vector3f Emit(float u, float v) const override;
+    virtual Vector3f Emit(const Ray& r_in, const Hit_Payload& rec,float u, float v) const override;
 private:
     std::shared_ptr<Texture> albedo_texture;
 };

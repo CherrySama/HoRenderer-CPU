@@ -30,7 +30,6 @@ public:
 
     virtual Vector3f Emit(float u, float v) const;
     virtual bool Scatter(const Ray& r_in, const Hit_Payload& rec, Vector3f& attenuation, Ray& scattered, Sampler& sampler) const = 0;
-    static std::shared_ptr<Material> Create(const MaterialParams& params);
 };
 
 // Lambertian

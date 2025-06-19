@@ -7,13 +7,13 @@
 #include "Hittable.hpp"
 #include "PhaseFunction.hpp"
 
-class ConstantMedium : public Hittable {
+class HomogeneousMedium : public Hittable {
 public:
-    ConstantMedium(std::shared_ptr<Hittable> boundary, float density, std::shared_ptr<Texture> tex) :
+    HomogeneousMedium(std::shared_ptr<Hittable> boundary, float density, std::shared_ptr<Texture> tex) :
         boundary(boundary), neg_inv_density(-1 / density),
         phase_function(std::make_shared<IsotropicPhase>(tex)) {}
 
-    ConstantMedium(std::shared_ptr<Hittable> boundary, float density, const Vector3f &albedo) :
+    HomogeneousMedium(std::shared_ptr<Hittable> boundary, float density, const Vector3f &albedo) :
         boundary(boundary), neg_inv_density(-1 / density),
         phase_function(std::make_shared<IsotropicPhase>(albedo)) {
     }

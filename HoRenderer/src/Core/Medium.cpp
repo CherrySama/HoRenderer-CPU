@@ -3,7 +3,7 @@
 */
 #include "Medium.hpp"
 
-bool ConstantMedium::isHit(const Ray &r, Vector2f t_interval, Hit_Payload &rec) const {
+bool HomogeneousMedium::isHit(const Ray &r, Vector2f t_interval, Hit_Payload &rec) const {
     Hit_Payload rec1, rec2;
     Vector2f infinite_interval = Vector2f(-std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
     if (!boundary->isHit(r, infinite_interval, rec1))

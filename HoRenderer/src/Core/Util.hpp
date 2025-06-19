@@ -46,6 +46,8 @@ class Lambertian;
 class DiffuseBRDF;
 class Metal;
 class Dielectric;
+class HomogeneousMedium;
+class IsotropicPhase;
 class DiffuseLight;
 class AABB;
 class BVHnode;
@@ -60,7 +62,6 @@ class HDRTexture;
 class Translate;
 class Rotate;
 class Scale;
-class IsotropicPhase;
 
 
 using Vector2u = glm::uvec2;

@@ -7,21 +7,6 @@
 #include "Ray.hpp"
 #include "Texture.hpp"
 
-enum class MaterialType {
-    LAMBERTIAN,
-    DIFFUSE_BRDF,
-    METAL,
-    DIELECTRIC,
-    DIFFUSELIGHT
-};
-
-struct MaterialParams {
-    MaterialType type;
-    std::shared_ptr<Texture> albedo_texture;
-    float roughness;
-    float fuzz;
-    float refractive_index;
-};
 
 class Material {
 public:

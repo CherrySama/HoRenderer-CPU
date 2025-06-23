@@ -10,17 +10,30 @@ Vector3f Material::Emit(const Ray& r_in, const Hit_Payload& rec, float u, float 
 	return Vector3f(0);
 }
 
+Vector3f Material::GetSurfaceNormal(const Hit_Payload& rec) const {
+    Vector3f surface_normal = rec.normal;
+
+    if (normal_texture != nullptr) {
+        Vector3f tangent_normal = normal_texture->GetColor(rec.uv.x, rec.uv.y);
+        
+        surface_normal = NormalFromTangentToWorld(rec.normal, tangent_normal);
+    }
+    
+    return surface_normal;
+}
+
 bool Lambertian::Scatter(const Ray &r_in, const Hit_Payload &rec, Vector3f &attenuation, Ray &scattered, Sampler &sampler) const
 {
+	Vector3f surface_normal = GetSurfaceNormal(rec);
 	// Generate random scattering directions (Lambertian distribution)
-	Vector3f scatter_direction = rec.normal + sampler.random_unit_vector();
+	Vector3f scatter_direction = surface_normal + sampler.random_unit_vector();
 
 	// Preventing numerical problems caused by generating zero vectors
     if (glm::length2(scatter_direction) < Epsilon) 
-        scatter_direction = rec.normal;
+        scatter_direction = surface_normal;
     
 	// SpawnRay could avoid self-intersection problem
-	scattered = Ray::SpawnRay(rec.p, scatter_direction, rec.normal);
+	scattered = Ray::SpawnRay(rec.p, scatter_direction, surface_normal);
 
 	attenuation = albedo_texture->GetColor(rec.uv.x, rec.uv.y);
     
@@ -29,26 +42,24 @@ bool Lambertian::Scatter(const Ray &r_in, const Hit_Payload &rec, Vector3f &atte
 
 bool DiffuseBRDF::Scatter(const Ray &r_in, const Hit_Payload &rec, Vector3f &attenuation, Ray &scattered, Sampler &sampler) const
 {
-    Vector3f albedo = albedo_texture->GetColor(rec.uv.x, rec.uv.y);
+	// Calculate incident and outgoing directions
+	Vector3f V = -glm::normalize(r_in.direction());  // Incident direction (pointing toward surface)
+    Vector3f N = GetSurfaceNormal(rec);                // Surface normal
+	Vector3f albedo = albedo_texture->GetColor(rec.uv.x, rec.uv.y);
     // Generate random scattering directions (Lambertian distribution)
-	Vector3f scatter_direction = rec.normal + sampler.random_unit_vector();
+	Vector3f scatter_direction = N + sampler.random_unit_vector();
 
 	// Preventing numerical problems caused by generating zero vectors
     if (glm::length2(scatter_direction) < Epsilon) 
-        scatter_direction = rec.normal;
+        scatter_direction = N;
     
 	// SpawnRay could avoid self-intersection problem
-	scattered = Ray::SpawnRay(rec.p, scatter_direction, rec.normal);
-
-	// Calculate incident and outgoing directions
-	Vector3f V = -glm::normalize(r_in.direction());  // Incident direction (pointing toward surface)
-	Vector3f L = glm::normalize(scatter_direction);   // Outgoing direction
-	Vector3f N = rec.normal;                          // Surface normal
+	scattered = Ray::SpawnRay(rec.p, scatter_direction, N);
 
 	// Calculate dot products
-	float NdotV = glm::clamp(glm::dot(N, V), 0.0f, 1.0f);
-	float NdotL = glm::clamp(glm::dot(N, L), 0.0f, 1.0f);
-	float LdotV = glm::dot(L, V);
+    float NdotL = glm::max(0.0f, glm::dot(N, glm::normalize(scattered.direction())));
+    float NdotV = glm::max(0.0f, glm::dot(N, V));
+	float LdotV = glm::dot(glm::normalize(scattered.direction()), V);
 
 	// Ensure correct hemisphere
 	if (NdotV <= Epsilon || NdotL <= Epsilon) {
@@ -77,32 +88,34 @@ bool DiffuseBRDF::Scatter(const Ray &r_in, const Hit_Payload &rec, Vector3f &att
 
 bool Metal::Scatter(const Ray& r_in, const Hit_Payload& rec, Vector3f& attenuation, Ray& scattered, Sampler& sampler) const
 {
-	Vector3f reflected = glm::reflect(r_in.direction(), rec.normal);
+	Vector3f surface_normal = GetSurfaceNormal(rec);
+    Vector3f reflected = glm::reflect(r_in.direction(), surface_normal);
 	reflected = glm::normalize(reflected) + (fuzz * sampler.random_unit_vector());
-	scattered = Ray::SpawnRay(rec.p, reflected, rec.normal);
+	scattered = Ray::SpawnRay(rec.p, reflected, surface_normal);
 	attenuation = albedo_texture->GetColor(rec.uv.x, rec.uv.y);
 
-	return (glm::dot(scattered.direction(), rec.normal) > 0.0f);
+	return (glm::dot(scattered.direction(), surface_normal) > 0.0f);
 }
 
 bool Dielectric::Scatter(const Ray& r_in, const Hit_Payload& rec, Vector3f& attenuation, Ray& scattered, Sampler& sampler) const
 {
+	Vector3f surface_normal = GetSurfaceNormal(rec);
 	attenuation = Vector3f(1.0f, 1.0f, 1.0f);
 	float ri = rec.front_face ? (1.0f / refractive_index) : refractive_index;
 
 	Vector3f unit_direction = glm::normalize(r_in.direction());
-	float cos_theta = std::fmin(dot(-unit_direction, rec.normal), 1.0);
+	float cos_theta = std::fmin(dot(-unit_direction, surface_normal), 1.0);
 	float sin_theta = std::sqrt(1.0 - cos_theta*cos_theta);
 
 	bool cannot_refract = ri * sin_theta > 1.0;
 	Vector3f direction;
 
 	if (cannot_refract || Reflectance(cos_theta, ri) > sampler.random_float())
-		direction = glm::reflect(unit_direction, rec.normal);
+		direction = glm::reflect(unit_direction, surface_normal);
 	else
-		direction = glm::refract(unit_direction, rec.normal, ri);
+		direction = glm::refract(unit_direction, surface_normal, ri);
 
-	scattered = Ray::SpawnRay(rec.p, direction, rec.normal);
+	scattered = Ray::SpawnRay(rec.p, direction, surface_normal);
 	return true;
 }
 

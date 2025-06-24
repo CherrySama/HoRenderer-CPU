@@ -22,37 +22,16 @@ public:
 protected:
     Vector3f GetSurfaceNormal(const Hit_Payload &rec) const;
     void SetNormal(std::shared_ptr<Texture> &normal);
-    inline Vector3f NormalFromTangentToWorld(const Vector3f &surface_normal, const Vector3f &tangent_normal) const {
-        Vector3f mapped_normal = glm::normalize(tangent_normal * 2.0f - 1.0f);
-
-        Vector3f up_vector = std::abs(surface_normal.z) < 0.9f ? Vector3f(0.0f, 0.0f, 1.0f) : Vector3f(1.0f, 0.0f, 0.0f);
-
-        Vector3f tangent_x = glm::normalize(glm::cross(up_vector, surface_normal));
-        Vector3f tangent_y = glm::normalize(glm::cross(surface_normal, tangent_x));
-
-        return glm::normalize(tangent_x * mapped_normal.x + tangent_y * mapped_normal.y + surface_normal * mapped_normal.z);
-    }
+    Vector3f NormalFromTangentToWorld(const Vector3f &surface_normal, const Vector3f &tangent_normal) const;
 
 protected:
     std::shared_ptr<Texture> normal_texture = nullptr;
 };
 
-// Lambertian
-class Lambertian : public Material {
+class Diffuse : public Material {
 public:
-    Lambertian(const Vector3f& a) : albedo_texture(std::make_shared<SolidTexture>(a)) {}
-    Lambertian(std::shared_ptr<Texture> tex) : albedo_texture(tex) {}
-
-    virtual bool Scatter(const Ray& r_in, const Hit_Payload& rec, Vector3f& attenuation, Ray& scattered, Sampler& sampler) const override;
-
-private:
-    std::shared_ptr<Texture> albedo_texture;
-};
-
-class DiffuseBRDF : public Material {
-public:
-    DiffuseBRDF(const Vector3f &a, float rough = 0.0f) : albedo_texture(std::make_shared<SolidTexture>(a)), roughness(rough) {}
-    DiffuseBRDF(std::shared_ptr<Texture> tex, float rough = 0.0f) : albedo_texture(tex), roughness(rough) {}
+    Diffuse(const Vector3f &a, float rough = 0.0f) : albedo_texture(std::make_shared<SolidTexture>(a)), roughness(rough) {}
+    Diffuse(std::shared_ptr<Texture> tex, float rough = 0.0f) : albedo_texture(tex), roughness(rough) {}
 
     virtual bool Scatter(const Ray& r_in, const Hit_Payload& rec, Vector3f& attenuation, Ray& scattered, Sampler& sampler) const override;
 

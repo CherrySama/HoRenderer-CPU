@@ -43,7 +43,7 @@ class Sampler;
 class ProgressTracker;
 class Material;
 class Lambertian;
-class DiffuseBRDF;
+class Diffuse;
 class Metal;
 class Dielectric;
 class HomogeneousMedium;

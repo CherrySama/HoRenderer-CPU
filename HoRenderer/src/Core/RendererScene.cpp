@@ -36,9 +36,9 @@ namespace RendererScene
         auto greenTexture = std::make_shared<SolidTexture>(Vector3f(0.12f, 0.45f, 0.15f));
 
         auto emitMaterial = std::make_shared<DiffuseLight>(emitTexture);
-        auto redMaterial = std::make_shared<Lambertian>(redTexture);
-        auto whiteMaterial =  std::make_shared<Lambertian>(whiteTexture);
-        auto greenMaterial = std::make_shared<Lambertian>(greenTexture);
+        auto redMaterial = std::make_shared<DiffuseBRDF>(redTexture);
+        auto whiteMaterial =  std::make_shared<DiffuseBRDF>(whiteTexture);
+        auto greenMaterial = std::make_shared<DiffuseBRDF>(greenTexture);
         auto mirrorMaterial = std::make_shared<Metal>(Vector3f(0.8f,0.8f,0.8f));
 
         scene->Add(std::make_shared<Quad>(Vector3f(555.0f, 0.0f, 0.0f),

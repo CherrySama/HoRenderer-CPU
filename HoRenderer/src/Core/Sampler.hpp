@@ -30,10 +30,13 @@ public:
 
     float random_float() const;
     Vector2f get_2d_sample() const;
-    // Generate random unit vectors for Lambertian reflection
     Vector3f random_unit_vector() const;
     Vector3f random_unit_2Dvector() const;
     Vector3f sample_square() const;
+
+    Vector3f CosineSampleHemisphere(const Vector3f &normal) const;
+    float CosinePdfHemisphere(float cos_theta) const;
+
     void SetCurrentSample(int sample_index);
     void SetPixel(int x, int y);
     

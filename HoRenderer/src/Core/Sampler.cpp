@@ -70,6 +70,29 @@ Vector3f Sampler::sample_square() const
     return Vector3f(sample.x, sample.y, 0.0f);
 }
 
+Vector3f Sampler::CosineSampleHemisphere(const Vector3f& normal) const
+{
+    Vector2f sample = get_2d_sample();
+    float cos_theta = std::sqrt(1.0f - sample.x);  // cos_theta = sqrt(1-u1)
+    float sin_theta = std::sqrt(sample.x);         // sin_theta = sqrt(u1)
+    float phi = 2.0f * PI * sample.y;                 // phi = 2π * u2
+
+    Vector3f local_direction(sin_theta * std::cos(phi),
+                             sin_theta * std::sin(phi),
+                             cos_theta);
+
+    Vector3f up_vector = (std::abs(normal.z) < 0.9f) ? Vector3f(0.0f, 0.0f, 1.0f) : Vector3f(1.0f, 0.0f, 0.0f);
+    Vector3f tangent = glm::normalize(glm::cross(up_vector, normal));
+    Vector3f bitangent = glm::normalize(glm::cross(normal, tangent));
+
+    return glm::normalize(tangent * local_direction.x + bitangent * local_direction.y + normal * local_direction.z);
+}
+
+float Sampler::CosinePdfHemisphere(float cos_theta) const
+{
+    return (cos_theta > 0.0f) ? (cos_theta / PI) : 0.0f;
+}
+
 void Sampler::SetCurrentSample(int sample_index)
 {
     current_sample = sample_index;

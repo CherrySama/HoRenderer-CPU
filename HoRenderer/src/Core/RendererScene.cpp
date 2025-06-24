@@ -6,8 +6,8 @@
 #include "Material.hpp"
 #include "Filter.hpp"
 #include "Transform.hpp"
-#include "Medium.hpp"
-#include "../Common/FileManager.hpp"
+// #include "Medium.hpp"
+// #include "../Common/FileManager.hpp"
 
 namespace RendererScene
 {    
@@ -87,6 +87,7 @@ namespace RendererScene
         scene->Add(translated_box2);
         // scene->Add(std::make_shared<HomogeneousMedium>(translated_box2, 0.01f, Vector3f(1)));
 
+        // scene->BuildBVH();
         auto renderer = std::make_shared<Renderer>(std::move(camera), std::move(integrator), std::move(sampler), std::move(scene));
         return renderer;
     }

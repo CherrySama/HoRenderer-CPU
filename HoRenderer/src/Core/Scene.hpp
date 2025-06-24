@@ -3,8 +3,6 @@
 */
 #pragma once
 
-#include <utility>
-
 #include "Util.hpp"
 #include "Hittable.hpp"
 

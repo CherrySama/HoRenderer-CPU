@@ -56,16 +56,23 @@ Vector3f Integrator::ray_color(const Ray &r, int bounce, const Hittable &world, 
 
     Hit_Payload rec;
     if (!world.isHit(r, Vector2f(0.0f, Infinity), rec)) {
-        return Vector3f(0.01, 0.01, 0.01);
+        return Vector3f(0.7, 0.8, 0.9);
     }
 
-    Ray scattered;
-    Vector3f attenuation;
     Vector3f emission = rec.mat->Emit(r, rec, rec.uv.x, rec.uv.y);
 
-    if (!rec.mat->Scatter(r, rec, attenuation, scattered, sampler))
+    Vector3f scatter_direction;
+    float pdf;
+    Vector3f brdf = rec.mat->Sample(r, rec, scatter_direction, pdf, sampler);
+    if (pdf <= Epsilon) 
         return emission;
 
+    Ray scattered = Ray::SpawnRay(rec.p, scatter_direction, rec.normal);
+
+    Vector3f surface_normal = rec.normal;
+    float cos_theta = glm::max(0.0f, glm::dot(surface_normal, glm::normalize(scatter_direction)));
+    Vector3f attenuation = brdf * cos_theta / pdf;
+    
     Vector3f scatter = attenuation * ray_color(scattered, bounce-1, world, sampler);
 
     return emission + scatter;

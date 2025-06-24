@@ -22,6 +22,10 @@ Vector3f Material::GetSurfaceNormal(const Hit_Payload& rec) const {
     return surface_normal;
 }
 
+void Material::SetNormal(std::shared_ptr<Texture> &normal) {
+    normal_texture = normal;
+}
+
 bool Lambertian::Scatter(const Ray &r_in, const Hit_Payload &rec, Vector3f &attenuation, Ray &scattered, Sampler &sampler) const
 {
 	Vector3f surface_normal = GetSurfaceNormal(rec);

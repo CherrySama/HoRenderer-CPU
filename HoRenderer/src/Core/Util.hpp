@@ -190,14 +190,3 @@ inline uint32_t hash_pixel(int x, int y) {
     h ^= h >> 16;
     return h;
 }
-
-inline Vector3f NormalFromTangentToWorld(const Vector3f& surface_normal, const Vector3f& tangent_normal) {
-    Vector3f mapped_normal = glm::normalize(tangent_normal * 2.0f - 1.0f);
-
-    Vector3f up_vector = std::abs(surface_normal.z) < 0.9f ? Vector3f(0.0f, 0.0f, 1.0f) : Vector3f(1.0f, 0.0f, 0.0f);
-    
-    Vector3f tangent_x = glm::normalize(glm::cross(up_vector, surface_normal));
-    Vector3f tangent_y = glm::normalize(glm::cross(surface_normal, tangent_x));
-
-    return glm::normalize(tangent_x * mapped_normal.x + tangent_y * mapped_normal.y + surface_normal * mapped_normal.z);
-}

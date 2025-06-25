@@ -35,30 +35,35 @@ class Ray;
 class Hittable;
 class Hit_Payload;
 class Scene;
-class Sphere;
-class Quad;
-class Box;
 class Camera;
 class Sampler;
 class ProgressTracker;
+
+class Sphere;
+class Quad;
+class Box;
+
 class Material;
 class Lambertian;
 class Diffuse;
-class Metal;
+class Conductor;
 class Dielectric;
 class HomogeneousMedium;
 class IsotropicPhase;
 class DiffuseLight;
+
 class AABB;
 class BVHnode;
 class Filter;
 class UniformFilter;
 class GaussianFilter;
 class TentFilter;
+
 class Texture;
 class SolidTexture;
 class ImageTexture;
 class HDRTexture;
+
 class Translate;
 class Rotate;
 class Scale;
@@ -161,10 +166,9 @@ inline float LinearToSRGB(float linear) {
 }
 
 inline Vector3f LinearToSRGB(const Vector3f& linear) {
-    return Vector3f(
-        LinearToSRGB(linear.r),
-        LinearToSRGB(linear.g),
-        LinearToSRGB(linear.b));
+    return Vector3f(LinearToSRGB(linear.r),
+                    LinearToSRGB(linear.g),
+                    LinearToSRGB(linear.b));
 }
 
 inline Vector3f ACESFilmicToneMapping(const Vector3f& color) {
@@ -189,4 +193,34 @@ inline uint32_t hash_pixel(int x, int y) {
     h *= 0xc2b2ae35;
     h ^= h >> 16;
     return h;
+}
+
+inline Vector3f ToLocal(const Vector3f& dir, const Vector3f& up) {
+	auto B = Vector3f(0.0f), C = Vector3f(0.0f);
+	if (std::abs(up.x) > std::abs(up.y)) {
+		float len_inv = 1.0f / std::sqrt(up.x * up.x + up.z * up.z);
+		C = Vector3f(up.z * len_inv, 0.0f, -up.x * len_inv);
+	}
+	else {
+		float len_inv = 1.0f / std::sqrt(up.y * up.y + up.z * up.z);
+		C = Vector3f(0.0f, up.z * len_inv, -up.y * len_inv);
+	}
+	B = glm::cross(C, up);
+
+	return Vector3f(glm::dot(dir, B), glm::dot(dir, C), glm::dot(dir, up));
+}
+
+inline Vector3f ToWorld(const Vector3f& dir, const Vector3f& up) {
+	auto B = Vector3f(0.0f), C = Vector3f(0.0f);
+	if (std::abs(up.x) > std::abs(up.y)) {
+		float len_inv = 1.0f / std::sqrt(up.x * up.x + up.z * up.z);
+		C = Vector3f(up.z * len_inv, 0.0f, -up.x * len_inv);
+	}
+	else {
+		float len_inv = 1.0f / std::sqrt(up.y * up.y + up.z * up.z);
+		C = Vector3f(0.0f, up.z * len_inv, -up.y * len_inv);
+	}
+	B = glm::cross(C, up);
+
+	return glm::normalize(dir.x * B + dir.y * C + dir.z * up);
 }

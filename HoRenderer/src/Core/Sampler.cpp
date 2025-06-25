@@ -93,6 +93,40 @@ float Sampler::CosinePdfHemisphere(float cos_theta) const
     return (cos_theta > 0.0f) ? (cos_theta / PI) : 0.0f;
 }
 
+Vector3f Sampler::GGXSampleHemisphere(const Vector3f &normal, const Vector3f &view, float alpha_u, float alpha_v) const
+{
+    Vector2f sample = get_2d_sample();
+
+    Vector3f up_vector = (std::abs(normal.z) < 0.9f) ? Vector3f(0.0f, 0.0f, 1.0f) : Vector3f(1.0f, 0.0f, 0.0f);
+    Vector3f tangent = glm::normalize(glm::cross(up_vector, normal));
+    Vector3f bitangent = glm::normalize(glm::cross(normal, tangent));
+
+    Vector3f V = Vector3f(glm::dot(view, tangent),
+                          glm::dot(view, bitangent),
+                          glm::dot(view, normal));
+
+    // Visible Normal Distribution Sampling - Eric Heitz algorithm
+    Vector3f Vh = glm::normalize(Vector3f(alpha_u * V.x, alpha_v * V.y, V.z));
+    float lensq = Vh.x * Vh.x + Vh.y * Vh.y;
+    Vector3f T1 = (lensq > 0.0f) ? Vector3f(-Vh.y, Vh.x, 0.0f) * (1.0f / std::sqrt(lensq)) : Vector3f(1.0f, 0.0f, 0.0f);
+    Vector3f T2 = glm::cross(Vh, T1);
+    
+    float r = std::sqrt(sample.x);
+    float phi = 2.0f * PI * sample.y;
+    float t1 = r * std::cos(phi);
+    float t2 = r * std::sin(phi);
+    float s = 0.5f * (1.0f + Vh.z);
+    t2 = (1.0f - s) * std::sqrt(1.0f - t1 * t1) + s * t2;
+    
+    Vector3f Nh = t1 * T1 + t2 * T2 + std::sqrt(std::max(0.0f, 1.0f - t1 * t1 - t2 * t2)) * Vh;
+
+    Vector3f local_H = glm::normalize(Vector3f(alpha_u * Nh.x, alpha_v * Nh.y, std::max(0.0f, Nh.z)));
+
+    Vector3f H = glm::normalize(tangent * local_H.x + bitangent * local_H.y + normal * local_H.z);
+
+    return glm::reflect(-view, H);
+}
+
 void Sampler::SetCurrentSample(int sample_index)
 {
     current_sample = sample_index;

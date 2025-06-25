@@ -7,9 +7,9 @@
 #include "Hittable.hpp"
 
 
-bool IsotropicPhase::Scatter(const Ray &r_in, const Hit_Payload &rec, Vector3f &attenuation, Ray &scattered, Sampler &sampler) const {
-    Vector3f scatter_direction = sampler.random_unit_vector();
-    scattered = Ray::SpawnRay(rec.p, scatter_direction, rec.normal);
-    attenuation = tex->GetColor(rec.uv.x, rec.uv.y);
-    return true;
-}
+// bool IsotropicPhase::Scatter(const Ray &r_in, const Hit_Payload &rec, Vector3f &attenuation, Ray &scattered, Sampler &sampler) const {
+//     Vector3f scatter_direction = sampler.random_unit_vector();
+//     scattered = Ray::SpawnRay(rec.p, scatter_direction, rec.normal);
+//     attenuation = tex->GetColor(rec.uv.x, rec.uv.y);
+//     return true;
+// }

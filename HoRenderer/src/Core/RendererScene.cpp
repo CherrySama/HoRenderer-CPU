@@ -117,8 +117,8 @@ namespace RendererScene
         auto centerMaterial = std::make_shared<Diffuse>(Vector3f(0.1f, 0.2f, 0.5f));
         auto emitMaterial = std::make_shared<Emission>(Vector3f(15.0f, 15.0f, 15.0f));
         auto leftMaterial = std::make_shared<Dielectric>(Vector3f(1.0f, 1.0f, 1.0f),
-                                                                                0.001f,
-                                                                                0.001f,
+                                                                                0.1f,
+                                                                                0.1f,
                                                                                 1.5f,
                                                                                 1.0f);
         auto rightMaterial = std::make_shared<Conductor>(Vector3f(0.8f, 0.6f, 0.2f),                                               

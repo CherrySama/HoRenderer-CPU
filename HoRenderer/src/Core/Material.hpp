@@ -56,6 +56,35 @@ private:
     Vector3f eta, k; 
 };
 
+class Plastic : public Material {
+public:
+    Plastic(const Vector3f &albedo, const Vector3f &specular, float roughness_u, float roughness_v, float int_ior, float ext_ior, bool nonlinear = true) :
+        albedo_texture(std::make_shared<SolidTexture>(albedo)),
+        specular_texture(std::make_shared<SolidTexture>(specular)),
+        roughness_texture_u(std::make_shared<SolidTexture>(Vector3f(roughness_u))),
+        roughness_texture_v(std::make_shared<SolidTexture>(Vector3f(roughness_v))),
+        eta(int_ior / ext_ior),
+        nonlinear(nonlinear) {}
+
+    Plastic(std::shared_ptr<Texture> albedo, std::shared_ptr<Texture> specular, std::shared_ptr<Texture> roughness_u, std::shared_ptr<Texture> roughness_v, float int_ior, float ext_ior, bool nonlinear = true) :
+        albedo_texture(albedo),
+        specular_texture(specular),
+        roughness_texture_u(roughness_u),
+        roughness_texture_v(roughness_v),
+        eta(int_ior / ext_ior),
+        nonlinear(nonlinear) {}
+
+    virtual Vector3f Sample(const Ray &r_in, const Hit_Payload &rec, Vector3f &scatter_direction, float &pdf, Sampler &sampler) const override;
+
+private:
+    std::shared_ptr<Texture> albedo_texture;      
+    std::shared_ptr<Texture> specular_texture;    
+    std::shared_ptr<Texture> roughness_texture_u; 
+    std::shared_ptr<Texture> roughness_texture_v; 
+    float eta;                                    
+    bool nonlinear;
+};
+
 class Emission : public Material {
 public:
     Emission(std::shared_ptr<Texture> tex, float intens = 1.0f) : albedo_texture(tex), intensity(intens) {}

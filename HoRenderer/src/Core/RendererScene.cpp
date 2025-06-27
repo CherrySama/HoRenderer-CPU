@@ -39,7 +39,14 @@ namespace RendererScene
                                                                             0.001f,
                                                                             Vector3f(0.47f, 0.37f, 1.5f),
                                                                             Vector3f(2.13f, 2.23f, 1.69f));
+        auto plasticMaterial = std::make_shared<Plastic>(Vector3f(0.8f, 0.2f, 0.2f), 
+                                                                            Vector3f(1.0f, 1.0f, 1.0f), 
+                                                                            0.5f,                     
+                                                                            0.5f,                      
+                                                                            1.6f,                       
+                                                                            1.0f);
 
+        
         scene->Add(std::make_shared<Quad>(Vector3f(555.0f, 0.0f, 0.0f),
                                           Vector3f(0.0f, 555.0f, 0.0f),
                                           Vector3f(0.0f, 0.0f, 555.0f),
@@ -72,7 +79,7 @@ namespace RendererScene
 
         auto box1 = std::make_shared<Box>(Vector3f(0.0f,0.0f,0.0f),
                                          Vector3f(165.0f, 165.0f, 165.0f),
-                                         whiteMaterial);
+                                         plasticMaterial);
         auto rotate_box1 = Transform::rotate(box1, RotationAxis::Y,15.0f);
         auto translated_box1 = Transform::translate(rotate_box1, Vector3f(212.5f,82.5f,147.5f));
         scene->Add(translated_box1);
@@ -80,7 +87,7 @@ namespace RendererScene
 
         auto box2 = std::make_shared<Box>(Vector3f(0.0f, 0.0f, 0.0f),
                                           Vector3f(165.0f, 330.0f, 165.0f),
-                                          goldMaterial);
+                                          whiteMaterial);
         auto rotate_box2 = Transform::rotate(box2, RotationAxis::Y,-18.0f);
         auto translated_box2 = Transform::translate(rotate_box2, Vector3f(347.5f, 165.0f, 377.5f));
         scene->Add(translated_box2);
@@ -118,12 +125,18 @@ namespace RendererScene
                                                                                 0.1f, 
                                                                                 Vector3f(0.8f, 0.6f, 0.2f),                               
                                                                                 Vector3f(3.0f, 2.5f, 2.0f));
+        auto greenPlastic = std::make_shared<Plastic>(Vector3f(0.2f, 0.8f, 0.3f), 
+                                                                            Vector3f(1.0f, 1.0f, 1.0f), 
+                                                                            0.05f,                     
+                                                                            0.2f,                      
+                                                                            1.6f,                       
+                                                                            1.0f);
 
         scene->Add(std::make_shared<Quad>(Vector3f(-50.0f, -0.5f, -50.0f), 
                                                 Vector3f(0.0f, 0.0f, 100.0f),   
                                                 Vector3f(100.0f, 0.0f, 0.0f),    
                                                 groundMaterial));
-        scene->Add(std::make_shared<Sphere>(Vector3f(0.0f, 0.0f, -1.2f), 0.5f, conductorMaterial));
+        scene->Add(std::make_shared<Sphere>(Vector3f(0.0f, 0.0f, -1.2f), 0.5f, greenPlastic));
 
         auto renderer = std::make_shared<Renderer>(std::move(camera), std::move(integrator), std::move(sampler), std::move(scene));
         return renderer;

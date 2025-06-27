@@ -44,10 +44,9 @@ class Quad;
 class Box;
 
 class Material;
-class Lambertian;
 class Diffuse;
 class Conductor;
-class Dielectric;
+class Plastic;
 class HomogeneousMedium;
 class IsotropicPhase;
 class Emission;
@@ -88,6 +87,7 @@ using Matrix4f = glm::mat4x4;
 constexpr float Epsilon = 1e-5f;
 constexpr float Infinity = std::numeric_limits<float>::infinity();
 constexpr float PI = 3.1415926535897932385f;
+constexpr float INV_PI = 1.0f / PI;
 
 
 inline uint32_t FloatToBits(float f) {

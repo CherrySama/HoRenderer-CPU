@@ -90,7 +90,7 @@ Vector3f Sampler::CosineSampleHemisphere(const Vector3f& normal) const
 
 float Sampler::CosinePdfHemisphere(float cos_theta) const
 {
-    return (cos_theta > 0.0f) ? (cos_theta / PI) : 0.0f;
+    return (cos_theta > 0.0f) ? (cos_theta * INV_PI) : 0.0f;
 }
 
 Vector3f Sampler::GGXNVDSample(const Vector3f &normal, const Vector3f &view, float alpha_u, float alpha_v) const

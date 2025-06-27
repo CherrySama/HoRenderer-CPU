@@ -85,20 +85,101 @@ Vector3f Conductor::Sample(const Ray& r_in, const Hit_Payload& rec, Vector3f& sc
     Vector3f H = sampler.GGXNVDSample(N, V, roughness_u, roughness_v);
     scatter_direction = glm::reflect(-V, H);
 
-	float NdotV = glm::max(glm::dot(N, V), 0.0f);
-    float NdotL = glm::max(glm::dot(N, scatter_direction), 0.0f);
+	float NdotV = glm::dot(N, V);
+    float NdotL = glm::dot(N, scatter_direction);
+    if (NdotV <= 0.0f || NdotL <= 0.0f) {
+		pdf = 0.0f;
+		return Vector3f(0.0f);
+	}
     float VdotH = glm::dot(V, H);
 
     Vector3f F = BSDF::FresnelConductor(V, H, eta, k);
     float D = BSDF::DistributionGGX(H, N, roughness_u, roughness_v);
-    float G1_V = BSDF::GeometrySchlickGGX(V, N, roughness_u, roughness_v);
+    float G1_V = BSDF::GeometrySmithG1(V, H, N, roughness_u, roughness_v);
     float Dv = G1_V * VdotH * D / NdotV;
     pdf = Dv * std::abs(1.0f / (4.0f * VdotH));
-
-    float G1_L = BSDF::GeometrySchlickGGX(scatter_direction, N, roughness_u, roughness_v);
+    float G1_L = BSDF::GeometrySmithG1(scatter_direction, H, N, roughness_u, roughness_v);
     float G = G1_V * G1_L;
 
 	Vector3f brdf = albedo * F * D * G / (4.0f * NdotV * NdotL);
+    
+    return brdf;
+}
+
+Vector3f Plastic::Sample(const Ray &r_in, const Hit_Payload &rec, Vector3f &scatter_direction, float &pdf, Sampler &sampler) const
+{
+    Vector3f kd = albedo_texture->GetColor(rec.uv.x, rec.uv.y);      
+    Vector3f ks = specular_texture->GetColor(rec.uv.x, rec.uv.y);   
+    float roughness_u = roughness_texture_u->GetColor(rec.uv.x, rec.uv.y)[0];
+    float roughness_v = roughness_texture_v->GetColor(rec.uv.x, rec.uv.y)[0];
+
+    float alpha_u = roughness_u * roughness_u;
+    float alpha_v = roughness_v * roughness_v;
+    float d_sum = kd.x + kd.y + kd.z;
+    float s_sum = ks.x + ks.y + ks.z;
+
+    Vector3f N = GetSurfaceNormal(rec);
+    Vector3f V = -glm::normalize(r_in.direction());
+
+    float etai_over_etat = rec.front_face ? (1.0f / eta) : eta;
+    float F_avg = BSDF::AverageFresnelDielectric(eta);
+    float Fo = BSDF::FresnelDielectric(V, N, 1.0f / eta);
+    float Fi = Fo;
+
+    float specular_sampling_weight = s_sum / (s_sum + d_sum);
+    float pdf_specular = Fi * specular_sampling_weight;
+    float pdf_diffuse = (1.0f - Fi) * (1.0f - specular_sampling_weight);
+    pdf_specular = pdf_specular / (pdf_specular + pdf_diffuse);
+
+    Vector3f H;
+    float NdotV = glm::dot(N, V);
+    float NdotL;
+
+    if (sampler.random_float() < pdf_specular) {
+        H = sampler.GGXNVDSample(N, V, alpha_u, alpha_v);
+        scatter_direction = glm::reflect(-V, H);
+
+        NdotL = glm::max(glm::dot(N, scatter_direction), 0.0f);
+        if (NdotL <= 0.0f || NdotV <= 0.0f) {
+            pdf = 0.0f;
+            return Vector3f(0.0f);
+        }
+    } else {
+        scatter_direction = sampler.CosineSampleHemisphere(N);
+        H = glm::normalize(V + scatter_direction);
+        Fi = BSDF::FresnelDielectric(scatter_direction, N, 1.0f / eta);
+
+        NdotL = glm::max(glm::dot(N, scatter_direction), 0.0f);
+        if (NdotL <= 0.0f || NdotV <= 0.0f) {
+            pdf = 0.0f;
+            return Vector3f(0.0f);
+        }
+    }
+    
+    Vector3f F = Vector3f(BSDF::FresnelDielectric(scatter_direction, H, 1.0f / eta));
+    float VdotH = glm::dot(V, H);
+    float D = BSDF::DistributionGGX(H, N, alpha_u, alpha_v);
+    float G1_V = BSDF::GeometrySmithG1(V, H, N, alpha_u, alpha_v);
+    float G1_L = BSDF::GeometrySmithG1(scatter_direction, H, N, alpha_u, alpha_v);
+    float G = G1_V * G1_L;
+    
+    Vector3f diffuse = kd;
+    Vector3f specular = ks;
+
+    Vector3f brdf;
+    if (nonlinear) {
+        brdf = diffuse / (Vector3f(1.0f) - diffuse * F_avg);
+    } else {
+        brdf = diffuse / (Vector3f(1.0f) - F_avg);
+    }
+
+    brdf *= (1.0f - Fi) * (1.0f - Fo) / PI;
+
+    brdf += specular * F * D * G / (4.0f * NdotL * NdotV);
+
+    float Dv = G1_V * VdotH * D / NdotV;
+    
+    pdf = pdf_specular * Dv * std::abs(1.0f / (4.0f * VdotH)) + (1.0f - pdf_specular) * sampler.CosinePdfHemisphere(NdotL);
     
     return brdf;
 }

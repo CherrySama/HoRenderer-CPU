@@ -21,25 +21,31 @@ namespace BSDF {
         }
     }
 
-    float GeometrySchlickGGX(const Vector3f &V, const Vector3f &N, float alpha_u, float alpha_v)
-	{
-        float NdotV = glm::max(glm::dot(N, V), 0.0f);
-        if (NdotV <= 0.0f) return 0.0f;
-        
-        if (alpha_u == alpha_v) {
-            float alpha = alpha_u;
-            float k = alpha * 0.5f; 
-            return NdotV / (NdotV * (1.0f - k) + k);
-        } else {
-            Vector3f local_V = ToLocal(V, N);
-            float lambda = 0.5f * (-1.0f + std::sqrt(1.0f + (alpha_u * alpha_u * local_V.x * local_V.x + alpha_v * alpha_v * local_V.y * local_V.y) / (local_V.z * local_V.z)));
-            return 1.0f / (1.0f + lambda);
-        }
-    }
+    float GeometrySmithG1(const Vector3f &V, const Vector3f &H, const Vector3f &N, float alpha_u, float alpha_v)
+    {
+        float cos_v_n = glm::dot(V, N);
 
-    float GeometrySmithGGX(const Vector3f &V, const Vector3f &L, const Vector3f &N, float alpha_u, float alpha_v)
-	{
-        return GeometrySchlickGGX(V, N, alpha_u, alpha_v) * GeometrySchlickGGX(L, N, alpha_u, alpha_v);
+        if (cos_v_n * glm::dot(V, H) <= 0.0f) {
+            return 0.0f;
+        }
+
+        if (std::abs(cos_v_n - 1.0f) < Epsilon) {
+            return 1.0f;
+        }
+
+        if (alpha_u == alpha_v) {
+            float cos_v_n_2 = cos_v_n * cos_v_n;
+            float tan_v_n_2 = (1.0f - cos_v_n_2) / cos_v_n_2;
+            float alpha_2 = alpha_u * alpha_u;
+
+            return 2.0f / (1.0f + std::sqrt(1.0f + alpha_2 * tan_v_n_2));
+        } else {
+            Vector3f dir = ToLocal(V, N);
+            float xy_alpha_2 = (alpha_u * dir.x) * (alpha_u * dir.x) + (alpha_v * dir.y) * (alpha_v * dir.y);
+            float tan_v_n_alpha_2 = xy_alpha_2 / (dir.z * dir.z);
+
+            return 2.0f / (1.0f + std::sqrt(1.0f + tan_v_n_alpha_2));
+        }
     }
 
     Vector3f FresnelConductor(const Vector3f &V, const Vector3f &H, const Vector3f &eta, const Vector3f &k)
@@ -80,13 +86,29 @@ namespace BSDF {
         float cos_theta_i = glm::abs(glm::dot(V, H));
         float cos_theta_t_2 = 1.0f - eta_inv * eta_inv * (1.0f - cos_theta_i * cos_theta_i);
 
-        if (cos_theta_t_2 <= 0.0f) 
-            return 1.0f; 
-        
+        if (cos_theta_t_2 <= 0.0f)
+            return 1.0f;
+
         float cos_theta_t = std::sqrt(cos_theta_t_2);
         float Rs = (eta_inv * cos_theta_i - cos_theta_t) / (eta_inv * cos_theta_i + cos_theta_t);
         float Rp = (cos_theta_i - eta_inv * cos_theta_t) / (cos_theta_i + eta_inv * cos_theta_t);
 
         return (Rs * Rs + Rp * Rp) * 0.5f;
+    }
+
+    float AverageFresnelDielectric(float eta)
+    {
+        if (eta < 1.0f) {
+            return -1.4399f * (eta * eta) + 0.7099f * eta + 0.6681f + 0.0636f / eta;
+        }
+        else {
+            float inv_eta = 1.0f / eta;
+            float inv_eta_2 = inv_eta * inv_eta;
+            float inv_eta_3 = inv_eta_2 * inv_eta;
+            float inv_eta_4 = inv_eta_3 * inv_eta;
+            float inv_eta_5 = inv_eta_4 * inv_eta;
+
+            return 0.919317f - 3.4793f * inv_eta + 6.75335f * inv_eta_2 - 7.80989f * inv_eta_3 + 4.98554f * inv_eta_4 - 1.36881f * inv_eta_5;
+        }
     }
 }

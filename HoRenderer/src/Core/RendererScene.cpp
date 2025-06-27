@@ -30,7 +30,7 @@ namespace RendererScene
         std::unique_ptr<Sampler> sampler = std::make_unique<Sampler>(FilterType::GAUSSIAN);
         std::unique_ptr<Scene> scene = std::make_unique<Scene>();
 
-        auto emitMaterial = std::make_shared<Diffuse>(Vector3f(50.0f, 50.0f, 50.0f));
+        auto emitMaterial = std::make_shared<Emission>(Vector3f(50.0f, 50.0f, 50.0f));
         auto redMaterial = std::make_shared<Diffuse>(Vector3f(0.65f, 0.05f, 0.05f));
         auto whiteMaterial =  std::make_shared<Diffuse>(Vector3f(0.73f, 0.73f, 0.73f));
         auto greenMaterial = std::make_shared<Diffuse>(Vector3f(0.12f, 0.45f, 0.15f));
@@ -39,9 +39,6 @@ namespace RendererScene
                                                                             0.001f,
                                                                             Vector3f(0.47f, 0.37f, 1.5f),
                                                                             Vector3f(2.13f, 2.23f, 1.69f));
-        auto glassMaterial = std::make_shared<Dielectric>(Vector3f(1.0f, 1.0f, 1.0f), 
-                                                                                0.001f, 0.001f,             
-                                                                                1.5f, 1.0f);
 
         scene->Add(std::make_shared<Quad>(Vector3f(555.0f, 0.0f, 0.0f),
                                           Vector3f(0.0f, 555.0f, 0.0f),
@@ -114,26 +111,19 @@ namespace RendererScene
         std::unique_ptr<Scene> scene = std::make_unique<Scene>();
 
         auto groundMaterial = std::make_shared<Diffuse>(Vector3f(0.8f, 0.8f, 0.0f));
-        auto centerMaterial = std::make_shared<Diffuse>(Vector3f(0.1f, 0.2f, 0.5f));
+        auto diffuseMaterial = std::make_shared<Diffuse>(Vector3f(0.1f, 0.2f, 0.5f));
         auto emitMaterial = std::make_shared<Emission>(Vector3f(15.0f, 15.0f, 15.0f));
-        auto leftMaterial = std::make_shared<Dielectric>(Vector3f(1.0f, 1.0f, 1.0f),
-                                                                                0.1f,
-                                                                                0.1f,
-                                                                                1.5f,
-                                                                                1.0f);
-        auto rightMaterial = std::make_shared<Conductor>(Vector3f(0.8f, 0.6f, 0.2f),                                               
+        auto conductorMaterial = std::make_shared<Conductor>(Vector3f(0.8f, 0.6f, 0.2f),                                               
                                                                                 0.1f, 
                                                                                 0.1f, 
                                                                                 Vector3f(0.8f, 0.6f, 0.2f),                               
                                                                                 Vector3f(3.0f, 2.5f, 2.0f));
 
         scene->Add(std::make_shared<Quad>(Vector3f(-50.0f, -0.5f, -50.0f), 
-                                          Vector3f(100.0f, 0.0f, 0.0f),    
-                                          Vector3f(0.0f, 0.0f, 100.0f),   
-                                          groundMaterial));
-        scene->Add(std::make_shared<Sphere>(Vector3f(0.0f, 0.0f, -1.2f), 0.5f, centerMaterial));
-        scene->Add(std::make_shared<Sphere>(Vector3f(-1.0f, 0.0f, -1.0f), 0.5f, leftMaterial));
-        scene->Add(std::make_shared<Sphere>(Vector3f(1.0f, 0.0f, -1.0f), 0.5f, rightMaterial));
+                                                Vector3f(0.0f, 0.0f, 100.0f),   
+                                                Vector3f(100.0f, 0.0f, 0.0f),    
+                                                groundMaterial));
+        scene->Add(std::make_shared<Sphere>(Vector3f(0.0f, 0.0f, -1.2f), 0.5f, conductorMaterial));
 
         auto renderer = std::make_shared<Renderer>(std::move(camera), std::move(integrator), std::move(sampler), std::move(scene));
         return renderer;

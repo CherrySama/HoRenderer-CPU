@@ -56,7 +56,7 @@ Vector3f Integrator::ray_color(const Ray &r, int bounce, const Hittable &world, 
 
     Hit_Payload rec;
     if (!world.isHit(r, Vector2f(0.0f, Infinity), rec)) {
-        return Vector3f(2.0f, 2.0f, 2.0f); 
+        return Vector3f(0.7f, 0.8f, 0.9f); 
     }
 
     Vector3f emission = rec.mat->Emit(r, rec, rec.uv.x, rec.uv.y);

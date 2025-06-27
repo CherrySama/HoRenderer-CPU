@@ -56,27 +56,6 @@ private:
     Vector3f eta, k; 
 };
 
-class Dielectric : public Material {
-public:
-    Dielectric(const Vector3f &albedo, float roughness_u, float roughness_v, float int_ior, float ext_ior) :
-        albedo_texture(std::make_shared<SolidTexture>(albedo)),
-        roughness_texture_u(std::make_shared<SolidTexture>(Vector3f(roughness_u))),
-        roughness_texture_v(std::make_shared<SolidTexture>(Vector3f(roughness_v))),
-        eta(int_ior / ext_ior) {}
-
-    Dielectric(std::shared_ptr<Texture> albedo_tex, std::shared_ptr<Texture> roughness_u_tex, std::shared_ptr<Texture> roughness_v_tex, float int_ior, float ext_ior) :
-        albedo_texture(albedo_tex), roughness_texture_u(roughness_u_tex), roughness_texture_v(roughness_v_tex),
-        eta(int_ior / ext_ior) {}
-
-    virtual Vector3f Sample(const Ray& r_in, const Hit_Payload& rec, Vector3f& scatter_direction, float& pdf, Sampler& sampler) const override;
-
-private:
-    std::shared_ptr<Texture> albedo_texture;
-    std::shared_ptr<Texture> roughness_texture_u;
-    std::shared_ptr<Texture> roughness_texture_v;
-    float eta;
-};
-
 class Emission : public Material {
 public:
     Emission(std::shared_ptr<Texture> tex, float intens = 1.0f) : albedo_texture(tex), intensity(intens) {}

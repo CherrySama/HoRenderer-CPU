@@ -93,7 +93,7 @@ float Sampler::CosinePdfHemisphere(float cos_theta) const
     return (cos_theta > 0.0f) ? (cos_theta / PI) : 0.0f;
 }
 
-Vector3f Sampler::GGXSampleHemisphere(const Vector3f &normal, const Vector3f &view, float alpha_u, float alpha_v) const
+Vector3f Sampler::GGXNVDSample(const Vector3f &normal, const Vector3f &view, float alpha_u, float alpha_v) const
 {
     Vector2f sample = get_2d_sample();
 
@@ -124,7 +124,7 @@ Vector3f Sampler::GGXSampleHemisphere(const Vector3f &normal, const Vector3f &vi
 
     Vector3f H = glm::normalize(tangent * local_H.x + bitangent * local_H.y + normal * local_H.z);
 
-    return glm::reflect(-view, H);
+    return H;
 }
 
 void Sampler::SetCurrentSample(int sample_index)

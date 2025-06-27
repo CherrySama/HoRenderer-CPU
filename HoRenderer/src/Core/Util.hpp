@@ -50,7 +50,7 @@ class Conductor;
 class Dielectric;
 class HomogeneousMedium;
 class IsotropicPhase;
-class DiffuseLight;
+class Emission;
 
 class AABB;
 class BVHnode;

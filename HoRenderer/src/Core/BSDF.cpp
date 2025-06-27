@@ -74,4 +74,19 @@ namespace BSDF {
         
         return result;
     }
+
+    float FresnelDielectric(const Vector3f &V, const Vector3f &H, float eta_inv)
+    {
+        float cos_theta_i = glm::abs(glm::dot(V, H));
+        float cos_theta_t_2 = 1.0f - eta_inv * eta_inv * (1.0f - cos_theta_i * cos_theta_i);
+
+        if (cos_theta_t_2 <= 0.0f) 
+            return 1.0f; 
+        
+        float cos_theta_t = std::sqrt(cos_theta_t_2);
+        float Rs = (eta_inv * cos_theta_i - cos_theta_t) / (eta_inv * cos_theta_i + cos_theta_t);
+        float Rp = (cos_theta_i - eta_inv * cos_theta_t) / (cos_theta_i + eta_inv * cos_theta_t);
+
+        return (Rs * Rs + Rp * Rp) * 0.5f;
+    }
 }

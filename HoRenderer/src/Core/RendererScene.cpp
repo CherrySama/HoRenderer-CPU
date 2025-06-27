@@ -30,16 +30,18 @@ namespace RendererScene
         std::unique_ptr<Sampler> sampler = std::make_unique<Sampler>(FilterType::GAUSSIAN);
         std::unique_ptr<Scene> scene = std::make_unique<Scene>();
 
-        auto emitTexture = std::make_shared<SolidTexture>(Vector3f(50.0f, 50.0f, 50.0f));
-        auto redTexture = std::make_shared<SolidTexture>(Vector3f(0.65f, 0.05f, 0.05f));
-        auto whiteTexture = std::make_shared<SolidTexture>(Vector3f(0.73f, 0.73f, 0.73f));
-        auto greenTexture = std::make_shared<SolidTexture>(Vector3f(0.12f, 0.45f, 0.15f));
-
-        auto emitMaterial = std::make_shared<DiffuseLight>(emitTexture);
-        auto redMaterial = std::make_shared<Diffuse>(redTexture);
-        auto whiteMaterial =  std::make_shared<Diffuse>(whiteTexture);
-        auto greenMaterial = std::make_shared<Diffuse>(greenTexture);
-        auto mirrorMaterial = std::make_shared<Metal>(Vector3f(0.8f,0.8f,0.8f));
+        auto emitMaterial = std::make_shared<Diffuse>(Vector3f(50.0f, 50.0f, 50.0f));
+        auto redMaterial = std::make_shared<Diffuse>(Vector3f(0.65f, 0.05f, 0.05f));
+        auto whiteMaterial =  std::make_shared<Diffuse>(Vector3f(0.73f, 0.73f, 0.73f));
+        auto greenMaterial = std::make_shared<Diffuse>(Vector3f(0.12f, 0.45f, 0.15f));
+        auto goldMaterial = std::make_shared<Conductor>(Vector3f(1.0f, 0.86f, 0.57f),
+                                                                            0.001f,
+                                                                            0.001f,
+                                                                            Vector3f(0.47f, 0.37f, 1.5f),
+                                                                            Vector3f(2.13f, 2.23f, 1.69f));
+        auto glassMaterial = std::make_shared<Dielectric>(Vector3f(1.0f, 1.0f, 1.0f), 
+                                                                                0.001f, 0.001f,             
+                                                                                1.5f, 1.0f);
 
         scene->Add(std::make_shared<Quad>(Vector3f(555.0f, 0.0f, 0.0f),
                                           Vector3f(0.0f, 555.0f, 0.0f),
@@ -81,13 +83,58 @@ namespace RendererScene
 
         auto box2 = std::make_shared<Box>(Vector3f(0.0f, 0.0f, 0.0f),
                                           Vector3f(165.0f, 330.0f, 165.0f),
-                                          mirrorMaterial);
+                                          goldMaterial);
         auto rotate_box2 = Transform::rotate(box2, RotationAxis::Y,-18.0f);
         auto translated_box2 = Transform::translate(rotate_box2, Vector3f(347.5f, 165.0f, 377.5f));
         scene->Add(translated_box2);
         // scene->Add(std::make_shared<HomogeneousMedium>(translated_box2, 0.01f, Vector3f(1)));
 
         // scene->BuildBVH();
+        auto renderer = std::make_shared<Renderer>(std::move(camera), std::move(integrator), std::move(sampler), std::move(scene));
+        return renderer;
+    }
+
+    std::shared_ptr<Renderer> TestScene()
+    {
+        CameraParams camParams = {
+            16.0f / 9.0f,                       
+            1200,                         
+            20.0f,                       
+            Vector3f(-2.0f, 2.0f, 1.0f), 
+            Vector3f(0.0f, 0.0f, -1.0f), 
+            Vector3f(0.0f, 1.0f, 0.0f),  
+            0.0f,                        
+            1.0f      
+        };
+        std::unique_ptr<Camera> camera = std::make_unique<Camera>();
+        camera->Create(camParams);
+
+        std::unique_ptr<Integrator> integrator = std::make_unique<Integrator>(camera->image_width, camera->image_height, 16, 30);
+        std::unique_ptr<Sampler> sampler = std::make_unique<Sampler>(FilterType::GAUSSIAN);
+        std::unique_ptr<Scene> scene = std::make_unique<Scene>();
+
+        auto groundMaterial = std::make_shared<Diffuse>(Vector3f(0.8f, 0.8f, 0.0f));
+        auto centerMaterial = std::make_shared<Diffuse>(Vector3f(0.1f, 0.2f, 0.5f));
+        auto emitMaterial = std::make_shared<Emission>(Vector3f(15.0f, 15.0f, 15.0f));
+        auto leftMaterial = std::make_shared<Dielectric>(Vector3f(1.0f, 1.0f, 1.0f),
+                                                                                0.001f,
+                                                                                0.001f,
+                                                                                1.5f,
+                                                                                1.0f);
+        auto rightMaterial = std::make_shared<Conductor>(Vector3f(0.8f, 0.6f, 0.2f),                                               
+                                                                                0.1f, 
+                                                                                0.1f, 
+                                                                                Vector3f(0.8f, 0.6f, 0.2f),                               
+                                                                                Vector3f(3.0f, 2.5f, 2.0f));
+
+        scene->Add(std::make_shared<Quad>(Vector3f(-50.0f, -0.5f, -50.0f), 
+                                          Vector3f(100.0f, 0.0f, 0.0f),    
+                                          Vector3f(0.0f, 0.0f, 100.0f),   
+                                          groundMaterial));
+        scene->Add(std::make_shared<Sphere>(Vector3f(0.0f, 0.0f, -1.2f), 0.5f, centerMaterial));
+        scene->Add(std::make_shared<Sphere>(Vector3f(-1.0f, 0.0f, -1.0f), 0.5f, leftMaterial));
+        scene->Add(std::make_shared<Sphere>(Vector3f(1.0f, 0.0f, -1.0f), 0.5f, rightMaterial));
+
         auto renderer = std::make_shared<Renderer>(std::move(camera), std::move(integrator), std::move(sampler), std::move(scene));
         return renderer;
     }

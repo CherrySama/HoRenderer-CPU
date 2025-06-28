@@ -50,6 +50,7 @@ class Plastic;
 class HomogeneousMedium;
 class IsotropicPhase;
 class Emission;
+class FrostedGlass;
 
 class AABB;
 class BVHnode;

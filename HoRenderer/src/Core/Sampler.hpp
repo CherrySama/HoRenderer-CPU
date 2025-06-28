@@ -35,7 +35,6 @@ public:
     Vector3f sample_square() const;
 
     Vector3f CosineSampleHemisphere(const Vector3f &normal) const;
-    float CosinePdfHemisphere(float cos_theta) const;
     Vector3f GGXNVDSample(const Vector3f& normal, const Vector3f& view, float alpha_u, float alpha_v) const;
 
     void SetCurrentSample(int sample_index);

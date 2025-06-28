@@ -45,8 +45,12 @@ namespace RendererScene
                                                                             0.5f,                      
                                                                             1.6f,                       
                                                                             1.0f);
+        auto frostedGlassMaterial = std::make_shared<FrostedGlass>(Vector3f(0.95f, 0.95f, 0.98f), 
+                                                                                        0.05f,                         
+                                                                                        0.05f,                          
+                                                                                        1.3f,
+                                                                                        1.0f);
 
-        
         scene->Add(std::make_shared<Quad>(Vector3f(555.0f, 0.0f, 0.0f),
                                           Vector3f(0.0f, 555.0f, 0.0f),
                                           Vector3f(0.0f, 0.0f, 555.0f),
@@ -126,17 +130,23 @@ namespace RendererScene
                                                                                 Vector3f(0.8f, 0.6f, 0.2f),                               
                                                                                 Vector3f(3.0f, 2.5f, 2.0f));
         auto greenPlastic = std::make_shared<Plastic>(Vector3f(0.2f, 0.8f, 0.3f), 
-                                                                            Vector3f(1.0f, 1.0f, 1.0f), 
-                                                                            0.05f,                     
-                                                                            0.2f,                      
+                                                                            Vector3f(0.3f, 0.3f, 0.3f), 
+                                                                            0.1f,                     
+                                                                            0.1f,                      
                                                                             1.6f,                       
                                                                             1.0f);
+        auto frostedGlassMaterial = std::make_shared<FrostedGlass>(Vector3f(0.95f, 0.95f, 0.98f),
+                                                                   0.05f,
+                                                                   0.05f,
+                                                                   1.3f,
+                                                                   1.0f);
 
         scene->Add(std::make_shared<Quad>(Vector3f(-50.0f, -0.5f, -50.0f), 
                                                 Vector3f(0.0f, 0.0f, 100.0f),   
                                                 Vector3f(100.0f, 0.0f, 0.0f),    
                                                 groundMaterial));
-        scene->Add(std::make_shared<Sphere>(Vector3f(0.0f, 0.0f, -1.2f), 0.5f, greenPlastic));
+        scene->Add(std::make_shared<Sphere>(Vector3f(-0.5f, 0.0f, -1.2f), 0.5f, conductorMaterial));
+        scene->Add(std::make_shared<Sphere>(Vector3f(1.0f, 0.0f, -1.2f), 0.5f, greenPlastic));
 
         auto renderer = std::make_shared<Renderer>(std::move(camera), std::move(integrator), std::move(sampler), std::move(scene));
         return renderer;

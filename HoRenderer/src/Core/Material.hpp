@@ -36,7 +36,6 @@ public:
 
 private:
     std::shared_ptr<Texture> albedo_texture;
-    // float roughness;
     std::shared_ptr<Texture> roughness_texture;
 };
 
@@ -100,4 +99,28 @@ public:
 private:
     std::shared_ptr<Texture> albedo_texture;
     float intensity;
+};
+
+class FrostedGlass : public Material {
+public:
+    FrostedGlass(const Vector3f &albedo, float roughness_u, float roughness_v, float int_ior, float ext_ior) :
+        albedo_texture(std::make_shared<SolidTexture>(albedo)),
+        roughness_texture_u(std::make_shared<SolidTexture>(Vector3f(roughness_u))),
+        roughness_texture_v(std::make_shared<SolidTexture>(Vector3f(roughness_v))),
+        eta(int_ior / ext_ior) {}
+
+    FrostedGlass(std::shared_ptr<Texture> albedo, std::shared_ptr<Texture> roughness_u, std::shared_ptr<Texture> roughness_v, float int_ior, float ext_ior) :
+        albedo_texture(albedo),
+        roughness_texture_u(roughness_u),
+        roughness_texture_v(roughness_v),
+        eta(int_ior / ext_ior) {}
+
+    virtual Vector3f Sample(const Ray &r_in, const Hit_Payload &rec, Vector3f &scatter_direction, float &pdf, Sampler &sampler) const override;
+    virtual Vector3f Evaluate(const Ray& r_in, const Hit_Payload& rec, const Vector3f& scatter_direction, float& pdf) const override;
+
+private:
+    std::shared_ptr<Texture> albedo_texture;
+    std::shared_ptr<Texture> roughness_texture_u;
+    std::shared_ptr<Texture> roughness_texture_v;
+    float eta; 
 };

@@ -14,7 +14,7 @@ public:
     virtual ~Material() = default;
 
     virtual Vector3f Sample(const Ray& r_in, const Hit_Payload& rec, Vector3f& scatter_direction, float& pdf, Sampler& sampler) const = 0;
-    // virtual Vector3f Evaluate(const Ray& r_in, const Hit_Payload& rec, const Vector3f& scatter_direction, float& pdf) const = 0;
+    virtual Vector3f Evaluate(const Ray& r_in, const Hit_Payload& rec, const Vector3f& scatter_direction, float& pdf) const = 0;
     virtual Vector3f Emit(const Ray& r_in, const Hit_Payload& rec, float u, float v) const;
     
 protected:
@@ -31,7 +31,8 @@ public:
     Diffuse(const Vector3f &a, float rough = 0.0f) : albedo_texture(std::make_shared<SolidTexture>(a)), roughness_texture(std::make_shared<SolidTexture>(Vector3f(rough))) {}
     Diffuse(std::shared_ptr<Texture> tex, std::shared_ptr<Texture> rough) : albedo_texture(tex), roughness_texture(rough) {}
 
-    virtual Vector3f Sample(const Ray& r_in, const Hit_Payload& rec, Vector3f& scatter_direction, float& pdf, Sampler& sampler) const override;
+    virtual Vector3f Sample(const Ray &r_in, const Hit_Payload &rec, Vector3f &scatter_direction, float &pdf, Sampler &sampler) const override;
+    virtual Vector3f Evaluate(const Ray& r_in, const Hit_Payload& rec, const Vector3f& scatter_direction, float& pdf) const override;
 
 private:
     std::shared_ptr<Texture> albedo_texture;
@@ -46,8 +47,9 @@ public:
 
     Conductor(std::shared_ptr<Texture> albedo_tex, std::shared_ptr<Texture> roughness_u, std::shared_ptr<Texture> roughness_v, const Vector3f &eta, const Vector3f &k) :
         albedo_texture(albedo_tex), roughness_texture_u(roughness_u), roughness_texture_v(roughness_v), eta(eta), k(k) {}
-        
-    virtual Vector3f Sample(const Ray& r_in, const Hit_Payload& rec, Vector3f& scatter_direction, float& pdf, Sampler& sampler) const override;
+
+    virtual Vector3f Sample(const Ray &r_in, const Hit_Payload &rec, Vector3f &scatter_direction, float &pdf, Sampler &sampler) const override;
+    virtual Vector3f Evaluate(const Ray& r_in, const Hit_Payload& rec, const Vector3f& scatter_direction, float& pdf) const override;
 
 private:
     std::shared_ptr<Texture> albedo_texture; 
@@ -75,6 +77,7 @@ public:
         nonlinear(nonlinear) {}
 
     virtual Vector3f Sample(const Ray &r_in, const Hit_Payload &rec, Vector3f &scatter_direction, float &pdf, Sampler &sampler) const override;
+    virtual Vector3f Evaluate(const Ray& r_in, const Hit_Payload& rec, const Vector3f& scatter_direction, float& pdf) const override;
 
 private:
     std::shared_ptr<Texture> albedo_texture;      
@@ -90,7 +93,8 @@ public:
     Emission(std::shared_ptr<Texture> tex, float intens = 1.0f) : albedo_texture(tex), intensity(intens) {}
     Emission(const Vector3f& emit, float intens = 1.0f) : albedo_texture(std::make_shared<SolidTexture>(emit)), intensity(intens) {}
 
-    virtual Vector3f Sample(const Ray& r_in, const Hit_Payload& rec, Vector3f& scatter_direction, float& pdf, Sampler& sampler) const override;
+    virtual Vector3f Sample(const Ray &r_in, const Hit_Payload &rec, Vector3f &scatter_direction, float &pdf, Sampler &sampler) const override;
+    virtual Vector3f Evaluate(const Ray& r_in, const Hit_Payload& rec, const Vector3f& scatter_direction, float& pdf) const override;
     virtual Vector3f Emit(const Ray &r_in, const Hit_Payload &rec, float u, float v) const override;
 
 private:

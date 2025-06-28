@@ -5,164 +5,140 @@
 #include "Shape.hpp"
 #include "Material.hpp"
 #include "Filter.hpp"
-#include "../Common/FileManager.hpp"
+#include "Transform.hpp"
+// #include "Medium.hpp"
+// #include "../Common/FileManager.hpp"
 
 namespace RendererScene
-{
-    std::shared_ptr<Renderer> RayTracingInOneWeekendCover()
+{    
+    std::shared_ptr<Renderer> CornellBox()
     {
-        // camera
-        CameraParams camParams = { 16.0f / 9.0f,
-                        1600,
-                        20.0f,
-                        Vector3f(13.0f, 2.0f, 3.0f),
-                        Vector3f(0.0f, 0.0f, 0.0f),
-                        Vector3f(0.0f, 1.0f, 0.0f),
-                        0.6f,
-                        10.0f};
-    
+        CameraParams camParams = {
+            1.0f,                              
+            900,                              
+            40.0f,                             
+            Vector3f(278.0f, 278.0f, -800.0f), 
+            Vector3f(278.0f, 278.0f, 0.0f),   
+            Vector3f(0.0f, 1.0f, 0.0f),       
+            0.0f,                              
+            1.0f                               
+        };
         std::unique_ptr<Camera> camera = std::make_unique<Camera>();
         camera->Create(camParams);
 
-        // Integrator
-        std::unique_ptr<Integrator> integrator = std::make_unique<Integrator>(camera->image_width, camera->image_height);
-
-        // Sampler
+        std::unique_ptr<Integrator> integrator = std::make_unique<Integrator>(camera->image_width, camera->image_height, 16, 30);
         std::unique_ptr<Sampler> sampler = std::make_unique<Sampler>(FilterType::GAUSSIAN);
-
-        // Scene
         std::unique_ptr<Scene> scene = std::make_unique<Scene>();
 
-        auto ground_material = std::make_shared<Lambertian>(Vector3f(0.5f, 0.5f, 0.5f));
-        scene->Add(std::make_shared<Quad>(Vector3f(-50.0f, 0.0f, -50.0f), 
-                                                Vector3f(100.0f, 0.0f, 0.0f),   
-                                                Vector3f(0.0f, 0.0f, 100.0f),   
-                                                ground_material));              
+        auto emitMaterial = std::make_shared<Emission>(Vector3f(50.0f, 50.0f, 50.0f));
+        auto redMaterial = std::make_shared<Diffuse>(Vector3f(0.65f, 0.05f, 0.05f));
+        auto whiteMaterial =  std::make_shared<Diffuse>(Vector3f(0.73f, 0.73f, 0.73f));
+        auto greenMaterial = std::make_shared<Diffuse>(Vector3f(0.12f, 0.45f, 0.15f));
+        auto goldMaterial = std::make_shared<Conductor>(Vector3f(1.0f, 0.86f, 0.57f),
+                                                                            0.001f,
+                                                                            0.001f,
+                                                                            Vector3f(0.47f, 0.37f, 1.5f),
+                                                                            Vector3f(2.13f, 2.23f, 1.69f));
+        auto plasticMaterial = std::make_shared<Plastic>(Vector3f(0.8f, 0.2f, 0.2f), 
+                                                                            Vector3f(1.0f, 1.0f, 1.0f), 
+                                                                            0.5f,                     
+                                                                            0.5f,                      
+                                                                            1.6f,                       
+                                                                            1.0f);
 
-        for (int a = -6; a < 6; a++) {
-            for (int b = -6; b < 6; b++) {
-                auto choose_mat = sampler->random_float();
-                Vector3f center(a + 0.9f * sampler->random_float(),
-                                0.2f,
-                                b + 0.9f * sampler->random_float());
+        
+        scene->Add(std::make_shared<Quad>(Vector3f(555.0f, 0.0f, 0.0f),
+                                          Vector3f(0.0f, 555.0f, 0.0f),
+                                          Vector3f(0.0f, 0.0f, 555.0f),
+                                          greenMaterial));
 
-                if (glm::length(center - Vector3f(4.0f, 0.2f, 0.0f)) > 0.9f) {
-                    std::shared_ptr<Material> sphere_material;
+        scene->Add(std::make_shared<Quad>(Vector3f(0.0f, 0.0f, 0.0f),
+                                          Vector3f(0.0f, 555.0f, 0.0f),
+                                          Vector3f(0.0f, 0.0f, 555.0f),
+                                          redMaterial));
 
-                    if (choose_mat < 0.8f) {
-                        // diffuse
-                        float r = sampler->random_float();
-                        float g = sampler->random_float();  
-                        float b = sampler->random_float();
-                        Vector3f albedo = Vector3f(r * r, g * g, b * b);
-                        sphere_material = std::make_shared<Lambertian>(albedo);
-                        scene->Add(std::make_shared<Sphere>(center, 0.2f, sphere_material));
-                    } else if (choose_mat < 0.95f) {
-                        // metal
-                        Vector3f albedo(sampler->random_float(0.5f, 1.0f),
-                                        sampler->random_float(0.5f, 1.0f),
-                                        sampler->random_float(0.5f, 1.0f));
-                        float fuzz = sampler->random_float(0.0f, 0.5f);
-                        sphere_material = std::make_shared<Metal>(albedo, fuzz);
-                        scene->Add(std::make_shared<Sphere>(center, 0.2f, sphere_material));
-                    } else {
-                        // glass
-                        sphere_material = std::make_shared<Dielectric>(1.5f);
-                        scene->Add(std::make_shared<Sphere>(center, 0.2f, sphere_material));
-                    }
-                }
-            }
-        }
-        auto material1 = std::make_shared<Dielectric>(1.5f);
-        scene->Add(std::make_shared<Sphere>(Vector3f(0.0f, 1.0f, 0.0f), 1.0f, material1));
+        scene->Add(std::make_shared<Quad>(Vector3f(127.5f, 554.0f, 127.5f),
+                                          Vector3f(300.0f, 0.0f, 0.0f),
+                                          Vector3f(0.0f, 0.0f, 300.0f),
+                                          emitMaterial));
 
-        auto material2 = std::make_shared<DiffuseBRDF>(Vector3f(0.4f, 0.2f, 0.1f));
-        scene->Add(std::make_shared<Sphere>(Vector3f(-4.0f, 1.0f, 0.0f), 1.0f, material2));
+        scene->Add(std::make_shared<Quad>(Vector3f(0.0f, 0.0f, 0.0f),
+                                          Vector3f(555.0f, 0.0f, 0.0f),
+                                          Vector3f(0.0f, 0.0f, 555.0f),
+                                          whiteMaterial));
 
-        auto material3 = std::make_shared<Metal>(Vector3f(0.7f, 0.6f, 0.5f), 0.0f);
-        scene->Add(std::make_shared<Sphere>(Vector3f(4.0f, 1.0f, 0.0f), 1.0f, material3));
+        scene->Add(std::make_shared<Quad>(Vector3f(555.0f, 555.0f, 555.0f),
+                                          Vector3f(-555.0f, 0.0f, 0.0f),
+                                          Vector3f(0.0f, 0.0f, -555.0f),
+                                          whiteMaterial));
 
-        scene->BuildBVH();
+        scene->Add(std::make_shared<Quad>(Vector3f(0.0f, 0.0f, 555.0f),
+                                          Vector3f(555.0f, 0.0f, 0.0f),
+                                          Vector3f(0.0f, 555.0f, 0.0f),
+                                          whiteMaterial));
 
-        // Renderer
-        auto renderer = std::make_shared<Renderer>(std::move(camera), std::move(integrator), std::move(sampler), std::move(scene));
+        auto box1 = std::make_shared<Box>(Vector3f(0.0f,0.0f,0.0f),
+                                         Vector3f(165.0f, 165.0f, 165.0f),
+                                         plasticMaterial);
+        auto rotate_box1 = Transform::rotate(box1, RotationAxis::Y,15.0f);
+        auto translated_box1 = Transform::translate(rotate_box1, Vector3f(212.5f,82.5f,147.5f));
+        scene->Add(translated_box1);
+        // scene->Add(std::make_shared<HomogeneousMedium>(translated_box1, 0.01f, Vector3f(0)));
 
-        return renderer;
-    }
-    
-    std::shared_ptr<Renderer> TestScene()
-    {
-        // camera
-        CameraParams camParams = { 16.0f / 9.0f,
-                        1600,
-                        20.0f,
-                        Vector3f(-2.0f, 2.0f, 1.0f),
-                        Vector3f(0.5f, 0.0f, -2.0f),
-                        Vector3f(0.0f, 1.0f, 0.0f),
-                        0.0f,
-                        2.0f};
-    
-        std::unique_ptr<Camera> camera = std::make_unique<Camera>();
-        camera->Create(camParams);
-
-        // Integrator
-        std::unique_ptr<Integrator> integrator = std::make_unique<Integrator>(camera->image_width, camera->image_height);
-
-        // Sampler
-        std::unique_ptr<Sampler> sampler = std::make_unique<Sampler>(FilterType::TENT);
-
-        // Scene
-        std::unique_ptr<Scene> scene = std::make_unique<Scene>();
-
-        // Material
-        FileManager *fm = FileManager::getInstance();
-        fm->init();
-        TextureParams imageParams;
-        imageParams.type = TextureType::IMAGE;
-        imageParams.filepath = fm->getTexturePath("paper-cuts.jpg");
-        auto imageTexture = Texture::Create(imageParams);
-
-        TextureParams solidParams;
-        solidParams.type = TextureType::SOLIDCOLOR;
-        solidParams.color = Vector3f(0.8f, 0.8f, 0.0f);
-        auto solidTexture = Texture::Create(solidParams);
-
-        MaterialParams mp;
-        mp.type = MaterialType::LAMBERTIAN;
-        mp.albedo_texture = solidTexture;
-        auto material_ground = Material::Create(mp);
-        mp.albedo_texture = imageTexture;
-        auto material_center = Material::Create(mp);
-
-        mp.type = MaterialType::DIELECTRIC;
-        mp.refractive_index = 1.50f;
-        auto material_left = Material::Create(mp);
-        mp.refractive_index = 1.00f / 1.50f;
-        auto material_bubble = Material::Create(mp);
-
-        solidParams.color = Vector3f(0.8f, 0.6f, 0.2f);
-        solidTexture = Texture::Create(solidParams);
-        mp.type = MaterialType::METAL;
-        mp.albedo_texture = solidTexture;
-        mp.fuzz = 0.0f;
-        auto material_right = Material::Create(mp);
-
-        // Scene
-        scene->Add(std::make_shared<Quad>(Vector3f(-50.0f, 0.0f, -50.0f), 
-                                                Vector3f(100.0f, 0.0f, 0.0f),   
-                                                Vector3f(0.0f, 0.0f, 100.0f),   
-                                                material_ground));   
-
-        scene->Add(std::make_shared<Sphere>(Vector3f(0.0f, 0.5f, -1.2f), 0.5f, material_center));
-        scene->Add(std::make_shared<Sphere>(Vector3f(-1.0f, 0.5f, -1.0f), 0.5f, material_left));
-        scene->Add(std::make_shared<Sphere>(Vector3f(-1.0f, 0.5f, -1.0f), 0.4f, material_bubble));
-        scene->Add(std::make_shared<Sphere>(Vector3f(1.0f, 0.5f, -1.0f), 0.5f, material_right));
+        auto box2 = std::make_shared<Box>(Vector3f(0.0f, 0.0f, 0.0f),
+                                          Vector3f(165.0f, 330.0f, 165.0f),
+                                          whiteMaterial);
+        auto rotate_box2 = Transform::rotate(box2, RotationAxis::Y,-18.0f);
+        auto translated_box2 = Transform::translate(rotate_box2, Vector3f(347.5f, 165.0f, 377.5f));
+        scene->Add(translated_box2);
+        // scene->Add(std::make_shared<HomogeneousMedium>(translated_box2, 0.01f, Vector3f(1)));
 
         // scene->BuildBVH();
-        
-        // Renderer
         auto renderer = std::make_shared<Renderer>(std::move(camera), std::move(integrator), std::move(sampler), std::move(scene));
+        return renderer;
+    }
 
+    std::shared_ptr<Renderer> TestScene()
+    {
+        CameraParams camParams = {
+            16.0f / 9.0f,                       
+            1200,                         
+            20.0f,                       
+            Vector3f(-2.0f, 2.0f, 1.0f), 
+            Vector3f(0.0f, 0.0f, -1.0f), 
+            Vector3f(0.0f, 1.0f, 0.0f),  
+            0.0f,                        
+            1.0f      
+        };
+        std::unique_ptr<Camera> camera = std::make_unique<Camera>();
+        camera->Create(camParams);
+
+        std::unique_ptr<Integrator> integrator = std::make_unique<Integrator>(camera->image_width, camera->image_height, 16, 30);
+        std::unique_ptr<Sampler> sampler = std::make_unique<Sampler>(FilterType::GAUSSIAN);
+        std::unique_ptr<Scene> scene = std::make_unique<Scene>();
+
+        auto groundMaterial = std::make_shared<Diffuse>(Vector3f(0.8f, 0.8f, 0.0f));
+        auto diffuseMaterial = std::make_shared<Diffuse>(Vector3f(0.1f, 0.2f, 0.5f));
+        auto emitMaterial = std::make_shared<Emission>(Vector3f(15.0f, 15.0f, 15.0f));
+        auto conductorMaterial = std::make_shared<Conductor>(Vector3f(0.8f, 0.6f, 0.2f),                                               
+                                                                                0.1f, 
+                                                                                0.1f, 
+                                                                                Vector3f(0.8f, 0.6f, 0.2f),                               
+                                                                                Vector3f(3.0f, 2.5f, 2.0f));
+        auto greenPlastic = std::make_shared<Plastic>(Vector3f(0.2f, 0.8f, 0.3f), 
+                                                                            Vector3f(1.0f, 1.0f, 1.0f), 
+                                                                            0.05f,                     
+                                                                            0.2f,                      
+                                                                            1.6f,                       
+                                                                            1.0f);
+
+        scene->Add(std::make_shared<Quad>(Vector3f(-50.0f, -0.5f, -50.0f), 
+                                                Vector3f(0.0f, 0.0f, 100.0f),   
+                                                Vector3f(100.0f, 0.0f, 0.0f),    
+                                                groundMaterial));
+        scene->Add(std::make_shared<Sphere>(Vector3f(0.0f, 0.0f, -1.2f), 0.5f, greenPlastic));
+
+        auto renderer = std::make_shared<Renderer>(std::move(camera), std::move(integrator), std::move(sampler), std::move(scene));
         return renderer;
     }
 }

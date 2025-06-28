@@ -5,79 +5,99 @@
 
 #include "Util.hpp"
 #include "Ray.hpp"
-#include "Sampler.hpp"
 #include "Texture.hpp"
 
-enum class MaterialType {
-    LAMBERTIAN,
-    DIFFUSE_BRDF,
-    METAL,
-    DIELECTRIC
-};
-
-struct MaterialParams {
-    MaterialType type;
-    std::shared_ptr<Texture> albedo_texture;
-    float roughness;
-    float fuzz;
-    float refractive_index;
-};
 
 class Material {
 public:
     Material() = default;
     virtual ~Material() = default;
 
-    // Core Scattering Function
-    virtual bool Scatter(const Ray& r_in, const Hit_Payload& rec, Vector3f& attenuation, Ray& scattered, Sampler& sampler) const = 0;
-    static std::shared_ptr<Material> Create(const MaterialParams& params);
+    virtual Vector3f Sample(const Ray& r_in, const Hit_Payload& rec, Vector3f& scatter_direction, float& pdf, Sampler& sampler) const = 0;
+    virtual Vector3f Evaluate(const Ray& r_in, const Hit_Payload& rec, const Vector3f& scatter_direction, float& pdf) const = 0;
+    virtual Vector3f Emit(const Ray& r_in, const Hit_Payload& rec, float u, float v) const;
+    
+protected:
+    Vector3f GetSurfaceNormal(const Hit_Payload &rec) const;
+    void SetNormal(std::shared_ptr<Texture> &normal);
+    Vector3f NormalFromTangentToWorld(const Vector3f &surface_normal, const Vector3f &tangent_normal) const;
+
+protected:
+    std::shared_ptr<Texture> normal_texture = nullptr;
 };
 
-// Lambertian
-class Lambertian : public Material {
+class Diffuse : public Material {
 public:
-    Lambertian(const Vector3f& a) : albedo_texture(std::make_shared<SolidTexture>(a)) {}
-    Lambertian(std::shared_ptr<Texture> tex) : albedo_texture(tex) {}
+    Diffuse(const Vector3f &a, float rough = 0.0f) : albedo_texture(std::make_shared<SolidTexture>(a)), roughness_texture(std::make_shared<SolidTexture>(Vector3f(rough))) {}
+    Diffuse(std::shared_ptr<Texture> tex, std::shared_ptr<Texture> rough) : albedo_texture(tex), roughness_texture(rough) {}
 
-    virtual bool Scatter(const Ray& r_in, const Hit_Payload& rec, Vector3f& attenuation, Ray& scattered, Sampler& sampler) const override;
+    virtual Vector3f Sample(const Ray &r_in, const Hit_Payload &rec, Vector3f &scatter_direction, float &pdf, Sampler &sampler) const override;
+    virtual Vector3f Evaluate(const Ray& r_in, const Hit_Payload& rec, const Vector3f& scatter_direction, float& pdf) const override;
 
 private:
     std::shared_ptr<Texture> albedo_texture;
+    // float roughness;
+    std::shared_ptr<Texture> roughness_texture;
 };
 
-class DiffuseBRDF : public Material {
+class Conductor : public Material {
 public:
-    DiffuseBRDF(const Vector3f &a, float rough = 0.0f) : albedo_texture(std::make_shared<SolidTexture>(a)), roughness(rough) {}
-    DiffuseBRDF(std::shared_ptr<Texture> tex, float rough = 0.0f) : albedo_texture(tex), roughness(rough) {}
+    Conductor(const Vector3f &albedo, float roughness_u, float roughness_v, const Vector3f &eta, const Vector3f &k) :
+        albedo_texture(std::make_shared<SolidTexture>(albedo)), roughness_texture_u(std::make_shared<SolidTexture>(Vector3f(roughness_u))), roughness_texture_v(std::make_shared<SolidTexture>(Vector3f(roughness_v))), eta(eta), k(k) {}
 
-    virtual bool Scatter(const Ray& r_in, const Hit_Payload& rec, Vector3f& attenuation, Ray& scattered, Sampler& sampler) const override;
+    Conductor(std::shared_ptr<Texture> albedo_tex, std::shared_ptr<Texture> roughness_u, std::shared_ptr<Texture> roughness_v, const Vector3f &eta, const Vector3f &k) :
+        albedo_texture(albedo_tex), roughness_texture_u(roughness_u), roughness_texture_v(roughness_v), eta(eta), k(k) {}
 
-private:
-    std::shared_ptr<Texture> albedo_texture;
-    float roughness;
-};
-
-// Not physically correct
-class Metal : public Material {
-public:
-    Metal(const Vector3f& a, float fu = 0.0f) : albedo_texture(std::make_shared<SolidTexture>(a)), fuzz(fu < 1.0f ? fu : 1.0f) {}
-    Metal(std::shared_ptr<Texture> tex, float fu = 0.0f) : albedo_texture(tex), fuzz(fu < 1.0f ? fu : 1.0f) {}
-
-    virtual bool Scatter(const Ray& r_in, const Hit_Payload& rec, Vector3f& attenuation, Ray& scattered, Sampler& sampler) const override;
+    virtual Vector3f Sample(const Ray &r_in, const Hit_Payload &rec, Vector3f &scatter_direction, float &pdf, Sampler &sampler) const override;
+    virtual Vector3f Evaluate(const Ray& r_in, const Hit_Payload& rec, const Vector3f& scatter_direction, float& pdf) const override;
 
 private:
     std::shared_ptr<Texture> albedo_texture; 
-    float fuzz;
+    std::shared_ptr<Texture> roughness_texture_u;  
+    std::shared_ptr<Texture> roughness_texture_v;
+    Vector3f eta, k; 
 };
 
-class Dielectric : public Material {
+class Plastic : public Material {
 public:
-    Dielectric(float refract) : refractive_index(refract) {}
+    Plastic(const Vector3f &albedo, const Vector3f &specular, float roughness_u, float roughness_v, float int_ior, float ext_ior, bool nonlinear = true) :
+        albedo_texture(std::make_shared<SolidTexture>(albedo)),
+        specular_texture(std::make_shared<SolidTexture>(specular)),
+        roughness_texture_u(std::make_shared<SolidTexture>(Vector3f(roughness_u))),
+        roughness_texture_v(std::make_shared<SolidTexture>(Vector3f(roughness_v))),
+        eta(int_ior / ext_ior),
+        nonlinear(nonlinear) {}
 
-    virtual bool Scatter(const Ray& r_in, const Hit_Payload& rec, Vector3f& attenuation, Ray& scattered, Sampler& sampler) const override;
+    Plastic(std::shared_ptr<Texture> albedo, std::shared_ptr<Texture> specular, std::shared_ptr<Texture> roughness_u, std::shared_ptr<Texture> roughness_v, float int_ior, float ext_ior, bool nonlinear = true) :
+        albedo_texture(albedo),
+        specular_texture(specular),
+        roughness_texture_u(roughness_u),
+        roughness_texture_v(roughness_v),
+        eta(int_ior / ext_ior),
+        nonlinear(nonlinear) {}
+
+    virtual Vector3f Sample(const Ray &r_in, const Hit_Payload &rec, Vector3f &scatter_direction, float &pdf, Sampler &sampler) const override;
+    virtual Vector3f Evaluate(const Ray& r_in, const Hit_Payload& rec, const Vector3f& scatter_direction, float& pdf) const override;
+
 private:
-    float refractive_index;
+    std::shared_ptr<Texture> albedo_texture;      
+    std::shared_ptr<Texture> specular_texture;    
+    std::shared_ptr<Texture> roughness_texture_u; 
+    std::shared_ptr<Texture> roughness_texture_v; 
+    float eta;                                    
+    bool nonlinear;
+};
 
-    // Use Schlick's approximation for reflectance.
-    static float Reflectance(float cosine, float refraction_index);
+class Emission : public Material {
+public:
+    Emission(std::shared_ptr<Texture> tex, float intens = 1.0f) : albedo_texture(tex), intensity(intens) {}
+    Emission(const Vector3f& emit, float intens = 1.0f) : albedo_texture(std::make_shared<SolidTexture>(emit)), intensity(intens) {}
+
+    virtual Vector3f Sample(const Ray &r_in, const Hit_Payload &rec, Vector3f &scatter_direction, float &pdf, Sampler &sampler) const override;
+    virtual Vector3f Evaluate(const Ray& r_in, const Hit_Payload& rec, const Vector3f& scatter_direction, float& pdf) const override;
+    virtual Vector3f Emit(const Ray &r_in, const Hit_Payload &rec, float u, float v) const override;
+
+private:
+    std::shared_ptr<Texture> albedo_texture;
+    float intensity;
 };

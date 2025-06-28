@@ -35,23 +35,37 @@ class Ray;
 class Hittable;
 class Hit_Payload;
 class Scene;
-class Sphere;
-class Quad;
-class Box;
 class Camera;
 class Sampler;
 class ProgressTracker;
+
+class Sphere;
+class Quad;
+class Box;
+
 class Material;
-class Lambertian;
-class DiffuseBRDF;
-class Metal;
-class Dielectric;
+class Diffuse;
+class Conductor;
+class Plastic;
+class HomogeneousMedium;
+class IsotropicPhase;
+class Emission;
+
 class AABB;
 class BVHnode;
 class Filter;
 class UniformFilter;
 class GaussianFilter;
 class TentFilter;
+
+class Texture;
+class SolidTexture;
+class ImageTexture;
+class HDRTexture;
+
+class Translate;
+class Rotate;
+class Scale;
 
 
 using Vector2u = glm::uvec2;
@@ -73,6 +87,7 @@ using Matrix4f = glm::mat4x4;
 constexpr float Epsilon = 1e-5f;
 constexpr float Infinity = std::numeric_limits<float>::infinity();
 constexpr float PI = 3.1415926535897932385f;
+constexpr float INV_PI = 1.0f / PI;
 
 
 inline uint32_t FloatToBits(float f) {
@@ -151,10 +166,9 @@ inline float LinearToSRGB(float linear) {
 }
 
 inline Vector3f LinearToSRGB(const Vector3f& linear) {
-    return Vector3f(
-        LinearToSRGB(linear.r),
-        LinearToSRGB(linear.g),
-        LinearToSRGB(linear.b));
+    return Vector3f(LinearToSRGB(linear.r),
+                    LinearToSRGB(linear.g),
+                    LinearToSRGB(linear.b));
 }
 
 inline Vector3f ACESFilmicToneMapping(const Vector3f& color) {
@@ -168,4 +182,45 @@ inline Vector3f ACESFilmicToneMapping(const Vector3f& color) {
     Vector3f denominator = color * (c * color + Vector3f(d)) + Vector3f(e);
     
     return glm::clamp(numerator / denominator, 0.0f, 1.0f);
+}
+
+inline uint32_t hash_pixel(int x, int y) {
+    uint32_t h = static_cast<uint32_t>(x);
+    h ^= static_cast<uint32_t>(y) << 16;
+    h ^= h >> 16;
+    h *= 0x85ebca6b;
+    h ^= h >> 13;
+    h *= 0xc2b2ae35;
+    h ^= h >> 16;
+    return h;
+}
+
+inline Vector3f ToLocal(const Vector3f& dir, const Vector3f& up) {
+	auto B = Vector3f(0.0f), C = Vector3f(0.0f);
+	if (std::abs(up.x) > std::abs(up.y)) {
+		float len_inv = 1.0f / std::sqrt(up.x * up.x + up.z * up.z);
+		C = Vector3f(up.z * len_inv, 0.0f, -up.x * len_inv);
+	}
+	else {
+		float len_inv = 1.0f / std::sqrt(up.y * up.y + up.z * up.z);
+		C = Vector3f(0.0f, up.z * len_inv, -up.y * len_inv);
+	}
+	B = glm::cross(C, up);
+
+	return Vector3f(glm::dot(dir, B), glm::dot(dir, C), glm::dot(dir, up));
+}
+
+inline Vector3f ToWorld(const Vector3f& dir, const Vector3f& up) {
+	auto B = Vector3f(0.0f), C = Vector3f(0.0f);
+	if (std::abs(up.x) > std::abs(up.y)) {
+		float len_inv = 1.0f / std::sqrt(up.x * up.x + up.z * up.z);
+		C = Vector3f(up.z * len_inv, 0.0f, -up.x * len_inv);
+	}
+	else {
+		float len_inv = 1.0f / std::sqrt(up.y * up.y + up.z * up.z);
+		C = Vector3f(0.0f, up.z * len_inv, -up.y * len_inv);
+	}
+	B = glm::cross(C, up);
+
+	return glm::normalize(dir.x * B + dir.y * C + dir.z * up);
 }

@@ -17,14 +17,17 @@ void Integrator::RenderImage(Camera &cam, Scene &world, Sampler &sampler, int sa
 
    #pragma omp parallel
     {
+        Sampler thread_sampler = sampler;
+        thread_sampler.SetCurrentSample(sample_index);
         // #pragma omp for schedule(dynamic, 4)
         #pragma omp for schedule(guided)
         for (int j = 0; j < height; ++j)
-        {                  
+        {
             for (int i = 0; i < width; i++) {
-                Vector2f offset = sampler.sample_square();
-                Ray r = cam.GenerateRay(i, j, sampler, offset);
-                Vector3f pixel_color = ray_color(r, max_bounce, world, sampler);
+                thread_sampler.SetPixel(i, j);
+                Vector2f offset = thread_sampler.sample_square();
+                Ray r = cam.GenerateRay(i, j, thread_sampler, offset);
+                Vector3f pixel_color = ray_color(r, max_bounce, world, thread_sampler);
 
                 write_color(i, j, pixel_color);  
             }
@@ -52,22 +55,27 @@ Vector3f Integrator::ray_color(const Ray &r, int bounce, const Hittable &world, 
         return Vector3f(0, 0, 0);
 
     Hit_Payload rec;
-    if (world.isHit(r, Vector2f(0.0f, Infinity), rec)) {
-        Ray scattered;
-        Vector3f attenuation;
-
-        // If the object has a material and can scatter light
-        if (rec.mat && rec.mat->Scatter(r, rec, attenuation, scattered, sampler))
-            return attenuation * ray_color(scattered, bounce-1, world, sampler);
-        
-        // If there is no material, use the normal color
-        return 0.5f * (rec.normal + Vector3f(1,1,1));
+    if (!world.isHit(r, Vector2f(0.0f, Infinity), rec)) {
+        return Vector3f(0.7f, 0.8f, 0.9f); 
     }
+
+    Vector3f emission = rec.mat->Emit(r, rec, rec.uv.x, rec.uv.y);
+
+    Vector3f scatter_direction;
+    float pdf;
+    Vector3f brdf = rec.mat->Sample(r, rec, scatter_direction, pdf, sampler);
+    if (pdf <= Epsilon) 
+        return emission;
+
+    Ray scattered = Ray::SpawnRay(rec.p, scatter_direction, rec.normal);
+
+    Vector3f surface_normal = rec.normal;
+    float cos_theta = glm::max(0.0f, glm::dot(surface_normal, glm::normalize(scatter_direction)));
+    Vector3f attenuation = brdf * cos_theta / pdf;
     
-    // Background Color - Sky Gradient
-    Vector3f unit_direction = glm::normalize(r.direction());
-    float color = 0.5f * (unit_direction.y + 1.0f);
-    return (1.0f - color) * Vector3f(1.0, 1.0, 1.0) + color * Vector3f(0.5, 0.7, 1.0);
+    Vector3f scatter = attenuation * ray_color(scattered, bounce-1, world, sampler);
+
+    return emission + scatter;
 }
 
 void Integrator::SetNumThreads(int threads)

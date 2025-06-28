@@ -7,7 +7,7 @@
 #include "Renderer.hpp"
 
 namespace RendererScene {
-    std::shared_ptr<Renderer> RayTracingInOneWeekendCover();
+    std::shared_ptr<Renderer> CornellBox();
 
     std::shared_ptr<Renderer> TestScene();
 }

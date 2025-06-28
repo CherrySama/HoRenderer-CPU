@@ -5,10 +5,10 @@
 #include "Core/RendererScene.hpp"
 
 
-int main()
-{
-    auto renderer = RendererScene::TestScene();
-    // auto renderer = RendererScene::RayTracingInOneWeekendCover();
+int main() {
+    srand(static_cast<unsigned int>(time(nullptr)));
+    // auto renderer = RendererScene::TestScene();
+    auto renderer = RendererScene::CornellBox();
     renderer->Run();
 
     return 0;

@@ -354,7 +354,7 @@ Vector3f FrostedGlass::Sample(const Ray &r_in, const Hit_Payload &rec, Vector3f 
     
     Vector3f H = sampler.GGXNVDSample(N, V, alpha_u, alpha_v);
     
-    float eta_ratio = rec.front_face ? (1.0f / eta) : eta;
+    float eta_ratio = rec.front_face ? eta : (1.0f / eta);
     float F = BSDF::FresnelDielectric(V, H, eta_ratio);
 
     if (sampler.random_float() < F) {
@@ -375,7 +375,7 @@ Vector3f FrostedGlass::Sample(const Ray &r_in, const Hit_Payload &rec, Vector3f 
         float Dv = G1_V * VdotH * D / NdotV;
         pdf = F * Dv * std::abs(1.0f / (4.0f * VdotH));
 
-        Vector3f brdf = albedo * F * D * G / (4.0f * NdotV * NdotL);
+        Vector3f brdf = albedo * F * D * G1_V / (4.0f * NdotV * NdotL);
         return brdf;
     } else {
         Vector3f T = glm::refract(-V, H, eta_ratio);
@@ -399,7 +399,7 @@ Vector3f FrostedGlass::Sample(const Ray &r_in, const Hit_Payload &rec, Vector3f 
             float pdf_reflection = Dv * std::abs(1.0f / (4.0f * VdotH));
             pdf = (1.0f - F) * pdf_reflection;
 
-            Vector3f brdf = albedo * D * G / (4.0f * NdotV * NdotL);
+            Vector3f brdf = albedo * (1.0f - F) * D * G1_V / (4.0f * NdotV * NdotL);
             return brdf;
         }
         scatter_direction = glm::normalize(T);
@@ -423,14 +423,14 @@ Vector3f FrostedGlass::Sample(const Ray &r_in, const Hit_Payload &rec, Vector3f 
             return Vector3f(0.0f);
         }
 
-        float jacobian_factor = (eta_ratio * eta_ratio * std::abs(LdotH)) / (denom * denom);
+        float jacobian_factor = std::abs(LdotH) / std::abs(denom);
         jacobian_factor *= jacobian_factor;
 
         float Dv = G1_V * VdotH * D / NdotV;
         pdf = (1.0f - F) * Dv * jacobian_factor;
 
         float eta_factor = rec.front_face ? (eta_ratio * eta_ratio) : 1.0f;
-        Vector3f btdf = albedo * (1.0f - F) * D * G * std::abs(VdotH * LdotH) * eta_factor / (std::abs(NdotV * NdotL) * denom * denom);
+        Vector3f btdf = albedo * (1.0f - F) * D * G1_V * std::abs(VdotH * LdotH) * eta_factor / (std::abs(NdotV * NdotL) * denom * denom);
 
         return btdf;
     }

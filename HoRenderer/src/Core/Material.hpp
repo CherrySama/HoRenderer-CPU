@@ -122,5 +122,6 @@ private:
     std::shared_ptr<Texture> albedo_texture;
     std::shared_ptr<Texture> roughness_texture_u;
     std::shared_ptr<Texture> roughness_texture_v;
-    float eta; 
+    float eta;
 };
+

@@ -396,7 +396,8 @@ Vector3f FrostedGlass::Sample(const Ray &r_in, const Hit_Payload &rec, Vector3f 
             float G = G1_V * G1_L;
 
             float Dv = G1_V * VdotH * D / NdotV;
-            pdf = Dv * std::abs(1.0f / (4.0f * VdotH));
+            float pdf_reflection = Dv * std::abs(1.0f / (4.0f * VdotH));
+            pdf = (1.0f - F) * pdf_reflection;
 
             Vector3f brdf = albedo * D * G / (4.0f * NdotV * NdotL);
             return brdf;
@@ -422,7 +423,7 @@ Vector3f FrostedGlass::Sample(const Ray &r_in, const Hit_Payload &rec, Vector3f 
             return Vector3f(0.0f);
         }
 
-        float jacobian_factor = std::abs(LdotH) / std::abs(denom);
+        float jacobian_factor = (eta_ratio * eta_ratio * std::abs(LdotH)) / (denom * denom);
         jacobian_factor *= jacobian_factor;
 
         float Dv = G1_V * VdotH * D / NdotV;

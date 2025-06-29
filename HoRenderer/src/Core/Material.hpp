@@ -16,6 +16,7 @@ public:
     virtual Vector3f Sample(const Ray& r_in, const Hit_Payload& rec, Vector3f& scatter_direction, float& pdf, Sampler& sampler) const = 0;
     virtual Vector3f Evaluate(const Ray& r_in, const Hit_Payload& rec, const Vector3f& scatter_direction, float& pdf) const = 0;
     virtual Vector3f Emit(const Ray& r_in, const Hit_Payload& rec, float u, float v) const;
+    virtual bool IsDelta() const { return false; }
     
 protected:
     Vector3f GetSurfaceNormal(const Hit_Payload &rec) const;
@@ -125,3 +126,14 @@ private:
     float eta;
 };
 
+class Glass : public Material {
+public:
+    Glass(float refraction_index) : refraction_index(refraction_index) {}
+    
+    virtual Vector3f Sample(const Ray& r_in, const Hit_Payload& rec, Vector3f& scatter_direction, float& pdf, Sampler& sampler) const override;
+    virtual Vector3f Evaluate(const Ray& r_in, const Hit_Payload& rec, const Vector3f& scatter_direction, float& pdf) const override;
+    virtual bool IsDelta() const override { return true; }
+    
+private:
+    float refraction_index;
+};

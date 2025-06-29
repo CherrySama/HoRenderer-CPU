@@ -511,3 +511,47 @@ Vector3f FrostedGlass::Evaluate(const Ray& r_in, const Hit_Payload& rec, const V
         return btdf;
     }
 }
+
+Vector3f Glass::Sample(const Ray& r_in, const Hit_Payload& rec, Vector3f& scatter_direction, float& pdf, Sampler& sampler) const
+{
+    Vector3f N = GetSurfaceNormal(rec);
+    Vector3f V = -glm::normalize(r_in.direction());
+
+    float eta_ratio = rec.front_face ? (1.0f / refraction_index) : refraction_index;
+    
+    float cos_theta = glm::clamp(glm::dot(V, N), 0.0f, 1.0f);
+    float sin_theta = std::sqrt(1.0f - cos_theta * cos_theta);
+
+    if (eta_ratio * sin_theta > 1.0f) {
+        scatter_direction = glm::reflect(-V, N);
+        pdf = 1.0f;
+        return Vector3f(1.0f, 1.0f, 1.0f);
+    } else {
+        float fresnel_reflectance = BSDF::FresnelDielectric(V, N, eta_ratio);
+        
+        if (sampler.random_float() < fresnel_reflectance) {
+            scatter_direction = glm::reflect(-V, N);
+            pdf = 1.0f;
+            return Vector3f(1.0f, 1.0f, 1.0f);
+        } else {
+            scatter_direction = glm::refract(-V, N, eta_ratio);
+            
+            if (glm::length(scatter_direction) < Epsilon) {
+                scatter_direction = glm::reflect(-V, N);
+                pdf = 1.0f;
+                return Vector3f(1.0f, 1.0f, 1.0f);
+            }
+            
+            pdf = 1.0f;
+
+            float eta_factor = rec.front_face ? (eta_ratio * eta_ratio) : 1.0f;
+            return Vector3f(eta_factor, eta_factor, eta_factor);
+        }
+    }
+}
+
+Vector3f Glass::Evaluate(const Ray& r_in, const Hit_Payload& rec, const Vector3f& scatter_direction, float& pdf) const
+{
+    pdf = Epsilon;
+    return Vector3f(Epsilon, Epsilon, Epsilon);
+}

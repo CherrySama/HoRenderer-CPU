@@ -67,11 +67,22 @@ Vector3f Integrator::ray_color(const Ray &r, int bounce, const Hittable &world, 
     if (pdf <= Epsilon) 
         return emission;
 
-    Ray scattered = Ray::SpawnRay(rec.p, scatter_direction, rec.normal);
 
-    Vector3f surface_normal = rec.normal;
-    float cos_theta = glm::max(0.0f, glm::dot(surface_normal, glm::normalize(scatter_direction)));
-    Vector3f attenuation = brdf * cos_theta / pdf;
+    Vector3f spawn_normal = rec.normal;
+    bool is_refraction = glm::dot(scatter_direction, rec.normal) < 0.0f;
+    if (is_refraction) 
+        spawn_normal = -rec.normal;
+    
+    Ray scattered = Ray::SpawnRay(rec.p, scatter_direction, spawn_normal);
+
+    Vector3f attenuation;
+    if (rec.mat->IsDelta()) {
+        attenuation = brdf;
+    } else {
+        Vector3f surface_normal = rec.normal;
+        float cos_theta = std::abs(glm::dot(surface_normal, glm::normalize(scatter_direction)));
+        attenuation = brdf * cos_theta / pdf;
+    }
     
     Vector3f scatter = attenuation * ray_color(scattered, bounce-1, world, sampler);
 

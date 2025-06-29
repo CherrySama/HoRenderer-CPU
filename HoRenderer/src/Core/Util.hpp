@@ -51,6 +51,7 @@ class HomogeneousMedium;
 class IsotropicPhase;
 class Emission;
 class FrostedGlass;
+class Glass;
 
 class AABB;
 class BVHnode;

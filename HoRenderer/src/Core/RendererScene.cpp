@@ -50,7 +50,8 @@ namespace RendererScene
                                                                                         0.3f,                          
                                                                                         1.3f,
                                                                                         1.0f);
-
+        auto glassMaterial = std::make_shared<Glass>(1.5f);
+        
         scene->Add(std::make_shared<Quad>(Vector3f(555.0f, 0.0f, 0.0f),
                                           Vector3f(0.0f, 555.0f, 0.0f),
                                           Vector3f(0.0f, 0.0f, 555.0f),
@@ -83,7 +84,7 @@ namespace RendererScene
 
         auto box1 = std::make_shared<Box>(Vector3f(0.0f,0.0f,0.0f),
                                          Vector3f(165.0f, 165.0f, 165.0f),
-                                         frostedGlassMaterial);
+                                         whiteMaterial);
         auto rotate_box1 = Transform::rotate(box1, RotationAxis::Y,15.0f);
         auto translated_box1 = Transform::translate(rotate_box1, Vector3f(212.5f,82.5f,147.5f));
         scene->Add(translated_box1);
@@ -91,7 +92,7 @@ namespace RendererScene
 
         auto box2 = std::make_shared<Box>(Vector3f(0.0f, 0.0f, 0.0f),
                                           Vector3f(165.0f, 330.0f, 165.0f),
-                                          whiteMaterial);
+                                          glassMaterial);
         auto rotate_box2 = Transform::rotate(box2, RotationAxis::Y,-18.0f);
         auto translated_box2 = Transform::translate(rotate_box2, Vector3f(347.5f, 165.0f, 377.5f));
         scene->Add(translated_box2);
@@ -117,7 +118,7 @@ namespace RendererScene
         std::unique_ptr<Camera> camera = std::make_unique<Camera>();
         camera->Create(camParams);
 
-        std::unique_ptr<Integrator> integrator = std::make_unique<Integrator>(camera->image_width, camera->image_height, 16, 30);
+        std::unique_ptr<Integrator> integrator = std::make_unique<Integrator>(camera->image_width, camera->image_height, 16, 50);
         std::unique_ptr<Sampler> sampler = std::make_unique<Sampler>(FilterType::GAUSSIAN);
         std::unique_ptr<Scene> scene = std::make_unique<Scene>();
 
@@ -140,13 +141,14 @@ namespace RendererScene
                                                                    0.05f,
                                                                    1.3f,
                                                                    1.0f);
+        auto glassMaterial = std::make_shared<Glass>(1.5f); 
 
         scene->Add(std::make_shared<Quad>(Vector3f(-50.0f, -0.5f, -50.0f), 
                                                 Vector3f(0.0f, 0.0f, 100.0f),   
                                                 Vector3f(100.0f, 0.0f, 0.0f),    
                                                 groundMaterial));
         scene->Add(std::make_shared<Sphere>(Vector3f(-0.5f, 0.0f, -1.2f), 0.5f, greenPlastic));
-        scene->Add(std::make_shared<Sphere>(Vector3f(1.0f, 0.0f, -1.2f), 0.5f, frostedGlassMaterial));
+        scene->Add(std::make_shared<Sphere>(Vector3f(1.0f, 0.0f, -1.2f), 0.5f, glassMaterial));
 
         auto renderer = std::make_shared<Renderer>(std::move(camera), std::move(integrator), std::move(sampler), std::move(scene));
         return renderer;

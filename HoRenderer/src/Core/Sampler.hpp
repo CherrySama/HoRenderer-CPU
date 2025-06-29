@@ -36,7 +36,8 @@ public:
 
     Vector3f CosineSampleHemisphere(const Vector3f &normal) const;
     Vector3f GGXNVDSample(const Vector3f& normal, const Vector3f& view, float alpha_u, float alpha_v) const;
-
+    Vector3f GGXDistributionSample(const Vector3f& normal, float alpha_u, float alpha_v) const;
+    
     void SetCurrentSample(int sample_index);
     void SetPixel(int x, int y);
     

@@ -148,7 +148,7 @@ namespace RendererScene
                                                 Vector3f(100.0f, 0.0f, 0.0f),    
                                                 groundMaterial));
         scene->Add(std::make_shared<Sphere>(Vector3f(-0.5f, 0.0f, -1.2f), 0.5f, greenPlastic));
-        scene->Add(std::make_shared<Sphere>(Vector3f(1.0f, 0.0f, -1.2f), 0.5f, glassMaterial));
+        scene->Add(std::make_shared<Sphere>(Vector3f(1.0f, 0.0f, -1.2f), 0.5f, frostedGlassMaterial));
 
         auto renderer = std::make_shared<Renderer>(std::move(camera), std::move(integrator), std::move(sampler), std::move(scene));
         return renderer;

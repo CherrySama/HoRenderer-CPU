@@ -15,4 +15,6 @@ namespace BSDF {
     float FresnelDielectric(const Vector3f &V, const Vector3f &H, float eta_inv);
 
     float AverageFresnelDielectric(float eta);
+
+    Vector3f MultipleScatteringCompensation(const Vector3f& albedo, float roughness, float F_avg);
 }

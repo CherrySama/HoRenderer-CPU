@@ -352,12 +352,14 @@ Vector3f FrostedGlass::Sample(const Ray &r_in, const Hit_Payload &rec, Vector3f 
         return Vector3f(0.0f);
     }
     
-    Vector3f H = sampler.GGXNVDSample(N, V, alpha_u, alpha_v);
-    
     float eta_ratio = rec.front_face ? eta : (1.0f / eta);
-    float F = BSDF::FresnelDielectric(V, H, eta_ratio);
+    float F_approx = BSDF::FresnelDielectric(V, N, eta_ratio);
+    float avg_roughness = (roughness_u + roughness_v) * 0.5f;
+    float F_avg = BSDF::AverageFresnelDielectric(eta);
+    Vector3f ms_compensation = BSDF::MultipleScatteringCompensation(albedo, avg_roughness, F_avg);
 
-    if (sampler.random_float() < F) {
+    if (sampler.random_float() < F_approx) {
+        Vector3f H = sampler.GGXNVDSample(N, V, alpha_u, alpha_v);
         scatter_direction = glm::reflect(-V, H);
 
         float NdotL = glm::dot(N, scatter_direction);
@@ -367,20 +369,30 @@ Vector3f FrostedGlass::Sample(const Ray &r_in, const Hit_Payload &rec, Vector3f 
         }
 
         float VdotH = glm::dot(V, H);
+        float F = BSDF::FresnelDielectric(V, H, eta_ratio);
         float D = BSDF::DistributionGGX(H, N, alpha_u, alpha_v);
         float G1_V = BSDF::GeometrySmithG1(V, H, N, alpha_u, alpha_v);
         float G1_L = BSDF::GeometrySmithG1(scatter_direction, H, N, alpha_u, alpha_v);
-        float G = G1_V * G1_L;
 
         float Dv = G1_V * VdotH * D / NdotV;
-        pdf = F * Dv * std::abs(1.0f / (4.0f * VdotH));
+        pdf = F_approx * Dv * std::abs(1.0f / (4.0f * VdotH));
 
         Vector3f brdf = albedo * F * D * G1_V / (4.0f * NdotV * NdotL);
+        brdf += ms_compensation * (1.0f - G1_V) * F;
         return brdf;
     } else {
-        Vector3f T = glm::refract(-V, H, eta_ratio);
+        Vector3f H = sampler.GGXDistributionSample(N, alpha_u, alpha_v);
+        Vector3f w_i = -V;  
+        float c_i = glm::dot(w_i, H);
 
-        if (glm::length(T) < Epsilon) {
+        if (c_i < 0.0f) {
+            H = -H;  
+            c_i = -c_i;
+        }
+        float eta_inv = 1.0f / eta_ratio;
+        float sin_t_squared = eta_inv * eta_inv * (1.0f - c_i * c_i);
+
+        if (sin_t_squared >= 1.0f) {
             scatter_direction = glm::reflect(-V, H);
 
             float NdotL = glm::dot(N, scatter_direction);
@@ -390,19 +402,20 @@ Vector3f FrostedGlass::Sample(const Ray &r_in, const Hit_Payload &rec, Vector3f 
             }
 
             float VdotH = glm::dot(V, H);
+            float F = BSDF::FresnelDielectric(V, H, eta_ratio);
             float D = BSDF::DistributionGGX(H, N, alpha_u, alpha_v);
             float G1_V = BSDF::GeometrySmithG1(V, H, N, alpha_u, alpha_v);
             float G1_L = BSDF::GeometrySmithG1(scatter_direction, H, N, alpha_u, alpha_v);
             float G = G1_V * G1_L;
+            float HdotN = glm::dot(H, N);
+            pdf = (1.0f - F_approx) * D * HdotN * std::abs(1.0f / (4.0f * VdotH));
 
-            float Dv = G1_V * VdotH * D / NdotV;
-            float pdf_reflection = Dv * std::abs(1.0f / (4.0f * VdotH));
-            pdf = (1.0f - F) * pdf_reflection;
-
-            Vector3f brdf = albedo * (1.0f - F) * D * G1_V / (4.0f * NdotV * NdotL);
+            Vector3f brdf = albedo * F * D * G / (4.0f * NdotV * NdotL);
             return brdf;
         }
-        scatter_direction = glm::normalize(T);
+        float c_o = std::sqrt(1.0f - sin_t_squared); 
+        Vector3f w_o = -eta_inv * w_i + (eta_inv * c_i - c_o) * H;
+        scatter_direction = glm::normalize(w_o);
 
         float NdotL = glm::dot(N, scatter_direction);
         if ((rec.front_face && NdotL >= 0.0f) || (!rec.front_face && NdotL <= 0.0f)) {
@@ -412,6 +425,7 @@ Vector3f FrostedGlass::Sample(const Ray &r_in, const Hit_Payload &rec, Vector3f 
 
         float VdotH = glm::dot(V, H);
         float LdotH = glm::dot(scatter_direction, H);
+        float F = BSDF::FresnelDielectric(V, H, eta_ratio);
         float D = BSDF::DistributionGGX(H, N, alpha_u, alpha_v);
         float G1_V = BSDF::GeometrySmithG1(V, H, N, alpha_u, alpha_v);
         float G1_L = BSDF::GeometrySmithG1(scatter_direction, H, N, alpha_u, alpha_v);
@@ -426,12 +440,12 @@ Vector3f FrostedGlass::Sample(const Ray &r_in, const Hit_Payload &rec, Vector3f 
         float jacobian_factor = std::abs(LdotH) / std::abs(denom);
         jacobian_factor *= jacobian_factor;
 
-        float Dv = G1_V * VdotH * D / NdotV;
-        pdf = (1.0f - F) * Dv * jacobian_factor;
+        float HdotN = glm::dot(H, N);
+        pdf = (1.0f - F_approx) * D * HdotN * jacobian_factor;
 
         float eta_factor = rec.front_face ? (eta_ratio * eta_ratio) : 1.0f;
-        Vector3f btdf = albedo * (1.0f - F) * D * G1_V * std::abs(VdotH * LdotH) * eta_factor / (std::abs(NdotV * NdotL) * denom * denom);
-
+        Vector3f btdf = albedo * (1.0f - F) * D * G * std::abs(VdotH * LdotH) * eta_factor / (std::abs(NdotV * NdotL) * denom * denom);
+        btdf += ms_compensation * (1.0f - G) * (1.0f - F);
         return btdf;
     }
 }
@@ -473,7 +487,7 @@ Vector3f FrostedGlass::Evaluate(const Ray& r_in, const Hit_Payload& rec, const V
         float Dv = G1_V * VdotH * D / NdotV;
         pdf = F * Dv * std::abs(1.0f / (4.0f * VdotH));
         
-        Vector3f brdf = albedo * F * D * G / (4.0f * NdotV * NdotL);
+        Vector3f brdf = albedo * F * D * G1_V / (4.0f * NdotV * NdotL);
         return brdf;
     } else {
         if ((rec.front_face && NdotL >= 0.0f) || (!rec.front_face && NdotL <= 0.0f)) {
@@ -502,8 +516,8 @@ Vector3f FrostedGlass::Evaluate(const Ray& r_in, const Hit_Payload& rec, const V
         float jacobian_factor = std::abs(LdotH) / std::abs(denom);
         jacobian_factor *= jacobian_factor;
 
-        float Dv = G1_V * VdotH * D / NdotV;
-        pdf = (1.0f - F) * Dv * jacobian_factor;
+        float HdotN = glm::dot(H, N);
+        pdf = (1.0f - F) * D * HdotN * jacobian_factor;
 
         float eta_factor = rec.front_face ? (eta_ratio * eta_ratio) : 1.0f;
         Vector3f btdf = albedo * (1.0f - F) * D * G * std::abs(VdotH * LdotH) * eta_factor / (std::abs(NdotV * NdotL) * denom * denom);

@@ -111,4 +111,10 @@ namespace BSDF {
             return 0.919317f - 3.4793f * inv_eta + 6.75335f * inv_eta_2 - 7.80989f * inv_eta_3 + 4.98554f * inv_eta_4 - 1.36881f * inv_eta_5;
         }
     }
+
+    Vector3f MultipleScatteringCompensation(const Vector3f &albedo, float roughness, float F_avg)
+    {
+        Vector3f f_add = albedo * albedo * F_avg / (Vector3f(1.0f) - albedo * (1.0f - F_avg));
+        return f_add;    
+    }
 }

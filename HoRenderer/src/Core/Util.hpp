@@ -90,6 +90,8 @@ constexpr float Epsilon = 1e-5f;
 constexpr float Infinity = std::numeric_limits<float>::infinity();
 constexpr float PI = 3.1415926535897932385f;
 constexpr float INV_PI = 1.0f / PI;
+constexpr float INV_2PI = 1.0f / (2.0f * PI);
+constexpr float INV_4PI = 1.0f / (4.0f * PI);
 
 
 inline uint32_t FloatToBits(float f) {

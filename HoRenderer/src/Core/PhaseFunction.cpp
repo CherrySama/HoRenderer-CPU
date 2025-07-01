@@ -7,9 +7,17 @@
 #include "Hittable.hpp"
 
 
-// bool IsotropicPhase::Scatter(const Ray &r_in, const Hit_Payload &rec, Vector3f &attenuation, Ray &scattered, Sampler &sampler) const {
-//     Vector3f scatter_direction = sampler.random_unit_vector();
-//     scattered = Ray::SpawnRay(rec.p, scatter_direction, rec.normal);
-//     attenuation = tex->GetColor(rec.uv.x, rec.uv.y);
-//     return true;
-// }
+Vector3f IsotropicPhase::Sample(const Ray &r_in, const Hit_Payload &rec, Vector3f &scatter_direction, float &pdf, Sampler &sampler) const
+{
+    scatter_direction = sampler.random_unit_vector();
+    pdf = INV_4PI;
+    Vector3f albedo = albedo_texture->GetColor(rec.uv.x, rec.uv.y);
+    return albedo;
+}
+
+Vector3f IsotropicPhase::Evaluate(const Ray &r_in, const Hit_Payload &rec, const Vector3f &scatter_direction, float &pdf) const
+{
+    pdf = INV_4PI;
+    Vector3f albedo = albedo_texture->GetColor(rec.uv.x, rec.uv.y);
+    return albedo;
+}

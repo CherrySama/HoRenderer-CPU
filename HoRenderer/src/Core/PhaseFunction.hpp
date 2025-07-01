@@ -8,15 +8,17 @@
 #include "Material.hpp"
 
 
-// class IsotropicPhase : public Material {
-// public:
-//     IsotropicPhase(const Vector3f& albedo) : tex(std::make_shared<SolidTexture>(albedo)) {}
-//     IsotropicPhase(std::shared_ptr<Texture> texture) : tex(texture) {}
+class IsotropicPhase : public Material {
+public:
+    IsotropicPhase(const Vector3f& albedo) : albedo_texture(std::make_shared<SolidTexture>(albedo)) {}
+    IsotropicPhase(std::shared_ptr<Texture> texture) : albedo_texture(texture) {}
 
-//     virtual bool Scatter(const Ray &r_in, const Hit_Payload &rec, Vector3f &attenuation, Ray &scattered, Sampler &sampler) const override;
+    virtual Vector3f Sample(const Ray& r_in, const Hit_Payload& rec, Vector3f& scatter_direction, float& pdf, Sampler& sampler) const override;
+    virtual Vector3f Evaluate(const Ray &r_in, const Hit_Payload &rec, const Vector3f &scatter_direction, float &pdf) const override;
+    virtual bool IsVolumetric() const override { return true; }
     
-// private:
-//     std::shared_ptr<Texture> tex;
-// };
+private:
+    std::shared_ptr<Texture> albedo_texture;
+};
 
 

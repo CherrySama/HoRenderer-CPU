@@ -70,6 +70,12 @@ class Translate;
 class Rotate;
 class Scale;
 
+class Light;
+class AreaLight;
+class PointLight;
+class DirLight;
+class EnvLight;
+
 
 using Vector2u = glm::uvec2;
 using Vector2i = glm::ivec2;

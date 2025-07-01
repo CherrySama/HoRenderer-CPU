@@ -49,6 +49,7 @@ class Conductor;
 class Plastic;
 class HomogeneousMedium;
 class IsotropicPhase;
+class HenyeyGreensteinPhase;
 class Emission;
 class FrostedGlass;
 class Glass;

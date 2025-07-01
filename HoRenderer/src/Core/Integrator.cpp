@@ -78,7 +78,11 @@ Vector3f Integrator::ray_color(const Ray &r, int bounce, const Hittable &world, 
     Vector3f attenuation;
     if (rec.mat->IsDelta()) {
         attenuation = brdf;
-    } else {
+    }
+    else if (rec.mat->IsVolumetric()) {
+        attenuation = brdf / pdf;
+    }
+    else {
         Vector3f surface_normal = rec.normal;
         float cos_theta = std::abs(glm::dot(surface_normal, glm::normalize(scatter_direction)));
         attenuation = brdf * cos_theta / pdf;

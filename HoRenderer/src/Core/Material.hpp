@@ -17,6 +17,7 @@ public:
     virtual Vector3f Evaluate(const Ray& r_in, const Hit_Payload& rec, const Vector3f& scatter_direction, float& pdf) const = 0;
     virtual Vector3f Emit(const Ray& r_in, const Hit_Payload& rec, float u, float v) const;
     virtual bool IsDelta() const { return false; }
+    virtual bool IsVolumetric() const { return false; }
     
 protected:
     Vector3f GetSurfaceNormal(const Hit_Payload &rec) const;

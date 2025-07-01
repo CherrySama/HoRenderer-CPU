@@ -7,6 +7,7 @@
 #include "Filter.hpp"
 #include "Transform.hpp"
 #include "Medium.hpp"
+#include "PhaseFunction.hpp"
 // #include "../Common/FileManager.hpp"
 
 namespace RendererScene

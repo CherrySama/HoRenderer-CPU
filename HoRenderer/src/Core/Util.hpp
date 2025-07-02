@@ -71,10 +71,9 @@ class Rotate;
 class Scale;
 
 class Light;
-class AreaLight;
-class PointLight;
-class DirLight;
-class EnvLight;
+class QuadAreaLight;
+class SphereAreaLight;
+class InfiniteAreaLight;
 
 
 using Vector2u = glm::uvec2;

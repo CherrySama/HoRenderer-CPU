@@ -67,7 +67,6 @@ Vector3f Integrator::ray_color(const Ray &r, int bounce, const Hittable &world, 
     if (pdf <= Epsilon) 
         return emission;
 
-
     Vector3f spawn_normal = rec.normal;
     bool is_refraction = glm::dot(scatter_direction, rec.normal) < 0.0f;
     if (is_refraction) 

@@ -6,22 +6,13 @@
 #include "Util.hpp"
 #include "Shape.hpp"
 
-struct LightSampleInfo {
-    Vector3f radiance;      
-    Vector3f direction;     
-    float distance;         
-    float pdf;              
-    bool valid;             
-    
-    LightSampleInfo() : radiance(0), direction(0), distance(Infinity), pdf(0), valid(false) {}
-};
 
 class Light {
 public:
     virtual ~Light() = default;
 
-    virtual LightSampleInfo Sample(const Vector3f& surface_pos, Sampler& sampler) const = 0;
-    virtual Vector3f Evaluate(const Vector3f& surface_pos, const Vector3f& light_dir, float& pdf) const = 0;
+    virtual Vector3f Sample(const Ray& r_in, const Hit_Payload& rec, Vector3f& light_direction, float& pdf, Sampler& sampler) const = 0;
+    virtual Vector3f Evaluate(const Ray& r_in, const Hit_Payload& rec, const Vector3f& light_direction, float& pdf) const = 0;
     virtual bool IsHit(const Ray &ray, float max_distance, Vector3f &radiance) const = 0;
 
     virtual float GetPower() const { return power; }
@@ -42,8 +33,8 @@ public:
         power = glm::length(color) * intensity * area * PI;
     }
 
-    virtual LightSampleInfo Sample(const Vector3f& surface_pos, Sampler& sampler) const override;
-    virtual Vector3f Evaluate(const Vector3f &surface_pos, const Vector3f &light_dir, float &pdf) const override;
+    virtual Vector3f Sample(const Ray& r_in, const Hit_Payload& rec, Vector3f& light_direction, float& pdf, Sampler& sampler) const override;
+    virtual Vector3f Evaluate(const Ray& r_in, const Hit_Payload& rec, const Vector3f& light_direction, float& pdf) const override;
     virtual bool IsHit(const Ray &ray, float max_distance, Vector3f &radiance) const override;
 
 private:
@@ -59,8 +50,8 @@ class SphereAreaLight : public Light {
 public:
     SphereAreaLight(std::shared_ptr<Sphere> sphere, const Vector3f &color, float intensity = 1.0f);
 
-    virtual LightSampleInfo Sample(const Vector3f &surface_pos, Sampler &sampler) const override;
-    virtual Vector3f Evaluate(const Vector3f &surface_pos, const Vector3f &light_dir, float &pdf) const override;
+    virtual Vector3f Sample(const Ray &r_in, const Hit_Payload &rec, Vector3f &light_direction, float &pdf, Sampler &sampler) const override;
+    virtual Vector3f Evaluate(const Ray &r_in, const Hit_Payload &rec, const Vector3f &light_direction, float &pdf) const override;
     virtual bool IsHit(const Ray &ray, float max_distance, Vector3f &radiance) const override;
 
 private:
@@ -78,8 +69,8 @@ class InfiniteAreaLight : public Light {
 public:
     InfiniteAreaLight(std::shared_ptr<HDRTexture> hdr, float scale = 1.0f);
 
-    virtual LightSampleInfo Sample(const Vector3f& surface_pos, Sampler& sampler) const override;
-    virtual Vector3f Evaluate(const Vector3f& surface_pos, const Vector3f& light_dir, float& pdf) const override;
+    virtual Vector3f Sample(const Ray& r_in, const Hit_Payload& rec, Vector3f& light_direction, float& pdf, Sampler& sampler) const override;
+    virtual Vector3f Evaluate(const Ray& r_in, const Hit_Payload& rec, const Vector3f& light_direction, float& pdf) const override;
     virtual bool IsHit(const Ray& ray, float max_distance, Vector3f& radiance) const override;
 
 private:

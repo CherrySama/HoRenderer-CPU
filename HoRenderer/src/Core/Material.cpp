@@ -335,6 +335,11 @@ Vector3f Emission::Emit(const Ray &r_in, const Hit_Payload &rec, float u, float 
     return intensity * albedo_texture->GetColor(u, v);
 }
 
+Vector3f Emission::GetEmission(const Vector2f &uv) const
+{
+    return intensity * albedo_texture->GetColor(uv.x, uv.y);
+}
+
 Vector3f FrostedGlass::Sample(const Ray &r_in, const Hit_Payload &rec, Vector3f &scatter_direction, float &pdf, Sampler &sampler) const
 {
     Vector3f albedo = albedo_texture->GetColor(rec.uv.x, rec.uv.y);

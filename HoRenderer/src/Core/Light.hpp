@@ -6,7 +6,10 @@
 #include "Util.hpp"
 #include "Shape.hpp"
 
-
+// 1. Sample function: based on shading point information,
+// sample light source direction and calculate expected radiance
+// 2. Evaluate function: based on light source intersection information,
+// calculate actual radiance (avoid repeated intersection detection)
 class Light {
 public:
     virtual ~Light() = default;
@@ -15,31 +18,19 @@ public:
     virtual Vector3f Evaluate(const Ray& r_in, const Hit_Payload& rec, const Vector3f& light_direction, float& pdf) const = 0;
     virtual bool IsHit(const Ray &ray, float max_distance, Vector3f &radiance) const = 0;
 
-    virtual float GetPower() const { return power; }
-
-protected:
-    Vector3f intensity;     
-    Vector3f color;         
-    float power;
+    virtual float GetPower() const = 0;
 };
 
 class QuadAreaLight : public Light {
 public:
-    QuadAreaLight(std::shared_ptr<Quad> quad, const Vector3f &color, float intensity = 1.0f) :
+    QuadAreaLight(std::shared_ptr<Quad> quad) :
         quad(quad) {
-        this->color = color;
-        this->intensity = Vector3f(intensity);
         area = glm::length(glm::cross(quad->get_u(), quad->get_v()));
-        power = glm::length(color) * intensity * area * PI;
     }
 
     virtual Vector3f Sample(const Ray& r_in, const Hit_Payload& rec, Vector3f& light_direction, float& pdf, Sampler& sampler) const override;
     virtual Vector3f Evaluate(const Ray& r_in, const Hit_Payload& rec, const Vector3f& light_direction, float& pdf) const override;
     virtual bool IsHit(const Ray &ray, float max_distance, Vector3f &radiance) const override;
-
-private:
-    Vector3f SampleQuadSurface(Sampler &sampler) const;
-    Vector3f GetQuadNormal() const;
 
 private:
     std::shared_ptr<Quad> quad;

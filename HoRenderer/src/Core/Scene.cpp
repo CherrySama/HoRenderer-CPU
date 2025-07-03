@@ -9,6 +9,7 @@ void Scene::Clean()
 {
     hit_objects.clear();
     bvh_tree.reset();
+    lights.clear();
 }
 
 void Scene::Add(std::shared_ptr<Hittable> object)
@@ -16,9 +17,18 @@ void Scene::Add(std::shared_ptr<Hittable> object)
     hit_objects.push_back(object);
 }
 
+void Scene::Add(std::shared_ptr<Light> light)
+{
+    lights.push_back(light);
+}
+
 const std::vector<std::shared_ptr<Hittable>> Scene::GetObjects() const
 {
     return hit_objects;        
+}
+
+const std::vector<std::shared_ptr<Light>>& Scene::GetLights() const {
+    return lights;
 }
 
 void Scene::BuildBVH()

@@ -49,7 +49,7 @@ void Integrator::write_color(int u, int v, const Vector3f &color)
     _mm_store_ps(float_pixels.get() + offset, c);
 }
 
-Vector3f Integrator::ray_color(const Ray &r, int bounce, const Hittable &world, Sampler &sampler)
+Vector3f Integrator::ray_color(const Ray &r, int bounce, const Scene &world, Sampler &sampler)
 {
     if (bounce <= 0)
         return Vector3f(0, 0, 0);

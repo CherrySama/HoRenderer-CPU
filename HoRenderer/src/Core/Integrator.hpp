@@ -25,7 +25,7 @@ public:
 
     void RenderImage(Camera &cam, Scene &world, Sampler &sampler, int sample_index);
     void write_color(int u, int v, const Vector3f &color);
-    Vector3f ray_color(const Ray &r, int bounce, const Hittable &world, Sampler &sampler);
+    Vector3f ray_color(const Ray &r, int bounce, const Scene &world, Sampler &sampler);
     
     void SetNumThreads(int threads);
     int GetNumThreads() const;

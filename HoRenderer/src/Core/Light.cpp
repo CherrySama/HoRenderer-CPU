@@ -40,8 +40,9 @@ Vector3f QuadAreaLight::Evaluate(const Ray &r_in, const Hit_Payload &rec, const 
         pdf = 0.0f;
         return Vector3f(0);
     }
-    
-    float distance_sq = rec.t * rec.t;
+
+    float distance = glm::length(rec.p - r_in.origin());
+    float distance_sq = distance * distance;
     pdf = distance_sq / (area * cos_theta);
 
     return rec.mat->Emit(r_in, rec, rec.uv.x, rec.uv.y);

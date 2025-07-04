@@ -16,9 +16,10 @@ public:
     virtual Vector3f Sample(const Ray& r_in, const Hit_Payload& rec, Vector3f& scatter_direction, float& pdf, Sampler& sampler) const = 0;
     virtual Vector3f Evaluate(const Ray& r_in, const Hit_Payload& rec, const Vector3f& scatter_direction, float& pdf) const = 0;
     virtual Vector3f Emit(const Ray& r_in, const Hit_Payload& rec, float u, float v) const;
+    virtual Vector3f Emit(const Vector2f& uv) const { return Vector3f(0); }
     virtual bool IsDelta() const { return false; }
     virtual bool IsVolumetric() const { return false; }
-    virtual Vector3f Emit(const Vector2f& uv) const { return Vector3f(0); }
+    virtual bool IsEmit() const { return false; }
     
 protected:
     Vector3f GetSurfaceNormal(const Hit_Payload &rec) const;
@@ -99,6 +100,7 @@ public:
     virtual Vector3f Evaluate(const Ray& r_in, const Hit_Payload& rec, const Vector3f& scatter_direction, float& pdf) const override;
     virtual Vector3f Emit(const Ray &r_in, const Hit_Payload &rec, float u, float v) const override;
     virtual Vector3f Emit(const Vector2f &uv) const override;
+    virtual bool IsEmit() const override { return true; }
 
 private:
     std::shared_ptr<Texture> albedo_texture;

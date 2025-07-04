@@ -29,7 +29,7 @@ Vector3f QuadAreaLight::Sample(const Ray &r_in, const Hit_Payload &rec, Vector3f
     // pdf = distance² / (area * cos_theta)
     pdf = distance_sq / (area * cos_theta);
 
-    return quad->get_mat()->GetEmission(uv);
+    return quad->get_mat()->Emit(uv);
 }
 
 Vector3f QuadAreaLight::Evaluate(const Ray &r_in, const Hit_Payload &rec, const Vector3f &light_direction, float &pdf) const

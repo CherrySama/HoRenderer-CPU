@@ -45,5 +45,5 @@ Vector3f QuadAreaLight::Evaluate(const Ray &r_in, const Hit_Payload &rec, const 
     float distance_sq = distance * distance;
     pdf = distance_sq / (area * cos_theta);
 
-    return rec.mat->Emit(r_in, rec, rec.uv.x, rec.uv.y);
+    return quad->get_mat()->Emit(rec.uv);
 }

@@ -59,37 +59,37 @@ Vector3f Integrator::ray_color(const Ray &r, int bounce, const Hittable &world, 
         return Vector3f(0.7f, 0.8f, 0.9f); 
     }
 
-    Vector3f emission = rec.mat->Emit(r, rec, rec.uv.x, rec.uv.y);
+    // emission
+    Vector3f total_radiance = rec.mat->Emit(r, rec, rec.uv.x, rec.uv.y);
 
+    // BRDF sampling
     Vector3f scatter_direction;
     float pdf;
     Vector3f brdf = rec.mat->Sample(r, rec, scatter_direction, pdf, sampler);
-    if (pdf <= Epsilon) 
-        return emission;
-
-    Vector3f spawn_normal = rec.normal;
-    bool is_refraction = glm::dot(scatter_direction, rec.normal) < 0.0f;
-    if (is_refraction) 
-        spawn_normal = -rec.normal;
-    
-    Ray scattered = Ray::SpawnRay(rec.p, scatter_direction, spawn_normal);
-
-    Vector3f attenuation;
-    if (rec.mat->IsDelta()) {
-        attenuation = brdf;
-    }
-    else if (rec.mat->IsVolumetric()) {
-        attenuation = brdf / pdf;
-    }
-    else {
+    if (pdf >Epsilon) {
         Vector3f surface_normal = rec.normal;
-        float cos_theta = std::abs(glm::dot(surface_normal, glm::normalize(scatter_direction)));
-        attenuation = brdf * cos_theta / pdf;
-    }
-    
-    Vector3f scatter = attenuation * ray_color(scattered, bounce-1, world, sampler);
+        if (glm::dot(scatter_direction, rec.normal) < 0.0f) 
+            surface_normal = -rec.normal;
 
-    return emission + scatter;
+        Ray scattered = Ray::SpawnRay(rec.p, scatter_direction, surface_normal);
+        Vector3f attenuation;
+        if (rec.mat->IsDelta()) {
+            attenuation = brdf;
+        } else if (rec.mat->IsVolumetric()) {
+            attenuation = brdf / pdf;
+        } else {
+            float cos_theta = std::abs(glm::dot(rec.normal, glm::normalize(scatter_direction)));
+            attenuation = brdf * cos_theta / pdf;
+        }
+        total_radiance += attenuation * ray_color(scattered, bounce-1, world, sampler);
+    }
+
+    // light sampling
+    // if (!rec.mat->IsEmit()) {
+    //     // do something
+    // }
+
+    return total_radiance;
 }
 
 void Integrator::SetNumThreads(int threads)

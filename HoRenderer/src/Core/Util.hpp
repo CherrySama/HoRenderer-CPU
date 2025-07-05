@@ -17,6 +17,7 @@
 #include <Windows.h>
 #include <vector>
 #include <sstream>
+#include <queue>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
@@ -35,6 +36,7 @@ class Ray;
 class Hittable;
 class Hit_Payload;
 class Scene;
+class AliasTable1D;
 class Camera;
 class Sampler;
 class ProgressTracker;

@@ -62,11 +62,15 @@ Vector3f Integrator::ray_color(const Ray &r, int bounce, const Scene &world, Sam
     // emission
     Vector3f total_radiance = rec.mat->Emit(r, rec, rec.uv.x, rec.uv.y);
 
+    // light sampling
+    Vector3f direct_lighting = EstimateDirectLighting(r, rec, world, sampler);
+    total_radiance += direct_lighting;
+
     // BRDF sampling
     Vector3f scatter_direction;
     float pdf;
     Vector3f brdf = rec.mat->Sample(r, rec, scatter_direction, pdf, sampler);
-    if (pdf >Epsilon) {
+    if (pdf > Epsilon && bounce > 1) {
         Vector3f surface_normal = rec.normal;
         if (glm::dot(scatter_direction, rec.normal) < 0.0f) 
             surface_normal = -rec.normal;
@@ -85,6 +89,74 @@ Vector3f Integrator::ray_color(const Ray &r, int bounce, const Scene &world, Sam
     }
 
     return total_radiance;
+}
+
+Vector3f Integrator::EstimateDirectLighting(const Ray &r_in, const Hit_Payload &rec, const Scene &world, Sampler &sampler)
+{
+    Vector3f direct_lighting(0.0f);
+    if (rec.mat->IsDelta() || rec.mat->IsVolumetric()) {
+        return direct_lighting;
+    }
+    
+    const auto& lights = world.GetLights();
+    if (lights.empty()) {
+        return direct_lighting;
+    }
+
+    Vector3f V = -glm::normalize(r_in.direction());
+
+    // light sampling
+    Vector3f light_direction;
+    float light_pdf;
+    Vector3f light_radiance = world.SampleLightEnvironment(r_in, rec, light_direction, light_pdf, sampler);
+    
+    if (light_pdf > Epsilon && glm::dot(rec.normal, light_direction) > 0.0f) {
+        // BRDF Evaluate
+        float brdf_pdf;
+        Vector3f brdf = rec.mat->Evaluate(r_in, rec, light_direction, brdf_pdf);
+        
+        if (brdf_pdf > Epsilon) {
+            float cos_theta = glm::dot(rec.normal, light_direction);
+            float mis_weight = PowerHeuristic(light_pdf, brdf_pdf);
+            direct_lighting += mis_weight * brdf * cos_theta * light_radiance / light_pdf;
+        }
+    }
+
+    // BRDF sampling
+    Vector3f scatter_direction;
+    float brdf_pdf;
+    Vector3f brdf = rec.mat->Sample(r_in, rec, scatter_direction, brdf_pdf, sampler);
+    
+    if (brdf_pdf > Epsilon && glm::dot(rec.normal, scatter_direction) > 0.0f) {
+        Vector3f surface_normal = rec.normal;
+        if (glm::dot(scatter_direction, rec.normal) < 0.0f) 
+            surface_normal = -rec.normal;
+
+        Ray light_ray = Ray::SpawnRay(rec.p, scatter_direction, surface_normal);
+        Hit_Payload light_rec;
+        
+        if (world.isHit(light_ray, Vector2f(Epsilon, Infinity), light_rec)) {
+            if (light_rec.mat && light_rec.mat->IsEmit()) {
+                float light_eval_pdf;
+                Vector3f light_emission = world.EvaluateLight(light_ray, light_rec, light_eval_pdf);
+                
+                if (light_eval_pdf > Epsilon) {
+                    float cos_theta = glm::dot(rec.normal, scatter_direction);
+                    float mis_weight = PowerHeuristic(brdf_pdf, light_eval_pdf);
+                    direct_lighting += mis_weight * brdf * cos_theta * light_emission / brdf_pdf;
+                }
+            }
+        }
+    }
+
+    return direct_lighting;
+}
+
+float Integrator::PowerHeuristic(float pdf1, float pdf2, int beta)
+{
+    float p1 = std::pow(pdf1, beta);
+    float p2 = std::pow(pdf2, beta);
+    return p1 / (p1 + p2);
 }
 
 void Integrator::SetNumThreads(int threads)

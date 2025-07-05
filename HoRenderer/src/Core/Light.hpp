@@ -14,7 +14,7 @@ public:
     virtual ~Light() = default;
 
     virtual Vector3f Sample(const Ray& r_in, const Hit_Payload& rec, Vector3f& light_direction, float& pdf, Sampler& sampler) const = 0;
-    virtual Vector3f Evaluate(const Ray& r_in, const Hit_Payload& rec, const Vector3f& light_direction, float& pdf) const = 0;
+    virtual Vector3f Evaluate(const Ray& r_in, const Hit_Payload& rec, float& pdf) const = 0;
     virtual float GetPower() const = 0;
     virtual std::shared_ptr<Hittable> GetShape() const = 0;
 };
@@ -27,7 +27,7 @@ public:
     }
 
     virtual Vector3f Sample(const Ray& r_in, const Hit_Payload& rec, Vector3f& light_direction, float& pdf, Sampler& sampler) const override;
-    virtual Vector3f Evaluate(const Ray& r_in, const Hit_Payload& rec, const Vector3f& light_direction, float& pdf) const override;
+    virtual Vector3f Evaluate(const Ray& r_in, const Hit_Payload& rec, float& pdf) const override;
     virtual float GetPower() const override;
     virtual std::shared_ptr<Hittable> GetShape() const override;
 
@@ -41,7 +41,7 @@ public:
     SphereAreaLight(std::shared_ptr<Sphere> sphere, const Vector3f &color, float intensity = 1.0f);
 
     virtual Vector3f Sample(const Ray &r_in, const Hit_Payload &rec, Vector3f &light_direction, float &pdf, Sampler &sampler) const override;
-    virtual Vector3f Evaluate(const Ray &r_in, const Hit_Payload &rec, const Vector3f &light_direction, float &pdf) const override;
+    virtual Vector3f Evaluate(const Ray &r_in, const Hit_Payload &rec, float &pdf) const override;
 
 private:
     Vector3f SampleSphereSurface(Sampler &sampler) const;
@@ -59,7 +59,7 @@ public:
     InfiniteAreaLight(std::shared_ptr<HDRTexture> hdr, float scale = 1.0f);
 
     virtual Vector3f Sample(const Ray& r_in, const Hit_Payload& rec, Vector3f& light_direction, float& pdf, Sampler& sampler) const override;
-    virtual Vector3f Evaluate(const Ray& r_in, const Hit_Payload& rec, const Vector3f& light_direction, float& pdf) const override;
+    virtual Vector3f Evaluate(const Ray& r_in, const Hit_Payload& rec, float& pdf) const override;
 
 private:
     Vector3f SphericalToCartesian(float theta, float phi) const;

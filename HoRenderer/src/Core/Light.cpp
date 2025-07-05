@@ -25,17 +25,15 @@ Vector3f QuadAreaLight::Sample(const Ray &r_in, const Hit_Payload &rec, Vector3f
         pdf = 0.0f;
         return Vector3f(0);
     }
-    
-    // pdf = distance² / (area * cos_theta)
-    pdf = distance_sq / (area * cos_theta);
 
+    pdf = distance_sq / (area * cos_theta);
     return quad->get_mat()->Emit(uv);
 }
 
-Vector3f QuadAreaLight::Evaluate(const Ray &r_in, const Hit_Payload &rec, const Vector3f &light_direction, float &pdf) const
+Vector3f QuadAreaLight::Evaluate(const Ray &r_in, const Hit_Payload &rec, float &pdf) const
 {
     Vector3f light_normal = glm::normalize(glm::cross(quad->get_u(), quad->get_v()));
-    float cos_theta = glm::dot(-light_direction, light_normal);
+    float cos_theta = glm::dot(-r_in.direction(), light_normal);
     if (cos_theta <= 0.0f) {
         pdf = 0.0f;
         return Vector3f(0);

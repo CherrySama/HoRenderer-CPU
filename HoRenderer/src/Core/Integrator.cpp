@@ -56,7 +56,7 @@ Vector3f Integrator::ray_color(const Ray &r, int bounce, const Scene &world, Sam
 
     Hit_Payload rec;
     if (!world.isHit(r, Vector2f(0.0f, Infinity), rec)) {
-        return Vector3f(0.7f, 0.8f, 0.9f); 
+        return Vector3f(0.01f, 0.01f, 0.01f); 
     }
 
     // emission
@@ -111,14 +111,25 @@ Vector3f Integrator::EstimateDirectLighting(const Ray &r_in, const Hit_Payload &
     Vector3f light_radiance = world.SampleLightEnvironment(r_in, rec, light_direction, light_pdf, sampler);
     
     if (light_pdf > Epsilon && glm::dot(rec.normal, light_direction) > 0.0f) {
-        // BRDF Evaluate
-        float brdf_pdf;
-        Vector3f brdf = rec.mat->Evaluate(r_in, rec, light_direction, brdf_pdf);
+        Ray shadow_ray = Ray::SpawnRay(rec.p, light_direction, rec.normal);
+        Hit_Payload shadow_rec;
+        bool in_shadow = false;
         
-        if (brdf_pdf > Epsilon) {
-            float cos_theta = glm::dot(rec.normal, light_direction);
-            float mis_weight = PowerHeuristic(light_pdf, brdf_pdf);
-            direct_lighting += mis_weight * brdf * cos_theta * light_radiance / light_pdf;
+        if (world.isHit(shadow_ray, Vector2f(Epsilon, Infinity), shadow_rec)) {
+            if (!shadow_rec.mat || !shadow_rec.mat->IsEmit()) {
+                in_shadow = true;
+            }
+        }
+
+        if (!in_shadow) {
+            float brdf_pdf;
+            Vector3f brdf = rec.mat->Evaluate(r_in, rec, light_direction, brdf_pdf);
+            
+            if (brdf_pdf > Epsilon) {
+                float cos_theta = glm::dot(rec.normal, light_direction);
+                float mis_weight = PowerHeuristic(light_pdf, brdf_pdf);
+                direct_lighting += mis_weight * brdf * cos_theta * light_radiance / light_pdf;
+            }
         }
     }
 

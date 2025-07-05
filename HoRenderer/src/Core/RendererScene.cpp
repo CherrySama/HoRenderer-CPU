@@ -6,6 +6,7 @@
 #include "Material.hpp"
 #include "Filter.hpp"
 #include "Transform.hpp"
+#include "Light.hpp"
 #include "Medium.hpp"
 #include "PhaseFunction.hpp"
 // #include "../Common/FileManager.hpp"
@@ -31,7 +32,7 @@ namespace RendererScene
         std::unique_ptr<Sampler> sampler = std::make_unique<Sampler>(FilterType::GAUSSIAN);
         std::unique_ptr<Scene> scene = std::make_unique<Scene>();
 
-        auto emitMaterial = std::make_shared<Emission>(Vector3f(50.0f, 50.0f, 50.0f));
+        auto emitMaterial = std::make_shared<Emission>(Vector3f(15.0f, 15.0f, 15.0f));
         auto redMaterial = std::make_shared<Diffuse>(Vector3f(0.65f, 0.05f, 0.05f));
         auto whiteMaterial =  std::make_shared<Diffuse>(Vector3f(0.73f, 0.73f, 0.73f));
         auto greenMaterial = std::make_shared<Diffuse>(Vector3f(0.12f, 0.45f, 0.15f));
@@ -64,10 +65,16 @@ namespace RendererScene
                                           Vector3f(0.0f, 0.0f, 555.0f),
                                           redMaterial));
 
-        scene->Add(std::make_shared<Quad>(Vector3f(127.5f, 554.0f, 127.5f),
-                                          Vector3f(300.0f, 0.0f, 0.0f),
-                                          Vector3f(0.0f, 0.0f, 300.0f),
-                                          emitMaterial));
+        // scene->Add(std::make_shared<Quad>(Vector3f(127.5f, 554.0f, 127.5f),
+        //                                   Vector3f(300.0f, 0.0f, 0.0f),
+        //                                   Vector3f(0.0f, 0.0f, 300.0f),
+        //                                   emitMaterial));
+        auto ceiling_quad = std::make_shared<Quad>(Vector3f(127.5f, 554.0f, 127.5f),
+                                                   Vector3f(300.0f, 0.0f, 0.0f),
+                                                   Vector3f(0.0f, 0.0f, 300.0f),
+                                                   emitMaterial);
+        auto ceiling_light = std::make_shared<QuadAreaLight>(ceiling_quad);
+        scene->Add(ceiling_light);
 
         scene->Add(std::make_shared<Quad>(Vector3f(0.0f, 0.0f, 0.0f),
                                           Vector3f(555.0f, 0.0f, 0.0f),
@@ -105,6 +112,7 @@ namespace RendererScene
         // scene->Add(std::make_shared<HomogeneousMedium>(translated_box2, 0.01f, Vector3f(1)));
 
         // scene->BuildBVH();
+        scene->BuildLightTable(); 
         auto renderer = std::make_shared<Renderer>(std::move(camera), std::move(integrator), std::move(sampler), std::move(scene));
         return renderer;
     }

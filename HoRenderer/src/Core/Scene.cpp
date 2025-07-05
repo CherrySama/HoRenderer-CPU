@@ -158,15 +158,8 @@ Vector3f Scene::SampleLightEnvironment(const Ray& r_in, const Hit_Payload& rec, 
     float light_pdf = 0.0f;
     Vector3f radiance = light->Sample(r_in, rec, light_direction, light_pdf, sampler);
 
-    pdf = light_pdf * (light->GetPower() / lightTable.Sum());
-
-    Ray shadow_ray = Ray::SpawnRay(rec.p, light_direction, rec.normal);
-    Hit_Payload shadow_rec;
-    if (isHit(shadow_ray, Vector2f(Epsilon, Infinity), shadow_rec)) {
-        if (!shadow_rec.mat || !shadow_rec.mat->IsEmit()) {
-            return Vector3f(0.0f);
-        }
-    }
+    float light_selection_pdf = light->GetPower() / lightTable.Sum();
+    pdf = light_pdf * light_selection_pdf;
     
     return radiance;
 }

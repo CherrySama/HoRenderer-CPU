@@ -5,7 +5,6 @@
 
 #include "Util.hpp"
 #include "Shape.hpp"
-
 // 1. Sample function: based on shading point information,
 // sample light source direction and calculate expected radiance
 // 2. Evaluate function: based on light source intersection information,
@@ -16,8 +15,8 @@ public:
 
     virtual Vector3f Sample(const Ray& r_in, const Hit_Payload& rec, Vector3f& light_direction, float& pdf, Sampler& sampler) const = 0;
     virtual Vector3f Evaluate(const Ray& r_in, const Hit_Payload& rec, const Vector3f& light_direction, float& pdf) const = 0;
-
     virtual float GetPower() const = 0;
+    virtual std::shared_ptr<Hittable> GetShape() const = 0;
 };
 
 class QuadAreaLight : public Light {
@@ -29,6 +28,8 @@ public:
 
     virtual Vector3f Sample(const Ray& r_in, const Hit_Payload& rec, Vector3f& light_direction, float& pdf, Sampler& sampler) const override;
     virtual Vector3f Evaluate(const Ray& r_in, const Hit_Payload& rec, const Vector3f& light_direction, float& pdf) const override;
+    virtual float GetPower() const override;
+    virtual std::shared_ptr<Hittable> GetShape() const override;
 
 private:
     std::shared_ptr<Quad> quad;

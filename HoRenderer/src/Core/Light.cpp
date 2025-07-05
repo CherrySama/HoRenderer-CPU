@@ -47,3 +47,15 @@ Vector3f QuadAreaLight::Evaluate(const Ray &r_in, const Hit_Payload &rec, const 
 
     return quad->get_mat()->Emit(rec.uv);
 }
+
+float QuadAreaLight::GetPower() const
+{
+    Vector3f emission = quad->get_mat()->Emit(Vector2f(0.5f, 0.5f));                   
+    float luminance = 0.299f * emission.r + 0.587f * emission.g + 0.114f * emission.b; 
+    return area * luminance * PI;
+}
+
+std::shared_ptr<Hittable> QuadAreaLight::GetShape() const
+{
+    return quad;
+}

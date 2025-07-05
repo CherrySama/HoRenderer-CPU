@@ -16,7 +16,6 @@ public:
 
     virtual Vector3f Sample(const Ray& r_in, const Hit_Payload& rec, Vector3f& light_direction, float& pdf, Sampler& sampler) const = 0;
     virtual Vector3f Evaluate(const Ray& r_in, const Hit_Payload& rec, const Vector3f& light_direction, float& pdf) const = 0;
-    virtual bool IsHit(const Ray &ray, float max_distance, Vector3f &radiance) const = 0;
 
     virtual float GetPower() const = 0;
 };
@@ -30,7 +29,6 @@ public:
 
     virtual Vector3f Sample(const Ray& r_in, const Hit_Payload& rec, Vector3f& light_direction, float& pdf, Sampler& sampler) const override;
     virtual Vector3f Evaluate(const Ray& r_in, const Hit_Payload& rec, const Vector3f& light_direction, float& pdf) const override;
-    virtual bool IsHit(const Ray &ray, float max_distance, Vector3f &radiance) const override;
 
 private:
     std::shared_ptr<Quad> quad;
@@ -43,7 +41,6 @@ public:
 
     virtual Vector3f Sample(const Ray &r_in, const Hit_Payload &rec, Vector3f &light_direction, float &pdf, Sampler &sampler) const override;
     virtual Vector3f Evaluate(const Ray &r_in, const Hit_Payload &rec, const Vector3f &light_direction, float &pdf) const override;
-    virtual bool IsHit(const Ray &ray, float max_distance, Vector3f &radiance) const override;
 
 private:
     Vector3f SampleSphereSurface(Sampler &sampler) const;
@@ -62,7 +59,6 @@ public:
 
     virtual Vector3f Sample(const Ray& r_in, const Hit_Payload& rec, Vector3f& light_direction, float& pdf, Sampler& sampler) const override;
     virtual Vector3f Evaluate(const Ray& r_in, const Hit_Payload& rec, const Vector3f& light_direction, float& pdf) const override;
-    virtual bool IsHit(const Ray& ray, float max_distance, Vector3f& radiance) const override;
 
 private:
     Vector3f SphericalToCartesian(float theta, float phi) const;

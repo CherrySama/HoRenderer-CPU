@@ -84,11 +84,6 @@ Vector3f Integrator::ray_color(const Ray &r, int bounce, const Scene &world, Sam
         total_radiance += attenuation * ray_color(scattered, bounce-1, world, sampler);
     }
 
-    // light sampling
-    // if (!rec.mat->IsEmit()) {
-    //     // do something
-    // }
-
     return total_radiance;
 }
 

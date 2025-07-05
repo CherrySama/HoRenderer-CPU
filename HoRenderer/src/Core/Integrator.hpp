@@ -8,10 +8,6 @@
 #include "Scene.hpp"
 #include "Camera.hpp"
 
-struct IntegratorParams {
-    int num_threads;
-    int max_bounce;
-};
 
 class Integrator{
 public:

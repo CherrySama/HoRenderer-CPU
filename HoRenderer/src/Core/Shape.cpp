@@ -81,7 +81,7 @@ bool Quad::isHit(const Ray &r, Vector2f t_interval, Hit_Payload &rec) const
     float beta = glm::dot(w, glm::cross(u, hit_vec));
     
     // Check if it is within the rectangle
-    if (alpha < 0 || alpha > 1 || beta < 0 || beta > 1)
+    if (alpha < -Epsilon || alpha > 1 + Epsilon || beta < -Epsilon || beta > 1 + Epsilon)
         return false;
     
     rec.t = t;

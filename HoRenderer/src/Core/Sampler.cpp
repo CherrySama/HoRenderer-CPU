@@ -35,8 +35,9 @@ Vector2f Sampler::get_2d_sample() const
     int dim1 = (pixel_dimension_offset + dimension_pair_index * 2) % SobolMatricesDim;
     int dim2 = (pixel_dimension_offset + dimension_pair_index * 2 + 1) % SobolMatricesDim;
 
-    uint32_t sobol_value1 = SobolSample(sample_index, dim1);
-    uint32_t sobol_value2 = SobolSample(sample_index, dim2);
+    uint64_t effective_sample_index = sample_index + pixel_hash % 8; 
+    uint32_t sobol_value1 = SobolSample(effective_sample_index, dim1);
+    uint32_t sobol_value2 = SobolSample(effective_sample_index, dim2);
 
     float u = std::min(static_cast<float>(sobol_value1) * 0x1p-32f, 0.99999994f);
     float v = std::min(static_cast<float>(sobol_value2) * 0x1p-32f, 0.99999994f);

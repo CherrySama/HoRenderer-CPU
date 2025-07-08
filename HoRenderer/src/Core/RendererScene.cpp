@@ -61,9 +61,9 @@ namespace RendererScene
                                           greenMaterial));
 
         scene->Add(std::make_shared<Quad>(Vector3f(0.0f, 0.0f, 0.0f),
-                                          Vector3f(0.0f, 555.0f, 0.0f),
                                           Vector3f(0.0f, 0.0f, 555.0f),
-                                          redMaterial));
+                                          Vector3f(0.0f, 555.0f, 0.0f),
+                                          plasticMaterial));
 
         // scene->Add(std::make_shared<Quad>(Vector3f(127.5f, 554.0f, 127.5f),
         //                                   Vector3f(300.0f, 0.0f, 0.0f),
@@ -77,9 +77,9 @@ namespace RendererScene
         scene->Add(ceiling_light);
 
         scene->Add(std::make_shared<Quad>(Vector3f(0.0f, 0.0f, 0.0f),
-                                          Vector3f(555.0f, 0.0f, 0.0f),
                                           Vector3f(0.0f, 0.0f, 555.0f),
-                                          whiteMaterial));
+                                          Vector3f(555.0f, 0.0f, 0.0f),
+                                          plasticMaterial));
 
         scene->Add(std::make_shared<Quad>(Vector3f(555.0f, 555.0f, 555.0f),
                                           Vector3f(-555.0f, 0.0f, 0.0f),
@@ -87,28 +87,28 @@ namespace RendererScene
                                           whiteMaterial));
 
         scene->Add(std::make_shared<Quad>(Vector3f(0.0f, 0.0f, 555.0f),
-                                          Vector3f(555.0f, 0.0f, 0.0f),
                                           Vector3f(0.0f, 555.0f, 0.0f),
+                                          Vector3f(555.0f, 0.0f, 0.0f),
                                           whiteMaterial));
 
-        auto box1 = std::make_shared<Box>(Vector3f(0.0f,0.0f,0.0f),
-                                         Vector3f(165.0f, 165.0f, 165.0f),
-                                         whiteMaterial);
-        auto rotate_box1 = Transform::rotate(box1, RotationAxis::Y,15.0f);
-        auto translated_box1 = Transform::translate(rotate_box1, Vector3f(212.5f,82.5f,147.5f));
-        scene->Add(translated_box1);
-        // auto smoke_medium = std::make_shared<HomogeneousMedium>(translated_box1,                
-        //                                                         Vector3f(0.1f, 0.1f, 0.1f),    
-        //                                                         Vector3f(0.02f, 0.02f, 0.02f), 
-        //                                                         smokePhase);
-        // scene->Add(smoke_medium);
+        // auto box1 = std::make_shared<Box>(Vector3f(0.0f,0.0f,0.0f),
+        //                                  Vector3f(165.0f, 165.0f, 165.0f),
+        //                                  whiteMaterial);
+        // auto rotate_box1 = Transform::rotate(box1, RotationAxis::Y,15.0f);
+        // auto translated_box1 = Transform::translate(rotate_box1, Vector3f(212.5f,82.5f,147.5f));
+        // scene->Add(translated_box1);
+        // // auto smoke_medium = std::make_shared<HomogeneousMedium>(translated_box1,                
+        // //                                                         Vector3f(0.1f, 0.1f, 0.1f),    
+        // //                                                         Vector3f(0.02f, 0.02f, 0.02f), 
+        // //                                                         smokePhase);
+        // // scene->Add(smoke_medium);
         
-        auto box2 = std::make_shared<Box>(Vector3f(0.0f, 0.0f, 0.0f),
-                                          Vector3f(165.0f, 330.0f, 165.0f),
-                                          glassMaterial);
-        auto rotate_box2 = Transform::rotate(box2, RotationAxis::Y,-18.0f);
-        auto translated_box2 = Transform::translate(rotate_box2, Vector3f(347.5f, 165.0f, 377.5f));
-        scene->Add(translated_box2);
+        // auto box2 = std::make_shared<Box>(Vector3f(0.0f, 0.0f, 0.0f),
+        //                                   Vector3f(165.0f, 330.0f, 165.0f),
+        //                                   glassMaterial);
+        // auto rotate_box2 = Transform::rotate(box2, RotationAxis::Y,-18.0f);
+        // auto translated_box2 = Transform::translate(rotate_box2, Vector3f(347.5f, 165.0f, 377.5f));
+        // scene->Add(translated_box2);
         // scene->Add(std::make_shared<HomogeneousMedium>(translated_box2, 0.01f, Vector3f(1)));
 
         // scene->BuildBVH();
@@ -164,6 +164,7 @@ namespace RendererScene
         scene->Add(std::make_shared<Sphere>(Vector3f(-0.5f, 0.0f, -1.2f), 0.5f, greenPlastic));
         scene->Add(std::make_shared<Sphere>(Vector3f(1.0f, 0.0f, -1.2f), 0.5f, glassMaterial));
 
+        scene->BuildLightTable(); 
         auto renderer = std::make_shared<Renderer>(std::move(camera), std::move(integrator), std::move(sampler), std::move(scene));
         return renderer;
     }

@@ -32,7 +32,7 @@ namespace RendererScene
         std::unique_ptr<Sampler> sampler = std::make_unique<Sampler>(FilterType::GAUSSIAN);
         std::unique_ptr<Scene> scene = std::make_unique<Scene>();
 
-        auto emitMaterial = std::make_shared<Emission>(Vector3f(15.0f, 15.0f, 15.0f));
+        auto emitMaterial = std::make_shared<Emission>(Vector3f(50.0f, 50.0f, 50.0f));
         auto redMaterial = std::make_shared<Diffuse>(Vector3f(0.65f, 0.05f, 0.05f));
         auto whiteMaterial =  std::make_shared<Diffuse>(Vector3f(0.73f, 0.73f, 0.73f));
         auto greenMaterial = std::make_shared<Diffuse>(Vector3f(0.12f, 0.45f, 0.15f));
@@ -41,17 +41,12 @@ namespace RendererScene
                                                                             0.001f,
                                                                             Vector3f(0.47f, 0.37f, 1.5f),
                                                                             Vector3f(2.13f, 2.23f, 1.69f));
-        auto plasticMaterial = std::make_shared<Plastic>(Vector3f(0.8f, 0.2f, 0.2f), 
+        auto plasticMaterial = std::make_shared<Plastic>(Vector3f(0.2f, 0.2f, 0.8f), 
                                                                             Vector3f(1.0f, 1.0f, 1.0f), 
                                                                             0.5f,                     
                                                                             0.5f,                      
                                                                             1.6f,                       
                                                                             1.0f);
-        auto frostedGlassMaterial = std::make_shared<FrostedGlass>(Vector3f(0.95f, 0.95f, 0.98f), 
-                                                                                        0.3f,                         
-                                                                                        0.3f,                          
-                                                                                        1.3f,
-                                                                                        1.0f);
         auto glassMaterial = std::make_shared<Glass>(1.5f);
         auto smokePhase = std::make_shared<IsotropicPhase>(Vector3f(0.7f, 0.7f, 0.7f));
         
@@ -61,25 +56,21 @@ namespace RendererScene
                                           greenMaterial));
 
         scene->Add(std::make_shared<Quad>(Vector3f(0.0f, 0.0f, 0.0f),
-                                          Vector3f(0.0f, 0.0f, 555.0f),
                                           Vector3f(0.0f, 555.0f, 0.0f),
-                                          plasticMaterial));
+                                          Vector3f(0.0f, 0.0f, 555.0f),
+                                          redMaterial));
 
-        // scene->Add(std::make_shared<Quad>(Vector3f(127.5f, 554.0f, 127.5f),
-        //                                   Vector3f(300.0f, 0.0f, 0.0f),
-        //                                   Vector3f(0.0f, 0.0f, 300.0f),
-        //                                   emitMaterial));
-        auto ceiling_quad = std::make_shared<Quad>(Vector3f(127.5f, 554.0f, 127.5f),
-                                                   Vector3f(300.0f, 0.0f, 0.0f),
-                                                   Vector3f(0.0f, 0.0f, 300.0f),
+        auto ceiling_quad = std::make_shared<Quad>(Vector3f(213.0f, 548.8f, 227.0f),
+                                                   Vector3f(130.0f, 0.0f, 0.0f),
+                                                   Vector3f(0.0f, 0.0f, 105.0f),
                                                    emitMaterial);
         auto ceiling_light = std::make_shared<QuadAreaLight>(ceiling_quad);
         scene->Add(ceiling_light);
 
         scene->Add(std::make_shared<Quad>(Vector3f(0.0f, 0.0f, 0.0f),
-                                          Vector3f(0.0f, 0.0f, 555.0f),
                                           Vector3f(555.0f, 0.0f, 0.0f),
-                                          plasticMaterial));
+                                          Vector3f(0.0f, 0.0f, 555.0f),
+                                          whiteMaterial));
 
         scene->Add(std::make_shared<Quad>(Vector3f(555.0f, 555.0f, 555.0f),
                                           Vector3f(-555.0f, 0.0f, 0.0f),
@@ -91,25 +82,24 @@ namespace RendererScene
                                           Vector3f(555.0f, 0.0f, 0.0f),
                                           whiteMaterial));
 
-        // auto box1 = std::make_shared<Box>(Vector3f(0.0f,0.0f,0.0f),
-        //                                  Vector3f(165.0f, 165.0f, 165.0f),
-        //                                  whiteMaterial);
-        // auto rotate_box1 = Transform::rotate(box1, RotationAxis::Y,15.0f);
-        // auto translated_box1 = Transform::translate(rotate_box1, Vector3f(212.5f,82.5f,147.5f));
-        // scene->Add(translated_box1);
-        // // auto smoke_medium = std::make_shared<HomogeneousMedium>(translated_box1,                
-        // //                                                         Vector3f(0.1f, 0.1f, 0.1f),    
-        // //                                                         Vector3f(0.02f, 0.02f, 0.02f), 
-        // //                                                         smokePhase);
-        // // scene->Add(smoke_medium);
+        auto box1 = std::make_shared<Box>(Vector3f(0.0f,0.0f,0.0f),
+                                         Vector3f(165.0f, 165.0f, 165.0f),
+                                         whiteMaterial);
+        auto rotate_box1 = Transform::rotate(box1, RotationAxis::Y,15.0f);
+        auto translated_box1 = Transform::translate(rotate_box1, Vector3f(212.5f,82.5f,147.5f));
+        scene->Add(translated_box1);
+        // auto smoke_medium = std::make_shared<HomogeneousMedium>(translated_box1,                
+        //                                                         Vector3f(0.1f, 0.1f, 0.1f),    
+        //                                                         Vector3f(0.02f, 0.02f, 0.02f), 
+        //                                                         smokePhase);
+        // scene->Add(smoke_medium);
         
-        // auto box2 = std::make_shared<Box>(Vector3f(0.0f, 0.0f, 0.0f),
-        //                                   Vector3f(165.0f, 330.0f, 165.0f),
-        //                                   glassMaterial);
-        // auto rotate_box2 = Transform::rotate(box2, RotationAxis::Y,-18.0f);
-        // auto translated_box2 = Transform::translate(rotate_box2, Vector3f(347.5f, 165.0f, 377.5f));
-        // scene->Add(translated_box2);
-        // scene->Add(std::make_shared<HomogeneousMedium>(translated_box2, 0.01f, Vector3f(1)));
+        auto box2 = std::make_shared<Box>(Vector3f(0.0f, 0.0f, 0.0f),
+                                          Vector3f(165.0f, 330.0f, 165.0f),
+                                          goldMaterial);
+        auto rotate_box2 = Transform::rotate(box2, RotationAxis::Y,-18.0f);
+        auto translated_box2 = Transform::translate(rotate_box2, Vector3f(347.5f, 165.0f, 377.5f));
+        scene->Add(translated_box2);
 
         // scene->BuildBVH();
         scene->BuildLightTable(); 

@@ -49,7 +49,7 @@ Vector3f HenyeyGreensteinPhase::Sample(const Ray &r_in, const Hit_Payload &rec, 
                                         sin_theta * std::sin(phi),
                                         cos_theta);
 
-    scatter_direction = ToWorld(local_direction, V);
+    scatter_direction = ToWorld(local_direction, -V);
 
     Vector3f attenuation(0.0f);
     pdf = 0.0f;
@@ -73,7 +73,7 @@ Vector3f HenyeyGreensteinPhase::Evaluate(const Ray &r_in, const Hit_Payload &rec
     Vector3f albedo = albedo_texture->GetColor(rec.uv.x, rec.uv.y);
     Vector3f V = -glm::normalize(r_in.direction());  
     Vector3f L = glm::normalize(scatter_direction);  
-    float cos_theta = glm::dot(L, V);
+    float cos_theta = glm::dot(L, -V);
     
     Vector3f attenuation(0.0f);
     pdf = 0.0f;

@@ -184,6 +184,20 @@ inline Vector3f LinearToSRGB(const Vector3f& linear) {
                     LinearToSRGB(linear.b));
 }
 
+inline float SRGBToLinear(float srgb) {
+    if (srgb <= 0.04045f) {
+        return srgb / 12.92f;
+    } else {
+        return std::pow((srgb + 0.055f) / 1.055f, 2.4f);
+    }
+}
+
+inline Vector3f SRGBToLinear(const Vector3f& srgb) {
+    return Vector3f(SRGBToLinear(srgb.r),
+                    SRGBToLinear(srgb.g),
+                    SRGBToLinear(srgb.b));
+}
+
 inline Vector3f ACESFilmicToneMapping(const Vector3f& color) {
     const float a = 2.51f;
     const float b = 0.03f;

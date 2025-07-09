@@ -10,14 +10,14 @@ Vector3f QuadAreaLight::Sample(const Ray &r_in, const Hit_Payload &rec, Vector3f
 {
     Vector2f uv = sampler.get_2d_sample();
     Vector3f light_point = quad->get_Q() + uv.x * quad->get_u() + uv.y * quad->get_v();
-    Vector3f light_to_surface = light_point - rec.p;
-    float distance_sq = glm::dot(light_to_surface, light_to_surface); 
+    Vector3f surface_to_light = light_point - rec.p;
+    float distance_sq = glm::dot(surface_to_light, surface_to_light); 
     if (distance_sq < Epsilon) {
         pdf = 0.0f;
         return Vector3f(0);
     }
     float distance = std::sqrt(distance_sq);
-    light_direction = light_to_surface / distance;
+    light_direction = surface_to_light / distance;
 
     Vector3f light_normal = glm::normalize(glm::cross(quad->get_u(), quad->get_v()));
     float cos_theta = glm::dot(-light_direction, light_normal);
@@ -33,7 +33,7 @@ Vector3f QuadAreaLight::Sample(const Ray &r_in, const Hit_Payload &rec, Vector3f
 Vector3f QuadAreaLight::Evaluate(const Ray &r_in, const Hit_Payload &rec, float &pdf) const
 {
     Vector3f light_normal = glm::normalize(glm::cross(quad->get_u(), quad->get_v()));
-    float cos_theta = glm::dot(-r_in.direction(), light_normal);
+    float cos_theta = glm::dot(-glm::normalize(r_in.direction()), light_normal);
     if (cos_theta <= 0.0f) {
         pdf = 0.0f;
         return Vector3f(0);

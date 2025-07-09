@@ -12,7 +12,7 @@ public:
     ~Ray() = default;
 
     inline const Vector3f& origin() const { return orig; }
-    inline const Vector3f& direction() const { return dir; }
+    inline const Vector3f& direction() const { return dir; } // Normalized unit vector
 
     /*
     * @brief: Fine-tune the starting point of the light to slightly deviate from the surface to avoid erroneous self-intersection due to floating point precision
@@ -35,6 +35,7 @@ public:
     */
     static Ray SpawnRay(const Vector3f& pos, const Vector3f& L, const Vector3f& Ng);
 
+    // at(t) returns the point at distance t along the ray. If direction is normalized, t is the actual distance
     inline Vector3f at(float t) const { return orig + t * dir; }
 
 private:

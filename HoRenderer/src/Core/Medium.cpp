@@ -22,8 +22,7 @@ bool HomogeneousMedium::isHit(const Ray &r, Vector2f t_interval, Hit_Payload &re
     if (rec1.t < 0)
         rec1.t = 0;
 
-    float ray_length = glm::length(r.direction());
-    float distance_inside_boundary = (rec2.t - rec1.t) * ray_length;
+    float distance_inside_boundary = rec2.t - rec1.t;
     
     float avg_sigma_t = (sigma_t.x + sigma_t.y + sigma_t.z) / 3.0f;
     uint32_t seed = hash_pixel(static_cast<int>(r.origin().x * 1000),
@@ -37,7 +36,7 @@ bool HomogeneousMedium::isHit(const Ray &r, Vector2f t_interval, Hit_Payload &re
     if (hit_distance > distance_inside_boundary)
         return false; 
 
-    rec.t = rec1.t + hit_distance / ray_length;
+    rec.t = rec1.t + hit_distance;
     rec.p = r.at(rec.t);
 
     rec.normal = Vector3f(1, 0, 0); 

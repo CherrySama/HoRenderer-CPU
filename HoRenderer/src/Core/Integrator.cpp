@@ -59,6 +59,16 @@ Vector3f Integrator::ray_color(const Ray &r, int bounce, const Scene &world, Sam
         return Vector3f(0.01f, 0.01f, 0.01f); 
     }
 
+    if (rec.p.x < 0.0f && std::abs(rec.p.x) < 1e-6f) {
+        rec.p.x = 0.0f;
+    }
+    if (rec.p.y < 0.0f && std::abs(rec.p.y) < 1e-6f) {
+        rec.p.y = 0.0f;
+    }
+    if (rec.p.z < 0.0f && std::abs(rec.p.z) < 1e-6f) {
+        rec.p.z = 0.0f;
+    }
+
     // emission
     Vector3f total_radiance = rec.mat->Emit(r, rec, rec.uv.x, rec.uv.y);
 
@@ -110,7 +120,7 @@ Vector3f Integrator::EstimateDirectLighting(const Ray &r_in, const Hit_Payload &
     float light_pdf;
     Vector3f light_radiance = world.SampleLightEnvironment(r_in, rec, light_direction, light_pdf, sampler);
     
-    if (light_pdf > Epsilon && glm::dot(rec.normal, light_direction) > 0.0f) {
+    if (light_pdf > Epsilon) {
         Ray shadow_ray = Ray::SpawnRay(rec.p, light_direction, rec.normal);
         Hit_Payload shadow_rec;
         bool in_shadow = false;
@@ -126,7 +136,7 @@ Vector3f Integrator::EstimateDirectLighting(const Ray &r_in, const Hit_Payload &
             Vector3f brdf = rec.mat->Evaluate(r_in, rec, light_direction, brdf_pdf);
             
             if (brdf_pdf > Epsilon) {
-                float cos_theta = glm::dot(rec.normal, light_direction);
+                float cos_theta = std::abs(glm::dot(rec.normal, light_direction));
                 float mis_weight = PowerHeuristic(light_pdf, brdf_pdf);
                 direct_lighting += mis_weight * brdf * cos_theta * light_radiance / light_pdf;
             }

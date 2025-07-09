@@ -29,13 +29,7 @@ void Material::SetNormal(std::shared_ptr<Texture> &normal) {
 
 Vector3f Material::NormalFromTangentToWorld(const Vector3f &surface_normal, const Vector3f &tangent_normal) const {
     Vector3f mapped_normal = glm::normalize(tangent_normal * 2.0f - 1.0f);
-
-    Vector3f up_vector = std::abs(surface_normal.z) < 0.9f ? Vector3f(0.0f, 0.0f, 1.0f) : Vector3f(1.0f, 0.0f, 0.0f);
-
-    Vector3f tangent_x = glm::normalize(glm::cross(up_vector, surface_normal));
-    Vector3f tangent_y = glm::normalize(glm::cross(tangent_x, surface_normal));
-
-    return glm::normalize(tangent_x * mapped_normal.x + tangent_y * mapped_normal.y + surface_normal * mapped_normal.z);
+    return ToWorld(mapped_normal, surface_normal);
 }
 
 Vector3f Diffuse::Sample(const Ray& r_in, const Hit_Payload& rec, Vector3f& scatter_direction, float& pdf, Sampler& sampler) const

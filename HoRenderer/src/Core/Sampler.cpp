@@ -82,24 +82,14 @@ Vector3f Sampler::CosineSampleHemisphere(const Vector3f& normal) const
                              sin_theta * std::sin(phi),
                              cos_theta);
 
-    Vector3f up_vector = (std::abs(normal.z) < 0.9f) ? Vector3f(0.0f, 0.0f, 1.0f) : Vector3f(1.0f, 0.0f, 0.0f);
-    Vector3f tangent = glm::normalize(glm::cross(up_vector, normal));
-    Vector3f bitangent = glm::normalize(glm::cross(normal, tangent));
-
-    return glm::normalize(tangent * local_direction.x + bitangent * local_direction.y + normal * local_direction.z);
+    return ToWorld(local_direction, normal);
 }
 
 Vector3f Sampler::GGXNVDSample(const Vector3f &normal, const Vector3f &view, float alpha_u, float alpha_v) const
 {
     Vector2f sample = get_2d_sample();
 
-    Vector3f up_vector = (std::abs(normal.z) < 0.9f) ? Vector3f(0.0f, 0.0f, 1.0f) : Vector3f(1.0f, 0.0f, 0.0f);
-    Vector3f tangent = glm::normalize(glm::cross(up_vector, normal));
-    Vector3f bitangent = glm::normalize(glm::cross(normal, tangent));
-
-    Vector3f V = Vector3f(glm::dot(view, tangent),
-                          glm::dot(view, bitangent),
-                          glm::dot(view, normal));
+    Vector3f V = ToLocal(view, normal);
 
     // Visible Normal Distribution Sampling - Eric Heitz algorithm
     Vector3f Vh = glm::normalize(Vector3f(alpha_u * V.x, alpha_v * V.y, V.z));
@@ -118,7 +108,7 @@ Vector3f Sampler::GGXNVDSample(const Vector3f &normal, const Vector3f &view, flo
 
     Vector3f local_H = glm::normalize(Vector3f(alpha_u * Nh.x, alpha_v * Nh.y, std::max(0.0f, Nh.z)));
 
-    Vector3f H = glm::normalize(tangent * local_H.x + bitangent * local_H.y + normal * local_H.z);
+    Vector3f H = ToWorld(local_H, normal);
 
     return H;
 }

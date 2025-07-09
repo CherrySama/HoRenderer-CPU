@@ -48,6 +48,12 @@ namespace BSDF {
         }
     }
 
+    float SchlickFresnelScalar(float cosTheta) {
+        float m = glm::clamp(1.0f - cosTheta, 0.0f, 1.0f);
+        float m2 = m * m;
+        return m2 * m2 * m; // pow(m, 5)
+    }
+
     Vector3f FresnelConductor(const Vector3f &V, const Vector3f &H, const Vector3f &eta, const Vector3f &k)
 	{
         float VdotH = glm::max(glm::dot(V, H), 0.0f);

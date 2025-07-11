@@ -222,6 +222,14 @@ inline uint32_t hash_pixel(int x, int y) {
     return h;
 }
 
+inline uint32_t hash_ray(const Vector3f& origin, const Vector3f& direction) {
+    uint32_t h = 0;
+    h ^= hash_pixel(FloatToBits(origin.x), FloatToBits(origin.y));
+    h ^= hash_pixel(FloatToBits(origin.z), FloatToBits(direction.x));
+    h ^= hash_pixel(FloatToBits(direction.y), FloatToBits(direction.z));
+    return h;
+}
+
 inline Vector3f ToLocal(const Vector3f& dir, const Vector3f& up) {
 	auto B = Vector3f(0.0f), C = Vector3f(0.0f);
 	if (std::abs(up.x) > std::abs(up.y)) {

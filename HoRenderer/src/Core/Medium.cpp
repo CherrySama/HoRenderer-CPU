@@ -23,14 +23,12 @@ bool HomogeneousMedium::isHit(const Ray &r, Vector2f t_interval, Hit_Payload &re
         rec1.t = 0;
 
     float distance_inside_boundary = rec2.t - rec1.t;
-    
-    float avg_sigma_t = (sigma_t.x + sigma_t.y + sigma_t.z) / 3.0f;
-    uint32_t seed = hash_pixel(static_cast<int>(r.origin().x * 1000),
-                               static_cast<int>(r.origin().y * 1000))
-                    ^ hash_pixel(static_cast<int>(r.direction().x * 1000),
-                                 static_cast<int>(r.direction().y * 1000));
+
+    // luminance weight
+    float avg_sigma_t = 0.299f * sigma_t.x + 0.587f * sigma_t.y + 0.114f * sigma_t.z;
+    uint32_t seed = hash_ray(r.origin(), r.direction());
     seed = seed * 1664525u + 1013904223u;
-    float random_sample = (seed >> 8) * (1.0f / 16777216.0f);
+    float random_sample = (seed & 0xFFFFFFFF) * (1.0f / 4294967296.0f);
     float hit_distance = -std::log(std::max(random_sample, 1e-8f)) / avg_sigma_t;
 
     if (hit_distance > distance_inside_boundary)

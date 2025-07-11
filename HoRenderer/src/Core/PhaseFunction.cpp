@@ -27,19 +27,16 @@ Vector3f HenyeyGreensteinPhase::Sample(const Ray &r_in, const Hit_Payload &rec, 
     Vector3f albedo = albedo_texture->GetColor(rec.uv.x, rec.uv.y);
     Vector3f V = -glm::normalize(r_in.direction()); 
     
-    int channel = std::min(static_cast<int>(sampler.random_float() * 3.0f), 2);
-    float gc = g[channel];
-    
-    float cos_theta = 0.0f;
-
-    if (std::abs(gc) < Epsilon) {
+    float cos_theta;
+    if (std::abs(g) < Epsilon) {
+        // cos(θ) = 1 - 2ξ
         cos_theta = 1.0f - 2.0f * sampler.random_float();
     } else {
+        // cos(θ) = (1 + g² - ((1-g²)/(1-g+2g*ξ))²) / (2g)
         float xi = sampler.random_float();
-        float sqr_term = (1.0f - gc * gc) / (1.0f - gc + 2.0f * gc * xi);
-        cos_theta = (1.0f + gc * gc - sqr_term * sqr_term) / (2.0f * gc);
+        float sqr_term = (1.0f - g * g) / (1.0f - g + 2.0f * g * xi);
+        cos_theta = (1.0f + g * g - sqr_term * sqr_term) / (2.0f * g);
     }
-
     cos_theta = glm::clamp(cos_theta, -1.0f, 1.0f);
 
     float sin_theta = std::sqrt(std::max(0.0f, 1.0f - cos_theta * cos_theta));
@@ -48,24 +45,17 @@ Vector3f HenyeyGreensteinPhase::Sample(const Ray &r_in, const Hit_Payload &rec, 
     Vector3f local_direction = Vector3f(sin_theta * std::cos(phi),
                                         sin_theta * std::sin(phi),
                                         cos_theta);
-
     scatter_direction = ToWorld(local_direction, -V);
 
-    Vector3f attenuation(0.0f);
-    pdf = 0.0f;
-    
-    for (int dim = 0; dim < 3; ++dim) {
-        float temp = 1.0f + g[dim] * g[dim] + 2.0f * g[dim] * cos_theta;
-        if (temp > Epsilon) {
-            float phase_value = INV_4PI * (1.0f - g[dim] * g[dim]) / (temp * std::sqrt(temp));
-            attenuation[dim] = phase_value;
-            pdf += phase_value;
-        }
+    // pdf
+    float temp = 1.0f + g * g + 2.0f * g * cos_theta;
+    if (temp > Epsilon) {
+        pdf = INV_4PI * (1.0f - g * g) / (temp * std::sqrt(temp));
+    } else {
+        pdf = INV_4PI;
     }
-    
-    pdf *= (1.0f / 3.0f);  
-    
-    return albedo * attenuation;
+
+    return albedo;
 }
 
 Vector3f HenyeyGreensteinPhase::Evaluate(const Ray &r_in, const Hit_Payload &rec, const Vector3f &scatter_direction, float &pdf) const
@@ -75,19 +65,12 @@ Vector3f HenyeyGreensteinPhase::Evaluate(const Ray &r_in, const Hit_Payload &rec
     Vector3f L = glm::normalize(scatter_direction);  
     float cos_theta = glm::dot(L, -V);
     
-    Vector3f attenuation(0.0f);
-    pdf = 0.0f;
-
-    for (int dim = 0; dim < 3; ++dim) {
-        float temp = 1.0f + g[dim] * g[dim] + 2.0f * g[dim] * cos_theta;
-        if (temp > Epsilon) {
-            float phase_value = INV_4PI * (1.0f - g[dim] * g[dim]) / (temp * std::sqrt(temp));
-            attenuation[dim] = phase_value;
-            pdf += phase_value;
-        }
+    float temp = 1.0f + g * g + 2.0f * g * cos_theta;
+    if (temp > Epsilon) {
+        pdf = INV_4PI * (1.0f - g * g) / (temp * std::sqrt(temp));
+    } else {
+        pdf = INV_4PI;  
     }
     
-    pdf *= (1.0f / 3.0f);  
-    
-    return albedo * attenuation;
+    return albedo;
 }

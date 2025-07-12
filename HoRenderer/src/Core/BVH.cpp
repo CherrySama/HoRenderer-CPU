@@ -56,13 +56,17 @@ BVHnode::BVHnode(std::vector<std::shared_ptr<Hittable>>& objects, size_t start, 
         }
     }
 
-    #pragma omp task shared(left) 
-    left = std::make_shared<BVHnode>(objects, start, split_point);
-    
-    #pragma omp task shared(right)  
-    right = std::make_shared<BVHnode>(objects, split_point, end);
-    
-    #pragma omp taskwait
+    #pragma omp parallel sections
+    {
+        #pragma omp section
+            {
+                left = std::make_shared<BVHnode>(objects, start, split_point);
+            }
+        #pragma omp section
+            {
+                right = std::make_shared<BVHnode>(objects, split_point, end);
+            }
+    }
 }
 
 bool BVHnode::isHit(const Ray& r, Vector2f t_interval, Hit_Payload& rec) const {

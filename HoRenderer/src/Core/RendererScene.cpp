@@ -28,7 +28,7 @@ namespace RendererScene
         std::unique_ptr<Camera> camera = std::make_unique<Camera>();
         camera->Create(camParams);
 
-        std::unique_ptr<Integrator> integrator = std::make_unique<Integrator>(camera->image_width, camera->image_height, 16, 30);
+        std::unique_ptr<Integrator> integrator = std::make_unique<Integrator>(camera->image_width, camera->image_height, 12, 30);
         std::unique_ptr<Sampler> sampler = std::make_unique<Sampler>(FilterType::GAUSSIAN);
         std::unique_ptr<Scene> scene = std::make_unique<Scene>();
 
@@ -122,7 +122,7 @@ namespace RendererScene
         std::unique_ptr<Camera> camera = std::make_unique<Camera>();
         camera->Create(camParams);
 
-        std::unique_ptr<Integrator> integrator = std::make_unique<Integrator>(camera->image_width, camera->image_height, 16, 50);
+        std::unique_ptr<Integrator> integrator = std::make_unique<Integrator>(camera->image_width, camera->image_height, 12, 50);
         std::unique_ptr<Sampler> sampler = std::make_unique<Sampler>(FilterType::GAUSSIAN);
         std::unique_ptr<Scene> scene = std::make_unique<Scene>();
 

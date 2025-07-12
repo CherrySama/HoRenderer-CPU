@@ -65,6 +65,6 @@ Ray Camera::GenerateRay(int u, int v, Sampler &sampler, const Vector2f& offset) 
                             + ((float(v) + offset.y) * pixel_delta_v);
 
     Vector3f ray_origin = (defocus_angle <= 0.0f) ? cameraPos : DefocusDisk(sampler);
-    Vector3f ray_direction = pixel_center - ray_origin;
+    Vector3f ray_direction = glm::normalize(pixel_center - ray_origin);
     return Ray(ray_origin, ray_direction);
 }

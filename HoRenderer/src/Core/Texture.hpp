@@ -11,18 +11,11 @@ enum class TextureType {
     HDR
 };
 
-struct TextureParams {
-	TextureType type;
-	Vector3f color;
-	std::string filepath;
-};
-
 class Texture {
 public:
     Texture(TextureType type) : tex_type(type) {}
     virtual ~Texture() = default;
     virtual Vector3f GetColor(float u, float v) const = 0;
-    static std::shared_ptr<Texture> Create(const TextureParams &params);
 
 private:
     TextureType tex_type;

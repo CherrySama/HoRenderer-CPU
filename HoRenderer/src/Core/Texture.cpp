@@ -66,8 +66,9 @@ Vector3f ImageTexture::GetColor(float u, float v) const
     float r = image_data[pixel_index] / 255.0f;
     float g = image_data[pixel_index + 1] / 255.0f;
     float b = image_data[pixel_index + 2] / 255.0f;
-    
-    return Vector3f(r, g, b);
+
+    Vector3f srgb_color(r, g, b);
+    return SRGBToLinear(srgb_color);
 }
 
 HDRTexture::HDRTexture(const std::string &filepath) : Texture(TextureType::HDR), width(0), height(0), channels(0), load_success(false)
@@ -128,16 +129,4 @@ Vector3f HDRTexture::GetColor(float u, float v) const
     float b = hdr_data[pixel_index + 2];
     
     return Vector3f(r, g, b);
-}
-
-std::shared_ptr<Texture> Texture::Create(const TextureParams &params) {
-    switch (params.type) {
-        case TextureType::SOLIDCOLOR:
-            return std::make_shared<SolidTexture>(params.color);
-        case TextureType::IMAGE:
-            return std::make_shared<ImageTexture>(params.filepath);
-        case TextureType::HDR:
-            return std::make_shared<HDRTexture>(params.filepath);
-        }
-    return NULL;
 }

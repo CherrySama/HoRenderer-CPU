@@ -64,6 +64,11 @@ public:
         return bbox;
     }
 
+    Vector3f get_u() const {return u;}
+    Vector3f get_v() const {return v;}
+    Vector3f get_Q() const {return Q;}
+    std::shared_ptr<Material> get_mat() const {return mat;}
+    
 private:
     Vector3f Q;    // The base point of the quadrilateral (a corner point)
     Vector3f u, v; // Two edge vectors starting from point Q

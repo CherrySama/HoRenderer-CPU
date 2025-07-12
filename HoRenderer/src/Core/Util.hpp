@@ -17,6 +17,8 @@
 #include <Windows.h>
 #include <vector>
 #include <sstream>
+#include <queue>
+#include <map>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
@@ -35,6 +37,7 @@ class Ray;
 class Hittable;
 class Hit_Payload;
 class Scene;
+class AliasTable1D;
 class Camera;
 class Sampler;
 class ProgressTracker;
@@ -49,7 +52,10 @@ class Conductor;
 class Plastic;
 class HomogeneousMedium;
 class IsotropicPhase;
+class HenyeyGreensteinPhase;
 class Emission;
+class FrostedGlass;
+class Glass;
 
 class AABB;
 class BVHnode;
@@ -66,6 +72,11 @@ class HDRTexture;
 class Translate;
 class Rotate;
 class Scale;
+
+class Light;
+class QuadAreaLight;
+class SphereAreaLight;
+class InfiniteAreaLight;
 
 
 using Vector2u = glm::uvec2;
@@ -88,6 +99,8 @@ constexpr float Epsilon = 1e-5f;
 constexpr float Infinity = std::numeric_limits<float>::infinity();
 constexpr float PI = 3.1415926535897932385f;
 constexpr float INV_PI = 1.0f / PI;
+constexpr float INV_2PI = 1.0f / (2.0f * PI);
+constexpr float INV_4PI = 1.0f / (4.0f * PI);
 
 
 inline uint32_t FloatToBits(float f) {
@@ -171,6 +184,20 @@ inline Vector3f LinearToSRGB(const Vector3f& linear) {
                     LinearToSRGB(linear.b));
 }
 
+inline float SRGBToLinear(float srgb) {
+    if (srgb <= 0.04045f) {
+        return srgb / 12.92f;
+    } else {
+        return std::pow((srgb + 0.055f) / 1.055f, 2.4f);
+    }
+}
+
+inline Vector3f SRGBToLinear(const Vector3f& srgb) {
+    return Vector3f(SRGBToLinear(srgb.r),
+                    SRGBToLinear(srgb.g),
+                    SRGBToLinear(srgb.b));
+}
+
 inline Vector3f ACESFilmicToneMapping(const Vector3f& color) {
     const float a = 2.51f;
     const float b = 0.03f;
@@ -192,6 +219,14 @@ inline uint32_t hash_pixel(int x, int y) {
     h ^= h >> 13;
     h *= 0xc2b2ae35;
     h ^= h >> 16;
+    return h;
+}
+
+inline uint32_t hash_ray(const Vector3f& origin, const Vector3f& direction) {
+    uint32_t h = 0;
+    h ^= hash_pixel(FloatToBits(origin.x), FloatToBits(origin.y));
+    h ^= hash_pixel(FloatToBits(origin.z), FloatToBits(direction.x));
+    h ^= hash_pixel(FloatToBits(direction.y), FloatToBits(direction.z));
     return h;
 }
 

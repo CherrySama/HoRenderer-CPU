@@ -16,6 +16,10 @@ public:
     virtual Vector3f Sample(const Ray& r_in, const Hit_Payload& rec, Vector3f& scatter_direction, float& pdf, Sampler& sampler) const = 0;
     virtual Vector3f Evaluate(const Ray& r_in, const Hit_Payload& rec, const Vector3f& scatter_direction, float& pdf) const = 0;
     virtual Vector3f Emit(const Ray& r_in, const Hit_Payload& rec, float u, float v) const;
+    virtual Vector3f Emit(const Vector2f& uv) const { return Vector3f(0); }
+    virtual bool IsDelta() const { return false; }
+    virtual bool IsVolumetric() const { return false; }
+    virtual bool IsEmit() const { return false; }
     
 protected:
     Vector3f GetSurfaceNormal(const Hit_Payload &rec) const;
@@ -36,7 +40,6 @@ public:
 
 private:
     std::shared_ptr<Texture> albedo_texture;
-    // float roughness;
     std::shared_ptr<Texture> roughness_texture;
 };
 
@@ -96,8 +99,46 @@ public:
     virtual Vector3f Sample(const Ray &r_in, const Hit_Payload &rec, Vector3f &scatter_direction, float &pdf, Sampler &sampler) const override;
     virtual Vector3f Evaluate(const Ray& r_in, const Hit_Payload& rec, const Vector3f& scatter_direction, float& pdf) const override;
     virtual Vector3f Emit(const Ray &r_in, const Hit_Payload &rec, float u, float v) const override;
+    virtual Vector3f Emit(const Vector2f &uv) const override;
+    virtual bool IsEmit() const override { return true; }
 
 private:
     std::shared_ptr<Texture> albedo_texture;
     float intensity;
+};
+
+class FrostedGlass : public Material {
+public:
+    FrostedGlass(const Vector3f &albedo, float roughness_u, float roughness_v, float int_ior, float ext_ior) :
+        albedo_texture(std::make_shared<SolidTexture>(albedo)),
+        roughness_texture_u(std::make_shared<SolidTexture>(Vector3f(roughness_u))),
+        roughness_texture_v(std::make_shared<SolidTexture>(Vector3f(roughness_v))),
+        eta(int_ior / ext_ior) {}
+
+    FrostedGlass(std::shared_ptr<Texture> albedo, std::shared_ptr<Texture> roughness_u, std::shared_ptr<Texture> roughness_v, float int_ior, float ext_ior) :
+        albedo_texture(albedo),
+        roughness_texture_u(roughness_u),
+        roughness_texture_v(roughness_v),
+        eta(int_ior / ext_ior) {}
+
+    virtual Vector3f Sample(const Ray &r_in, const Hit_Payload &rec, Vector3f &scatter_direction, float &pdf, Sampler &sampler) const override;
+    virtual Vector3f Evaluate(const Ray& r_in, const Hit_Payload& rec, const Vector3f& scatter_direction, float& pdf) const override;
+
+private:
+    std::shared_ptr<Texture> albedo_texture;
+    std::shared_ptr<Texture> roughness_texture_u;
+    std::shared_ptr<Texture> roughness_texture_v;
+    float eta;
+};
+
+class Glass : public Material {
+public:
+    Glass(float refraction_index) : refraction_index(refraction_index) {}
+    
+    virtual Vector3f Sample(const Ray& r_in, const Hit_Payload& rec, Vector3f& scatter_direction, float& pdf, Sampler& sampler) const override;
+    virtual Vector3f Evaluate(const Ray& r_in, const Hit_Payload& rec, const Vector3f& scatter_direction, float& pdf) const override;
+    virtual bool IsDelta() const override { return true; }
+    
+private:
+    float refraction_index;
 };

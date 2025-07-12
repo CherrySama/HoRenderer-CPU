@@ -10,9 +10,13 @@ namespace BSDF {
 
     float GeometrySmithG1(const Vector3f &V, const Vector3f &H, const Vector3f &N, float alpha_u, float alpha_v);
 
+    float SchlickFresnelScalar(float cosTheta);
+
     Vector3f FresnelConductor(const Vector3f &V, const Vector3f &H, const Vector3f &eta, const Vector3f &k);
 
     float FresnelDielectric(const Vector3f &V, const Vector3f &H, float eta_inv);
 
     float AverageFresnelDielectric(float eta);
+
+    Vector3f MultipleScatteringCompensation(const Vector3f& albedo, float roughness, float F_avg);
 }

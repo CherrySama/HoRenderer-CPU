@@ -6,3 +6,7 @@ HoRenderer is a C++ offline renderer created by Xmake. And Im still working on i
 ### Requirements📝
 * Xmake
 * VSCode
+
+## Gallery
+
+![Cornell Box](examples/CornellBox.png)

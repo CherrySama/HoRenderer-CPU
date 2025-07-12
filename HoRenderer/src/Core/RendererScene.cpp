@@ -48,7 +48,7 @@ namespace RendererScene
                                                                             1.6f,                       
                                                                             1.0f);
         auto glassMaterial = std::make_shared<Glass>(1.5f);
-        auto smokePhase = std::make_shared<HenyeyGreensteinPhase>(Vector3f(0.7f, 0.7f, 0.7f), 0.3f);
+        // auto smokePhase = std::make_shared<HenyeyGreensteinPhase>(Vector3f(0.7f, 0.7f, 0.7f), 0.3f);
 
         scene->Add(std::make_shared<Quad>(Vector3f(555.0f, 0.0f, 0.0f),
                                           Vector3f(0.0f, 555.0f, 0.0f),
@@ -87,12 +87,12 @@ namespace RendererScene
                                          whiteMaterial);
         auto rotate_box1 = Transform::rotate(box1, RotationAxis::Y,15.0f);
         auto translated_box1 = Transform::translate(rotate_box1, Vector3f(212.5f,82.5f,147.5f));
-        // scene->Add(translated_box1);
-        auto smoke_medium = std::make_shared<HomogeneousMedium>(translated_box1,                
-                                                                Vector3f(0.05f, 0.05f, 0.05f),    
-                                                                Vector3f(0.02f, 0.02f, 0.02f), 
-                                                                smokePhase);
-        scene->Add(smoke_medium);
+        scene->Add(translated_box1);
+        // auto smoke_medium = std::make_shared<HomogeneousMedium>(translated_box1,                
+        //                                                         Vector3f(0.05f, 0.05f, 0.05f),    
+        //                                                         Vector3f(0.02f, 0.02f, 0.02f), 
+        //                                                         smokePhase);
+        // scene->Add(smoke_medium);
         
         auto box2 = std::make_shared<Box>(Vector3f(0.0f, 0.0f, 0.0f),
                                           Vector3f(165.0f, 330.0f, 165.0f),

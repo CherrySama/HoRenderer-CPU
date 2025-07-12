@@ -56,7 +56,7 @@ Vector3f Integrator::ray_color(const Ray &r, int bounce, const Scene &world, Sam
 
     Hit_Payload rec;
     if (!world.isHit(r, Vector2f(0.0f, Infinity), rec)) {
-        return Vector3f(0.01f, 0.01f, 0.01f); 
+        return Vector3f(0.1f, 0.1f, 0.1f); 
     }
 
     if (rec.p.x < 0.0f && std::abs(rec.p.x) < 1e-6f) {
@@ -82,8 +82,6 @@ Vector3f Integrator::ray_color(const Ray &r, int bounce, const Scene &world, Sam
     Vector3f brdf = rec.mat->Sample(r, rec, scatter_direction, pdf, sampler);
     if (pdf > Epsilon && bounce > 1) {
         Vector3f surface_normal = rec.normal;
-        if (glm::dot(scatter_direction, rec.normal) < 0.0f) 
-            surface_normal = -rec.normal;
 
         Ray scattered = Ray::SpawnRay(rec.p, scatter_direction, surface_normal);
         Vector3f attenuation;

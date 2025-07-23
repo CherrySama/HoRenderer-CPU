@@ -56,7 +56,7 @@ Vector3f Integrator::ray_color(const Ray &r, int bounce, const Scene &world, Sam
 
     Hit_Payload rec;
     if (!world.isHit(r, Vector2f(0.0f, Infinity), rec)) {
-        return Vector3f(0.1f, 0.1f, 0.1f); 
+        return Vector3f(0.05f, 0.05f, 0.05f); 
     }
 
     if (rec.p.x < 0.0f && std::abs(rec.p.x) < 1e-6f) {

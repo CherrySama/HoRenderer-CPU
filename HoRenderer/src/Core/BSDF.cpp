@@ -21,6 +21,15 @@ namespace BSDF {
         }
     }
 
+    float DistributionGTR1(const Vector3f &H, const Vector3f &N, float alpha) {
+        float NdotH = glm::max(glm::dot(N, H), 0.0f);
+        if (NdotH <= 0.0f) return 0.0f;
+        
+        float alpha2 = alpha * alpha;
+        float t = 1.0f + (alpha2 - 1.0f) * NdotH * NdotH;
+        return (alpha2 - 1.0f) / (PI * std::log(alpha2) * t);
+    }
+
     float GeometrySmithG1(const Vector3f &V, const Vector3f &H, const Vector3f &N, float alpha_u, float alpha_v)
     {
         float cos_v_n = glm::dot(V, N);
@@ -48,10 +57,16 @@ namespace BSDF {
         }
     }
 
-    float SchlickFresnelScalar(float cosTheta) {
+    Vector3f SchlickFresnel(const Vector3f &F0, float cosTheta) {
         float m = glm::clamp(1.0f - cosTheta, 0.0f, 1.0f);
         float m2 = m * m;
-        return m2 * m2 * m; // pow(m, 5)
+        float m5 = m2 * m2 * m; // pow(m, 5)
+        return F0 + (Vector3f(1.0f) - F0) * m5;
+    }
+
+    Vector3f ComputeF0(const Vector3f &base_color, float metallic, float specular) {
+        Vector3f dielectric_f0 = Vector3f(0.16f * specular * specular);
+        return glm::mix(dielectric_f0, base_color, metallic);
     }
 
     Vector3f FresnelConductor(const Vector3f &V, const Vector3f &H, const Vector3f &eta, const Vector3f &k)

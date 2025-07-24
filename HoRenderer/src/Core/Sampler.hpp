@@ -34,7 +34,8 @@ public:
     Vector3f random_unit_2Dvector() const;
     Vector3f sample_square() const;
 
-    Vector3f CosineSampleHemisphere(const Vector3f &normal) const;
+    Vector3f SampleCosineHemisphere(const Vector3f &normal) const;
+    Vector3f SampleGTR1(const Vector3f &normal, const Vector3f& view, float alpha_u, float alpha_v) const;
     Vector3f GGXNVDSample(const Vector3f& normal, const Vector3f& view, float alpha_u, float alpha_v) const;
     Vector3f GGXDistributionSample(const Vector3f& normal, float alpha_u, float alpha_v) const;
     

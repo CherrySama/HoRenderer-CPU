@@ -71,18 +71,34 @@ Vector3f Sampler::sample_square() const
     return Vector3f(sample.x, sample.y, 0.0f);
 }
 
-Vector3f Sampler::CosineSampleHemisphere(const Vector3f& normal) const
+Vector3f Sampler::SampleCosineHemisphere(const Vector3f& normal) const
 {
     Vector2f sample = get_2d_sample();
-    float cos_theta = std::sqrt(1.0f - sample.x);  // cos_theta = sqrt(1-u1)
-    float sin_theta = std::sqrt(sample.x);         // sin_theta = sqrt(u1)
-    float phi = 2.0f * PI * sample.y;                 // phi = 2π * u2
+    float cos_theta = std::sqrt(1.0f - sample.x * sample.x - sample.y * sample.y); 
+    float sin_theta = std::sqrt(sample.x);         
+    float phi = 2.0f * PI * sample.y;                
 
     Vector3f local_direction(sin_theta * std::cos(phi),
                              sin_theta * std::sin(phi),
                              cos_theta);
 
     return ToWorld(local_direction, normal);
+}
+
+Vector3f Sampler::SampleGTR1(const Vector3f &normal, const Vector3f &view, float alpha_u, float alpha_v) const
+{
+    Vector2f sample = get_2d_sample();
+    Vector3f V = ToLocal(view, normal);
+    float phi = 2.0f * PI * sample.x;
+    float cos_theta = std::sqrt((1.0f - std::pow(alpha_u * alpha_v, 1.0f - sample.y)) / (1.0f - alpha_u * alpha_v));
+    float sin_theta = std::sqrt(std::max(0.0f, 1.0f - std::cos(phi) * std::cos(phi)));
+
+    Vector3f local_H(sin_theta * std::cos(phi),
+                     sin_theta * std::sin(phi),
+                     cos_theta);
+    Vector3f H = ToWorld(local_H, normal);
+
+    return H;
 }
 
 Vector3f Sampler::GGXNVDSample(const Vector3f &normal, const Vector3f &view, float alpha_u, float alpha_v) const

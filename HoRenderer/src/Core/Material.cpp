@@ -16,8 +16,8 @@ Vector3f Material::GetSurfaceNormal(const Hit_Payload& rec) const {
 
     if (normal_texture != nullptr) {
         Vector3f tangent_normal = normal_texture->GetColor(rec.uv.x, rec.uv.y);
-        
-        surface_normal = NormalFromTangentToWorld(rec.normal, tangent_normal);
+        Vector3f mapped_normal = glm::normalize(tangent_normal * 2.0f - 1.0f);
+        surface_normal = ToWorld(mapped_normal, rec.normal);
     }
     
     return surface_normal;
@@ -25,11 +25,6 @@ Vector3f Material::GetSurfaceNormal(const Hit_Payload& rec) const {
 
 void Material::SetNormal(std::shared_ptr<Texture> &normal) {
     normal_texture = normal;
-}
-
-Vector3f Material::NormalFromTangentToWorld(const Vector3f &surface_normal, const Vector3f &tangent_normal) const {
-    Vector3f mapped_normal = glm::normalize(tangent_normal * 2.0f - 1.0f);
-    return ToWorld(mapped_normal, surface_normal);
 }
 
 Vector3f Diffuse::Sample(const Ray& r_in, const Hit_Payload& rec, Vector3f& scatter_direction, float& pdf, Sampler& sampler) const

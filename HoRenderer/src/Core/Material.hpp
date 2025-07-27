@@ -24,7 +24,6 @@ public:
 protected:
     Vector3f GetSurfaceNormal(const Hit_Payload &rec) const;
     void SetNormal(std::shared_ptr<Texture> &normal);
-    Vector3f NormalFromTangentToWorld(const Vector3f &surface_normal, const Vector3f &tangent_normal) const;
 
 protected:
     std::shared_ptr<Texture> normal_texture = nullptr;

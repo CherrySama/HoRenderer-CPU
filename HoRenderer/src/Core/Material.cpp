@@ -39,7 +39,7 @@ Vector3f Diffuse::Sample(const Ray& r_in, const Hit_Payload& rec, Vector3f& scat
     Vector3f albedo = albedo_texture->GetColor(rec.uv.x, rec.uv.y);
     float roughness = roughness_texture->GetColor(rec.uv.x, rec.uv.y)[0];
 
-    scatter_direction = sampler.CosineSampleHemisphere(N);
+    scatter_direction = sampler.SampleCosineHemisphere(N);
 
     float NdotL = glm::dot(N, scatter_direction);
     float NdotV = glm::dot(N, V);
@@ -205,7 +205,7 @@ Vector3f Plastic::Sample(const Ray &r_in, const Hit_Payload &rec, Vector3f &scat
             return Vector3f(0.0f);
         }
     } else {
-        scatter_direction = sampler.CosineSampleHemisphere(N);
+        scatter_direction = sampler.SampleCosineHemisphere(N);
         H = glm::normalize(V + scatter_direction);
         Fi = BSDF::FresnelDielectric(scatter_direction, N, 1.0f / eta);
 

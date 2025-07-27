@@ -489,7 +489,7 @@ Vector3f FrostedGlass::Evaluate(const Ray& r_in, const Hit_Payload& rec, const V
             return Vector3f(0.0f);
         }
 
-        H = rec.front_face ? -glm::normalize(V + scatter_direction * eta) : H = -glm::normalize(V * eta + scatter_direction);
+        H = rec.front_face ? -glm::normalize(V + scatter_direction * eta) : -glm::normalize(V * eta + scatter_direction);
         if (glm::dot(H, N) < 0.0f) 
             H = -H;
 

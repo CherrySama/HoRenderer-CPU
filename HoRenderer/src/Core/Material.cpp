@@ -167,7 +167,6 @@ Vector3f Plastic::Sample(const Ray &r_in, const Hit_Payload &rec, Vector3f &scat
     Vector3f ks = specular_texture->GetColor(rec.uv.x, rec.uv.y);   
     float roughness_u = roughness_texture_u->GetColor(rec.uv.x, rec.uv.y)[0];
     float roughness_v = roughness_texture_v->GetColor(rec.uv.x, rec.uv.y)[0];
-
     float alpha_u = roughness_u * roughness_u;
     float alpha_v = roughness_v * roughness_v;
     float d_sum = kd.x + kd.y + kd.z;
@@ -189,7 +188,6 @@ Vector3f Plastic::Sample(const Ray &r_in, const Hit_Payload &rec, Vector3f &scat
     Vector3f H;
     float NdotV = glm::dot(N, V);
     float NdotL;
-
     if (sampler.random_float() < pdf_specular) {
         H = sampler.GGXNVDSample(N, V, alpha_u, alpha_v);
         scatter_direction = glm::reflect(-V, H);
@@ -229,11 +227,9 @@ Vector3f Plastic::Sample(const Ray &r_in, const Hit_Payload &rec, Vector3f &scat
     }
 
     brdf *= (1.0f - Fi) * (1.0f - Fo) / PI;
-
     brdf += specular * F * D * G / (4.0f * NdotL * NdotV);
 
     float Dv = G1_V * VdotH * D / NdotV;
-
     float pdf_NdotL = NdotL > 0.0f ? NdotL * INV_PI : 0.0f;
     pdf = pdf_specular * Dv * std::abs(1.0f / (4.0f * VdotH)) + (1.0f - pdf_specular) * pdf_NdotL;
     

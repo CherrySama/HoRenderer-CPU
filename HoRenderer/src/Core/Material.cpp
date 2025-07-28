@@ -119,10 +119,10 @@ Vector3f Conductor::Sample(const Ray& r_in, const Hit_Payload& rec, Vector3f& sc
     float D = BSDF::DistributionGGX(H, N, roughness_u, roughness_v);
     float G1_V = BSDF::GeometrySmithG1(V, H, N, roughness_u, roughness_v);
     float Dv = G1_V * VdotH * D / NdotV;
-    pdf = Dv * std::abs(1.0f / (4.0f * VdotH));
     float G1_L = BSDF::GeometrySmithG1(scatter_direction, H, N, roughness_u, roughness_v);
     float G = G1_V * G1_L;
-
+    
+    pdf = Dv * std::abs(1.0f / (4.0f * VdotH));
 	Vector3f brdf = albedo * F * D * G / (4.0f * NdotV * NdotL);
     
     return brdf;

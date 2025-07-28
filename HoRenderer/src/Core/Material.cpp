@@ -267,7 +267,7 @@ Vector3f Plastic::Evaluate(const Ray &r_in, const Hit_Payload &rec, const Vector
     pdf_specular = pdf_specular / (pdf_specular + pdf_diffuse);
 
     float NdotV = glm::dot(N, V);
-    float NdotL = glm::max(glm::dot(N, scatter_direction), 0.0f);
+    float NdotL = glm::dot(N, scatter_direction);
     if (NdotL <= 0.0f || NdotV <= 0.0f) {
         pdf = 0.0f;
         return Vector3f(0.0f);
@@ -290,14 +290,11 @@ Vector3f Plastic::Evaluate(const Ray &r_in, const Hit_Payload &rec, const Vector
         brdf = diffuse / (Vector3f(1.0f) - F_avg);
     }
 
-    brdf *= (1.0f - Fi) * (1.0f - Fo) / PI;
-
+    brdf *= (1.0f - Fi) * (1.0f - Fo) * INV_PI;
     brdf += specular * F * D * G / (4.0f * NdotL * NdotV);
 
     float Dv = G1_V * VdotH * D / NdotV;
-
-    float cosine_pdf = NdotL / PI;
-    
+    float cosine_pdf = NdotL * INV_PI;
     pdf = pdf_specular * Dv * std::abs(1.0f / (4.0f * VdotH)) + (1.0f - pdf_specular) * cosine_pdf;
     
     return brdf;

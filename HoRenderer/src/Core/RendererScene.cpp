@@ -41,13 +41,17 @@ namespace RendererScene
                                                                             0.001f,
                                                                             Vector3f(0.47f, 0.37f, 1.5f),
                                                                             Vector3f(2.13f, 2.23f, 1.69f));
-        auto plasticMaterial = std::make_shared<Plastic>(Vector3f(0.2f, 0.2f, 0.8f), 
-                                                                            Vector3f(1.0f, 1.0f, 1.0f), 
-                                                                            0.5f,                     
-                                                                            0.5f,                      
-                                                                            1.6f,                       
-                                                                            1.0f);
-        auto glassMaterial = std::make_shared<Glass>(1.5f);
+        auto plasticMaterial = std::make_shared<Plastic>(Vector3f(0.2f, 0.2f, 0.8f),
+                                                         Vector3f(1.0f, 1.0f, 1.0f),
+                                                         0.5f,
+                                                         0.5f,
+                                                         1.6f,
+                                                         1.0f);
+        auto frostedGlassMaterial = std::make_shared<FrostedGlass>(Vector3f(0.95f, 0.95f, 0.98f),
+                                                                   0.05f,
+                                                                   0.05f,
+                                                                   1.3f,
+                                                                   1.0f);
         // auto smokePhase = std::make_shared<HenyeyGreensteinPhase>(Vector3f(0.7f, 0.7f, 0.7f), 0.3f);
 
         scene->Add(std::make_shared<Quad>(Vector3f(555.0f, 0.0f, 0.0f),
@@ -96,7 +100,7 @@ namespace RendererScene
         
         auto box2 = std::make_shared<Box>(Vector3f(0.0f, 0.0f, 0.0f),
                                           Vector3f(165.0f, 330.0f, 165.0f),
-                                          whiteMaterial);
+                                          frostedGlassMaterial);
         auto rotate_box2 = Transform::rotate(box2, RotationAxis::Y,-18.0f);
         auto translated_box2 = Transform::translate(rotate_box2, Vector3f(347.5f, 165.0f, 377.5f));
         scene->Add(translated_box2);
@@ -145,7 +149,6 @@ namespace RendererScene
                                                                    0.05f,
                                                                    1.3f,
                                                                    1.0f);
-        auto glassMaterial = std::make_shared<Glass>(1.5f); 
 
         scene->Add(std::make_shared<Quad>(Vector3f(-50.0f, -0.5f, -50.0f), 
                                                 Vector3f(0.0f, 0.0f, 100.0f),   

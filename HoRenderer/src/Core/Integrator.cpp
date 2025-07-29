@@ -56,17 +56,7 @@ Vector3f Integrator::ray_color(const Ray &r, int bounce, const Scene &world, Sam
 
     Hit_Payload rec;
     if (!world.isHit(r, Vector2f(0.0f, Infinity), rec)) {
-        return Vector3f(0.5f, 0.5f, 0.5f); 
-    }
-
-    if (rec.p.x < 0.0f && std::abs(rec.p.x) < 1e-6f) {
-        rec.p.x = 0.0f;
-    }
-    if (rec.p.y < 0.0f && std::abs(rec.p.y) < 1e-6f) {
-        rec.p.y = 0.0f;
-    }
-    if (rec.p.z < 0.0f && std::abs(rec.p.z) < 1e-6f) {
-        rec.p.z = 0.0f;
+        return Vector3f(0.05f, 0.05f, 0.05f); 
     }
 
     // emission
@@ -81,22 +71,58 @@ Vector3f Integrator::ray_color(const Ray &r, int bounce, const Scene &world, Sam
     float pdf;
     Vector3f brdf = rec.mat->Sample(r, rec, scatter_direction, pdf, sampler);
     if (pdf > Epsilon && bounce > 1) {
-        bool is_transmission = (glm::dot(scatter_direction, rec.normal) * glm::dot(r.direction(), rec.normal)) < 0;
+        bool is_transmission = (glm::dot(scatter_direction, rec.normal) * glm::dot(-r.direction(), rec.normal)) < 0;
         Vector3f surface_normal = is_transmission ? -rec.normal : rec.normal;
         Ray scattered = Ray::SpawnRay(rec.p, scatter_direction, surface_normal);
-        
-        Vector3f attenuation;
-        if (rec.mat->IsVolumetric()) {
-            attenuation = brdf / pdf;
-        } else {
-            if (is_transmission) {
-                attenuation = brdf / pdf;
+
+        // check if it hits anything
+        Hit_Payload light_rec;
+        if (world.isHit(scattered, Vector2f(Epsilon, Infinity), light_rec)) {
+            // Check if it hits a light source
+            if (light_rec.mat && light_rec.mat->IsEmit()) {
+                // Hitting the Light Source - Calculating Direct Lighting Contribution Using MIS
+                float light_eval_pdf;
+                Vector3f light_emission = world.EvaluateLight(scattered, light_rec, light_eval_pdf);
+
+                if (light_eval_pdf > Epsilon && pdf > Epsilon) {
+                    float mis_weight = PowerHeuristic(pdf, light_eval_pdf);
+
+                    if (is_transmission) {
+                        total_radiance += mis_weight * brdf * light_emission / pdf;
+                    } else {
+                        float cos_theta = glm::dot(rec.normal, scatter_direction);
+                        total_radiance += mis_weight * brdf * cos_theta * light_emission / pdf;
+                    }
+                } // After hitting the light source, no longer recurse and end this path directly
             } else {
-                float cos_theta = std::abs(glm::dot(rec.normal, scatter_direction));
-                attenuation = brdf * cos_theta / pdf;
+                // Hitting a non-light source - indirect lighting is handled recursively as normal
+                Vector3f attenuation;
+                if (rec.mat->IsVolumetric()) {
+                    attenuation = brdf / pdf;
+                } else {
+                    if (is_transmission) {
+                        attenuation = brdf / pdf;
+                    } else {
+                        float cos_theta = glm::dot(rec.normal, scatter_direction);
+                        attenuation = brdf * cos_theta / pdf;
+                    }
+                }
+                // Russian Roulette
+                int bounces_count = max_bounce - bounce;
+                if (bounces_count > 3) {
+                    float max_component = std::max({attenuation.x, attenuation.y, attenuation.z});
+                    float survival_prob = std::min(0.95f, max_component);
+
+                    if (sampler.random_float() > survival_prob) {
+                        return total_radiance; // End Path
+                    }
+                    attenuation /= survival_prob;
+                }
+
+                // Only recurse if hitting a non-light source
+                total_radiance += attenuation * ray_color(scattered, bounce - 1, world, sampler);
             }
         }
-        total_radiance += attenuation * ray_color(scattered, bounce-1, world, sampler);
     }
 
     return total_radiance;
@@ -120,9 +146,11 @@ Vector3f Integrator::EstimateDirectLighting(const Ray &r_in, const Hit_Payload &
     Vector3f light_direction;
     float light_pdf;
     Vector3f light_radiance = world.SampleLightEnvironment(r_in, rec, light_direction, light_pdf, sampler);
-    
+
     if (light_pdf > Epsilon) {
-        Ray shadow_ray = Ray::SpawnRay(rec.p, light_direction, rec.normal);
+        bool is_light_transmission = glm::dot(light_direction, rec.normal) * glm::dot(V, rec.normal) < 0;
+        Vector3f shadow_normal = is_light_transmission ? -rec.normal : rec.normal;
+        Ray shadow_ray = Ray::SpawnRay(rec.p, light_direction, shadow_normal);
         Hit_Payload shadow_rec;
         bool in_shadow = false;
         
@@ -137,35 +165,12 @@ Vector3f Integrator::EstimateDirectLighting(const Ray &r_in, const Hit_Payload &
             Vector3f brdf = rec.mat->Evaluate(r_in, rec, light_direction, brdf_pdf);
             
             if (brdf_pdf > Epsilon) {
-                float cos_theta = std::abs(glm::dot(rec.normal, light_direction));
                 float mis_weight = PowerHeuristic(light_pdf, brdf_pdf);
-                direct_lighting += mis_weight * brdf * cos_theta * light_radiance / light_pdf;
-            }
-        }
-    }
-
-    // BRDF sampling
-    Vector3f scatter_direction;
-    float brdf_pdf;
-    Vector3f brdf = rec.mat->Sample(r_in, rec, scatter_direction, brdf_pdf, sampler);
-    
-    if (brdf_pdf > Epsilon && glm::dot(rec.normal, scatter_direction) > 0.0f) {
-        Vector3f surface_normal = rec.normal;
-        if (glm::dot(scatter_direction, rec.normal) < 0.0f) 
-            surface_normal = -rec.normal;
-
-        Ray light_ray = Ray::SpawnRay(rec.p, scatter_direction, surface_normal);
-        Hit_Payload light_rec;
-        
-        if (world.isHit(light_ray, Vector2f(Epsilon, Infinity), light_rec)) {
-            if (light_rec.mat && light_rec.mat->IsEmit()) {
-                float light_eval_pdf;
-                Vector3f light_emission = world.EvaluateLight(light_ray, light_rec, light_eval_pdf);
-                
-                if (light_eval_pdf > Epsilon) {
-                    float cos_theta = glm::dot(rec.normal, scatter_direction);
-                    float mis_weight = PowerHeuristic(brdf_pdf, light_eval_pdf);
-                    direct_lighting += mis_weight * brdf * cos_theta * light_emission / brdf_pdf;
+                if (is_light_transmission) {
+                    direct_lighting += mis_weight * brdf * light_radiance / light_pdf;
+                } else {
+                    float cos_theta = glm::dot(rec.normal, light_direction);
+                    direct_lighting += mis_weight * brdf * cos_theta * light_radiance / light_pdf;
                 }
             }
         }

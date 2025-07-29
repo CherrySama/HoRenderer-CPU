@@ -91,7 +91,7 @@ namespace RendererScene
                                          whiteMaterial);
         auto rotate_box1 = Transform::rotate(box1, RotationAxis::Y,15.0f);
         auto translated_box1 = Transform::translate(rotate_box1, Vector3f(212.5f,82.5f,147.5f));
-        scene->Add(translated_box1);
+        // scene->Add(translated_box1);
         // auto smoke_medium = std::make_shared<HomogeneousMedium>(translated_box1,                
         //                                                         Vector3f(0.05f, 0.05f, 0.05f),    
         //                                                         Vector3f(0.02f, 0.02f, 0.02f), 

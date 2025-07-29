@@ -56,7 +56,7 @@ Vector3f Integrator::ray_color(const Ray &r, int bounce, const Scene &world, Sam
 
     Hit_Payload rec;
     if (!world.isHit(r, Vector2f(0.0f, Infinity), rec)) {
-        return Vector3f(0.05f, 0.05f, 0.05f); 
+        return Vector3f(0.5f, 0.5f, 0.5f); 
     }
 
     if (rec.p.x < 0.0f && std::abs(rec.p.x) < 1e-6f) {
@@ -81,17 +81,20 @@ Vector3f Integrator::ray_color(const Ray &r, int bounce, const Scene &world, Sam
     float pdf;
     Vector3f brdf = rec.mat->Sample(r, rec, scatter_direction, pdf, sampler);
     if (pdf > Epsilon && bounce > 1) {
-        Vector3f surface_normal = rec.normal;
-
+        bool is_transmission = (glm::dot(scatter_direction, rec.normal) * glm::dot(r.direction(), rec.normal)) < 0;
+        Vector3f surface_normal = is_transmission ? -rec.normal : rec.normal;
         Ray scattered = Ray::SpawnRay(rec.p, scatter_direction, surface_normal);
+        
         Vector3f attenuation;
-        if (rec.mat->IsDelta()) {
-            attenuation = brdf;
-        } else if (rec.mat->IsVolumetric()) {
+        if (rec.mat->IsVolumetric()) {
             attenuation = brdf / pdf;
         } else {
-            float cos_theta = std::abs(glm::dot(rec.normal, glm::normalize(scatter_direction)));
-            attenuation = brdf * cos_theta / pdf;
+            if (is_transmission) {
+                attenuation = brdf / pdf;
+            } else {
+                float cos_theta = std::abs(glm::dot(rec.normal, scatter_direction));
+                attenuation = brdf * cos_theta / pdf;
+            }
         }
         total_radiance += attenuation * ray_color(scattered, bounce-1, world, sampler);
     }
@@ -102,7 +105,7 @@ Vector3f Integrator::ray_color(const Ray &r, int bounce, const Scene &world, Sam
 Vector3f Integrator::EstimateDirectLighting(const Ray &r_in, const Hit_Payload &rec, const Scene &world, Sampler &sampler)
 {
     Vector3f direct_lighting(0.0f);
-    if (rec.mat->IsDelta() || rec.mat->IsVolumetric()) {
+    if (rec.mat->IsVolumetric()) {
         return direct_lighting;
     }
     

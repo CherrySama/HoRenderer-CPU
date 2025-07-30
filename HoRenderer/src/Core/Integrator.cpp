@@ -88,7 +88,8 @@ Vector3f Integrator::ray_color(const Ray &r, int bounce, const Scene &world, Sam
                     float mis_weight = PowerHeuristic(pdf, light_eval_pdf);
 
                     if (is_transmission) {
-                        total_radiance += mis_weight * brdf * light_emission / pdf;
+                        float cos_theta = std::abs(glm::dot(rec.normal, scatter_direction));
+                        total_radiance += mis_weight * brdf * cos_theta * light_emission / pdf;
                     } else {
                         float cos_theta = glm::dot(rec.normal, scatter_direction);
                         total_radiance += mis_weight * brdf * cos_theta * light_emission / pdf;

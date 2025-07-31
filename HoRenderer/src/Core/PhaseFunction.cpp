@@ -34,8 +34,13 @@ Vector3f HenyeyGreensteinPhase::Sample(const Ray &r_in, const Hit_Payload &rec, 
     } else {
         // cos(θ) = (1 + g² - ((1-g²)/(1-g+2g*ξ))²) / (2g)
         float xi = sampler.random_float();
-        float sqr_term = (1.0f - g * g) / (1.0f - g + 2.0f * g * xi);
-        cos_theta = (1.0f + g * g - sqr_term * sqr_term) / (2.0f * g);
+        float denominator = 1.0f - g + 2.0f * g * xi;
+        if (std::abs(denominator) < Epsilon) {
+            cos_theta = 1.0f - 2.0f * sampler.random_float(); // Degenerate to isotropy
+        } else {
+            float term = (1.0f - g * g) / denominator;
+            cos_theta = (1.0f + g * g - term * term) / (2.0f * g);
+        }
     }
     cos_theta = glm::clamp(cos_theta, -1.0f, 1.0f);
 
@@ -63,7 +68,7 @@ Vector3f HenyeyGreensteinPhase::Evaluate(const Ray &r_in, const Hit_Payload &rec
     Vector3f albedo = albedo_texture->GetColor(rec.uv.x, rec.uv.y);
     Vector3f V = -glm::normalize(r_in.direction());  
     Vector3f L = glm::normalize(scatter_direction);  
-    float cos_theta = glm::dot(L, -V);
+    float cos_theta = glm::dot(-V, L);
     
     float temp = 1.0f + g * g + 2.0f * g * cos_theta;
     if (temp > Epsilon) {

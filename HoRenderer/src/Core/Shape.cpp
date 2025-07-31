@@ -23,6 +23,8 @@ bool Sphere::isHit(const Ray &r, Vector2f t_interval, Hit_Payload &rec) const
             rec.set_face_normal(r, outward_normal);
             rec.mat = mat;
             rec.uv = getSphereUV(rec.p);
+            rec.interior_medium_id = interior_id;
+            rec.exterior_medium_id = exterior_id;
             return true;
         }
         root = (h + sqrt_d) / a;
@@ -33,6 +35,8 @@ bool Sphere::isHit(const Ray &r, Vector2f t_interval, Hit_Payload &rec) const
             rec.set_face_normal(r, outward_normal);
             rec.mat = mat;
             rec.uv = getSphereUV(rec.p);
+            rec.interior_medium_id = interior_id;
+            rec.exterior_medium_id = exterior_id;
             return true;
         }
     }
@@ -89,6 +93,8 @@ bool Quad::isHit(const Ray &r, Vector2f t_interval, Hit_Payload &rec) const
     rec.set_face_normal(r, normal);
     rec.mat = mat;
     rec.uv = Vector2f(alpha, beta);
+    rec.interior_medium_id = interior_id;
+    rec.exterior_medium_id = exterior_id;
 
     return true;
 }
@@ -122,40 +128,40 @@ void Box::CreateSides()
         Vector3f(center.x - half_dim.x, center.y - half_dim.y, center.z + half_dim.z), 
         Vector3f(dimensions.x, 0, 0),                                                  
         Vector3f(0, dimensions.y, 0),                                                  
-        mat));
+        mat, interior_id, exterior_id));
 
     // back (z-)
     sides.push_back(std::make_shared<Quad>(
         Vector3f(center.x + half_dim.x, center.y - half_dim.y, center.z - half_dim.z),
         Vector3f(-dimensions.x, 0, 0),
         Vector3f(0, dimensions.y, 0),
-        mat));
+        mat, interior_id, exterior_id));
 
     // top (y+)
     sides.push_back(std::make_shared<Quad>(
         Vector3f(center.x - half_dim.x, center.y + half_dim.y, center.z + half_dim.z),
         Vector3f(dimensions.x, 0, 0),
         Vector3f(0, 0, -dimensions.z),
-        mat));
+        mat, interior_id, exterior_id));
 
     // bottom (y-)
     sides.push_back(std::make_shared<Quad>(
         Vector3f(center.x - half_dim.x, center.y - half_dim.y, center.z - half_dim.z),
         Vector3f(dimensions.x, 0, 0),
         Vector3f(0, 0, dimensions.z),
-        mat));
+        mat, interior_id, exterior_id));
 
     // right (x+)
     sides.push_back(std::make_shared<Quad>(
         Vector3f(center.x + half_dim.x, center.y - half_dim.y, center.z + half_dim.z),
         Vector3f(0, 0, -dimensions.z),
         Vector3f(0, dimensions.y, 0),
-        mat));
+        mat, interior_id, exterior_id));
 
     // left (x-)
     sides.push_back(std::make_shared<Quad>(
         Vector3f(center.x - half_dim.x, center.y - half_dim.y, center.z - half_dim.z),
         Vector3f(0, 0, dimensions.z),
         Vector3f(0, dimensions.y, 0),
-        mat));
+        mat, interior_id, exterior_id));
 }

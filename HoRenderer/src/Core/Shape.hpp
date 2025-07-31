@@ -9,8 +9,8 @@
 class Sphere : public Hittable {
 public:
     Sphere() {}
-    Sphere(const Vector3f center, float radius, std::shared_ptr<Material> material = nullptr) :
-        center(center), radius(std::fmax(0, radius)), mat(material) {
+    Sphere(const Vector3f center, float radius, std::shared_ptr<Material> material = nullptr, int interior_medium_id = -1, int exterior_medium_id = -1) :
+        center(center), radius(std::fmax(0, radius)), mat(material), interior_id(interior_medium_id), exterior_id(exterior_medium_id) {
         Vector3f rvec = Vector3f(radius, radius, radius);
         bbox = AABB(center - rvec, center + rvec);
     }
@@ -26,13 +26,15 @@ private:
     float radius;
     std::shared_ptr<Material> mat;
     AABB bbox;
+    int interior_id = -1;  
+    int exterior_id = -1;
 };
 
 class Quad : public Hittable {
 public:
     Quad() {}
-    Quad(const Vector3f &Q, const Vector3f &u, const Vector3f &v, std::shared_ptr<Material> material = nullptr) :
-        Q(Q), u(u), v(v), mat(material) {
+    Quad(const Vector3f &Q, const Vector3f &u, const Vector3f &v, std::shared_ptr<Material> material = nullptr, int interior_medium_id = -1, int exterior_medium_id = -1) :
+        Q(Q), u(u), v(v), mat(material), interior_id(interior_medium_id), exterior_id(exterior_medium_id) {
         normal = glm::normalize(glm::cross(u, v));
         D = glm::dot(normal, Q);
         Vector3f n = glm::cross(u, v);
@@ -77,13 +79,15 @@ private:
     float D;    // Plane equation D value
     std::shared_ptr<Material> mat;
     AABB bbox;
+    int interior_id = -1;  
+    int exterior_id = -1;
 };
 
 class Box : public Hittable {
 public:
     Box() {}
-    Box(const Vector3f &center, const Vector3f &dimensions, std::shared_ptr<Material> material = nullptr) :
-        center(center), dimensions(dimensions), mat(material) {
+    Box(const Vector3f &center, const Vector3f &dimensions, std::shared_ptr<Material> material = nullptr, int interior_medium_id = -1, int exterior_medium_id = -1) :
+        center(center), dimensions(dimensions), mat(material), interior_id(interior_medium_id), exterior_id(exterior_medium_id) {
         // Calculate minimum and maximum points
         min_corner = center - dimensions * 0.5f;
         max_corner = center + dimensions * 0.5f;
@@ -104,6 +108,8 @@ private:
     Vector3f max_corner; // Maximum point (for internal calculation)
     std::shared_ptr<Material> mat;
     AABB bbox;
+    int interior_id = -1;  
+    int exterior_id = -1;
 
     // The 6 faces of a cuboid (stored as rectangles)
     std::vector<std::shared_ptr<Quad>> sides;

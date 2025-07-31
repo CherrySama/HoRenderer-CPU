@@ -4,35 +4,34 @@
 #pragma once
 
 #include "Util.hpp"
-#include "Texture.hpp"
-#include "Material.hpp"
 
-
-class IsotropicPhase : public Material {
+// Focus on phase functions
+class PhaseFunction {
 public:
-    IsotropicPhase(const Vector3f& albedo) : albedo_texture(std::make_shared<SolidTexture>(albedo)) {}
-    IsotropicPhase(std::shared_ptr<Texture> albedo) : albedo_texture(albedo) {}
-
-    virtual Vector3f Sample(const Ray& r_in, const Hit_Payload& rec, Vector3f& scatter_direction, float& pdf, Sampler& sampler) const override;
-    virtual Vector3f Evaluate(const Ray &r_in, const Hit_Payload &rec, const Vector3f &scatter_direction, float &pdf) const override;
-    virtual bool IsVolumetric() const override { return true; }
+    virtual ~PhaseFunction() = default;
     
-private:
-    std::shared_ptr<Texture> albedo_texture;
+    virtual Vector3f Sample(const Vector3f& wi, const Vector2f& sample, Vector3f& wo, float& pdf) const = 0;
+    virtual float Evaluate(const Vector3f& wi, const Vector3f& wo) const = 0;
+    virtual float Pdf(const Vector3f& wi, const Vector3f& wo) const = 0;
 };
 
-class HenyeyGreensteinPhase : public Material {
+class IsotropicPhase : public PhaseFunction {
 public:
-    HenyeyGreensteinPhase(const Vector3f &albedo, float asymmetry_param) :
-        albedo_texture(std::make_shared<SolidTexture>(albedo)), g(asymmetry_param) {}
-    HenyeyGreensteinPhase(const Vector3f &albedo, const Vector3f &asymmetry_param) :
-        albedo_texture(std::make_shared<SolidTexture>(albedo)), g(0.299f * asymmetry_param.x + 0.587f * asymmetry_param.y + 0.114f * asymmetry_param.z) {}
+    IsotropicPhase() = default;
 
-    virtual Vector3f Sample(const Ray& r_in, const Hit_Payload& rec, Vector3f& scatter_direction, float& pdf, Sampler& sampler) const override;
-    virtual Vector3f Evaluate(const Ray& r_in, const Hit_Payload& rec, const Vector3f& scatter_direction, float& pdf) const override;
-    virtual bool IsVolumetric() const override { return true; }
+    virtual Vector3f Sample(const Vector3f& wi, const Vector2f& sample, Vector3f& wo, float& pdf) const override;
+    virtual float Evaluate(const Vector3f& wi, const Vector3f& wo) const override;
+    virtual float Pdf(const Vector3f& wi, const Vector3f& wo) const override;
+};
+
+class HenyeyGreensteinPhase : public PhaseFunction {
+public:
+    HenyeyGreensteinPhase(float g) : g(g) {}
+
+    virtual Vector3f Sample(const Vector3f& wi, const Vector2f& sample, Vector3f& wo, float& pdf) const override;
+    virtual float Evaluate(const Vector3f& wi, const Vector3f& wo) const override;
+    virtual float Pdf(const Vector3f &wi, const Vector3f &wo) const override;
     
 private:
-    std::shared_ptr<Texture> albedo_texture;
-    float g;  
+    float g;
 };

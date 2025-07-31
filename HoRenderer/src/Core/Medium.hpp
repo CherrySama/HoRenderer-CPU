@@ -4,21 +4,48 @@
 #pragma once
 
 #include "Util.hpp"
-#include "Hittable.hpp"
+#include "PhaseFunction.hpp"
 
 
-class HomogeneousMedium : public Hittable {
+class Medium {
 public:
-    HomogeneousMedium(std::shared_ptr<Hittable> boundary, const Vector3f &sigma_s, const Vector3f &sigma_a, std::shared_ptr<Material> phase) :
-        boundary(boundary), sigma_s(sigma_s), sigma_a(sigma_a), phase_function(phase), sigma_t(sigma_s + sigma_a) {}
-
-    virtual bool isHit(const Ray& r, Vector2f t_interval, Hit_Payload& rec) const override;
-    virtual AABB getBoundingBox() const override { return boundary->getBoundingBox(); }
+    virtual ~Medium() = default;
     
+    virtual Vector3f GetSigmaA(const Vector3f& p) const = 0;
+    virtual Vector3f GetSigmaS(const Vector3f& p) const = 0;
+    virtual Vector3f GetSigmaT(const Vector3f& p) const = 0;
+    virtual std::shared_ptr<PhaseFunction> GetPhaseFunction() const = 0;
+    
+    // volume rendering
+    virtual bool IsHomogeneous() const = 0;
+    // Transmission calculation T = exp(-σₜ * t)
+    virtual Vector3f Transmittance(const Vector3f& p1, const Vector3f& p2) const = 0;
+    // Distance sampling t ~ exp(-σₜ * t)
+    virtual float SampleDistance(const Ray& ray, float max_t, Sampler& sampler) const = 0;
+};
+
+class HomogeneousMedium : public Medium {
+public:
+    HomogeneousMedium(const Vector3f &sigma_s, const Vector3f &sigma_a, std::shared_ptr<PhaseFunction> phase)
+        : sigma_s(sigma_s), sigma_a(sigma_a), phase_function(phase) {
+        sigma_t = sigma_s + sigma_a;
+    }
+
+    virtual Vector3f GetSigmaA(const Vector3f& p) const override;
+    virtual Vector3f GetSigmaS(const Vector3f& p) const override;
+    virtual Vector3f GetSigmaT(const Vector3f& p) const override;
+    virtual std::shared_ptr<PhaseFunction> GetPhaseFunction() const override;
+    
+    // volume rendering
+    virtual bool IsHomogeneous() const override;
+    // Transmission calculation T = exp(-σₜ * t)
+    virtual Vector3f Transmittance(const Vector3f& p1, const Vector3f& p2) const override;
+    // Distance sampling t ~ exp(-σₜ * t)
+    virtual float SampleDistance(const Ray &ray, float max_t, Sampler &sampler) const override;
+
 private:
-    std::shared_ptr<Hittable> boundary;
-    Vector3f sigma_s;  // Scattering coefficient
-    Vector3f sigma_a;  // Absorption coefficient
-    Vector3f sigma_t;  // Extinction coefficient -> sigma_s + sigma_a
-    std::shared_ptr<Material> phase_function;  
+    Vector3f sigma_s; // Scattering coefficient
+    Vector3f sigma_a; // Absorption coefficient
+    Vector3f sigma_t; // Extinction coefficient -> σₛ + σₐ
+    std::shared_ptr<PhaseFunction> phase_function;
 };

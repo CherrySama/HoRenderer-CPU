@@ -2,46 +2,46 @@
     Created by Yinghao He on 2025-06-06
 */
 #include "Medium.hpp"
+#include "Sampler.hpp"
 
-bool HomogeneousMedium::isHit(const Ray &r, Vector2f t_interval, Hit_Payload &rec) const {
-    Hit_Payload rec1, rec2;
-    Vector2f infinite_interval = Vector2f(-Infinity, Infinity);
-    if (!boundary->isHit(r, infinite_interval, rec1))
-        return false;
 
-    Vector2f second_interval = Vector2f(rec1.t + 0.0001f, Infinity);
-    if (!boundary->isHit(r, second_interval, rec2))
-        return false;
+Vector3f HomogeneousMedium::GetSigmaA(const Vector3f &p) const {
+    return sigma_a;
+}
 
-    if (rec1.t < t_interval.x) rec1.t = t_interval.x;
-    if (rec2.t > t_interval.y) rec2.t = t_interval.y;
+Vector3f HomogeneousMedium::GetSigmaS(const Vector3f &p) const {
+    return sigma_s;
+}
 
-    if (rec1.t >= rec2.t)
-        return false;
+Vector3f HomogeneousMedium::GetSigmaT(const Vector3f &p) const {
+    return sigma_t;
+}
 
-    if (rec1.t < 0)
-        rec1.t = 0;
+std::shared_ptr<PhaseFunction> HomogeneousMedium::GetPhaseFunction() const {
+    return phase_function;
+}
 
-    float distance_inside_boundary = rec2.t - rec1.t;
-
-    // luminance weight
-    float avg_sigma_t = 0.299f * sigma_t.x + 0.587f * sigma_t.y + 0.114f * sigma_t.z;
-    uint32_t seed = hash_ray(r.origin(), r.direction());
-    seed = seed * 1664525u + 1013904223u;
-    float random_sample = (seed & 0xFFFFFFFF) * (1.0f / 4294967296.0f);
-    float hit_distance = -std::log(std::max(random_sample, 1e-8f)) / avg_sigma_t;
-
-    if (hit_distance > distance_inside_boundary)
-        return false; 
-
-    rec.t = rec1.t + hit_distance;
-    rec.p = r.at(rec.t);
-
-    rec.normal = Vector3f(1, 0, 0); 
-    rec.front_face = true;
-    rec.mat = phase_function; 
-    rec.uv = Vector2f(0, 0); 
-    
+bool HomogeneousMedium::IsHomogeneous() const {
     return true;
 }
 
+// T = exp(-σₜ * ||p₂-p₁||)
+Vector3f HomogeneousMedium::Transmittance(const Vector3f &p1, const Vector3f &p2) const {
+    float distance = glm::length(p2 - p1);
+    // Spectroscopy to calculate transmittance
+    return Vector3f(std::exp(-sigma_t.x * distance),
+                    std::exp(-sigma_t.y * distance),
+                    std::exp(-sigma_t.z * distance));
+}
+
+// t = -log(1-u) / σₜ
+float HomogeneousMedium::SampleDistance(const Ray &ray, float max_t, Sampler &sampler) const {
+    float avg_sigma_t = (sigma_t.x + sigma_t.y + sigma_t.z) / 3.0f;
+    if (avg_sigma_t <= Epsilon) 
+        return Infinity; // no scattering
+
+    float u = sampler.random_float();
+    float sampled_t = -std::log(1.0f - u) / avg_sigma_t;
+
+    return sampled_t;
+}

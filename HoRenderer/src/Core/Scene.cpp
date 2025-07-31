@@ -4,7 +4,6 @@
 #include "Scene.hpp"
 #include "BVH.hpp"
 #include "Light.hpp"
-#include "Material.hpp"
 #include "Sampler.hpp"
 
 
@@ -63,6 +62,7 @@ void Scene::Clean()
     hit_objects.clear();
     bvh_tree.reset();
     lights.clear();
+    media.clear();
 }
 
 void Scene::Add(std::shared_ptr<Hittable> object)
@@ -70,7 +70,7 @@ void Scene::Add(std::shared_ptr<Hittable> object)
     hit_objects.push_back(object);
 }
 
-void Scene::Add(std::shared_ptr<Light> light)
+void Scene::AddLights(std::shared_ptr<Light> light)
 {
     lights.push_back(light);
     auto shape = light->GetShape();
@@ -78,13 +78,27 @@ void Scene::Add(std::shared_ptr<Light> light)
         hit_objects.push_back(shape);
 }
 
+void Scene::AddMedium(std::shared_ptr<Medium> medium)
+{
+    media.push_back(medium);
+}
+
 const std::vector<std::shared_ptr<Hittable>> Scene::GetObjects() const
 {
     return hit_objects;        
 }
 
-const std::vector<std::shared_ptr<Light>>& Scene::GetLights() const {
+const std::vector<std::shared_ptr<Light>> &Scene::GetLights() const
+{
     return lights;
+}
+
+const std::shared_ptr<Medium> Scene::GetMedium(int medium_id) const
+{
+    if (medium_id >= 0 && medium_id < media.size()) 
+        return media[medium_id];
+    
+    return nullptr; // vacuum
 }
 
 void Scene::BuildBVH()
@@ -189,4 +203,40 @@ Vector3f Scene::EvaluateLight(const Ray &light_ray, const Hit_Payload &light_rec
     }
     
     return radiance;
+}
+
+// Get the medium ID where the ray is currently located
+int Scene::GetCurrentMediumId(const Ray &ray, const Hit_Payload *last_hit) const
+{
+    // TODO: Judging by scene geometry and medium boundaries
+    
+    // If there is the last intersection information,
+    // determine the medium conversion based on the surface normal
+    if (last_hit) {
+        bool entering = glm::dot(ray.direction(), last_hit->normal) < 0;
+        if (entering) {
+            return last_hit->interior_medium_id;
+        } else {
+            return last_hit->exterior_medium_id;
+        }
+    }
+
+    return -1;
+}
+
+// Update the medium ID
+int Scene::UpdateMediumId(const Ray &ray, const Hit_Payload &hit, int current_medium_id) const
+{
+    if (hit.interior_medium_id != hit.exterior_medium_id) {
+        // Medium Boundary Transition
+        if (glm::dot(ray.direction(), hit.normal) > 0) {
+            // Rays emitted from the inside
+            return hit.exterior_medium_id;
+        } else {
+            // Rays entering from outside
+            return hit.interior_medium_id;
+        }
+    }
+    // No media conversion
+    return current_medium_id;
 }

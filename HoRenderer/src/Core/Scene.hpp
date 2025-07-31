@@ -30,9 +30,11 @@ public:
 
     void Clean();
     void Add(std::shared_ptr<Hittable> object);
-    void Add(std::shared_ptr<Light> light);
+    void AddLights(std::shared_ptr<Light> light);
+    void AddMedium(std::shared_ptr<Medium> medium);
     const std::vector<std::shared_ptr<Hittable>> GetObjects() const;
-    const std::vector<std::shared_ptr<Light>>& GetLights() const;
+    const std::vector<std::shared_ptr<Light>> &GetLights() const;
+    const std::shared_ptr<Medium> GetMedium(int medium_id) const;
 
     void BuildBVH();
     void BuildLightTable();
@@ -41,10 +43,15 @@ public:
 
     Vector3f SampleLightEnvironment(const Ray& r_in, const Hit_Payload& rec, Vector3f& light_direction, float& pdf, Sampler& sampler) const;
     Vector3f EvaluateLight(const Ray& light_ray, const Hit_Payload& light_rec, float& pdf) const;
+
+    // Media Management
+    int GetCurrentMediumId(const Ray &ray, const Hit_Payload *last_hit = nullptr) const;
+    int UpdateMediumId(const Ray &ray, const Hit_Payload &hit, int current_medium_id) const;
     
 private:
     std::vector<std::shared_ptr<Hittable>> hit_objects;
     std::shared_ptr<BVHnode> bvh_tree;
     std::vector<std::shared_ptr<Light>> lights;
+    std::vector<std::shared_ptr<Medium>> media;
     AliasTable1D lightTable;
 };

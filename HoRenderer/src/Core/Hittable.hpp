@@ -14,6 +14,8 @@ public:
     bool front_face;
     std::shared_ptr<Material> mat;
     Vector2f uv;
+    int interior_medium_id = -1;  // Internal medium ID, -1 means vacuum
+    int exterior_medium_id = -1;  // External medium ID, -1 means vacuum
 
 public:
     void set_face_normal(const Ray &r, const Vector3f &outward_normal);

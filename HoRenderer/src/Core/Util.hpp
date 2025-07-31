@@ -50,11 +50,14 @@ class Material;
 class Diffuse;
 class Conductor;
 class Plastic;
-class HomogeneousMedium;
-class IsotropicPhase;
-class HenyeyGreensteinPhase;
 class Emission;
 class FrostedGlass;
+
+class Medium;
+class HomogeneousMedium;
+class PhaseFunction;
+class IsotropicPhase;
+class HenyeyGreensteinPhase;
 
 class AABB;
 class BVHnode;

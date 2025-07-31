@@ -98,16 +98,13 @@ Vector3f Integrator::ray_color(const Ray &r, int bounce, const Scene &world, Sam
             } else {
                 // Hitting a non-light source - indirect lighting is handled recursively as normal
                 Vector3f attenuation;
-                if (rec.mat->IsVolumetric()) {
+                if (is_transmission) {
                     attenuation = brdf / pdf;
                 } else {
-                    if (is_transmission) {
-                        attenuation = brdf / pdf;
-                    } else {
-                        float cos_theta = glm::dot(rec.normal, scatter_direction);
-                        attenuation = brdf * cos_theta / pdf;
-                    }
+                    float cos_theta = glm::dot(rec.normal, scatter_direction);
+                    attenuation = brdf * cos_theta / pdf;
                 }
+
                 // Russian Roulette
                 int bounces_count = max_bounce - bounce;
                 if (bounces_count > 3) {
@@ -131,11 +128,7 @@ Vector3f Integrator::ray_color(const Ray &r, int bounce, const Scene &world, Sam
 
 Vector3f Integrator::EstimateDirectLighting(const Ray &r_in, const Hit_Payload &rec, const Scene &world, Sampler &sampler)
 {
-    Vector3f direct_lighting(0.0f);
-    if (rec.mat->IsVolumetric()) {
-        return direct_lighting;
-    }
-    
+    Vector3f direct_lighting(0.0f); 
     const auto& lights = world.GetLights();
     if (lights.empty()) {
         return direct_lighting;

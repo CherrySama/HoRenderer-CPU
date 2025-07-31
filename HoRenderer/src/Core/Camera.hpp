@@ -16,6 +16,7 @@ struct CameraParams
     Vector3f vup;
     float defocus_angle;
     float focus_dist;
+    int medium_id = -1;
 };
 
 
@@ -27,8 +28,8 @@ public:
     void Create(const CameraParams& params);
     void MoveTo(Vector3f pos);
 
+    int GetMediumId() const { return medium_id; }
     Vector3f DefocusDisk(Sampler &sampler) const;
-
     Ray GenerateRay(int u, int v, Sampler &sampler, const Vector2f& offset = Vector2f(0, 0)) const;
 
 private:
@@ -40,6 +41,7 @@ private:
     float defocus_angle;
     Vector3f defocus_disk_u;   // Defocus disk horizontal radius
     Vector3f defocus_disk_v;   // Defocus disk vertical radius
+    int medium_id = -1;
 
 public:
     int image_width, image_height;

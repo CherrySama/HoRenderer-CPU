@@ -11,6 +11,7 @@ void Camera::Create(const CameraParams &params)
     vfov = params.vfov;
     image_width = params.image_width;
     cameraPos = params.lookfrom;
+    medium_id = params.medium_id;
 
     image_height = int(image_width / aspect_ratio);
     image_height = (image_height < 1) ? 1 : image_height;

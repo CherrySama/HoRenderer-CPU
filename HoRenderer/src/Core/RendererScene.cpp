@@ -8,7 +8,6 @@
 #include "Transform.hpp"
 #include "Light.hpp"
 #include "Medium.hpp"
-#include "PhaseFunction.hpp"
 // #include "../Common/FileManager.hpp"
 
 namespace RendererScene
@@ -69,7 +68,7 @@ namespace RendererScene
                                                    Vector3f(0.0f, 0.0f, 105.0f),
                                                    emitMaterial);
         auto ceiling_light = std::make_shared<QuadAreaLight>(ceiling_quad);
-        scene->Add(ceiling_light);
+        scene->AddLights(ceiling_light);
 
         scene->Add(std::make_shared<Quad>(Vector3f(0.0f, 0.0f, 0.0f),
                                           Vector3f(555.0f, 0.0f, 0.0f),
@@ -106,57 +105,6 @@ namespace RendererScene
         scene->Add(translated_box2);
 
         // scene->BuildBVH();
-        scene->BuildLightTable(); 
-        auto renderer = std::make_shared<Renderer>(std::move(camera), std::move(integrator), std::move(sampler), std::move(scene));
-        return renderer;
-    }
-
-    std::shared_ptr<Renderer> TestScene()
-    {
-        CameraParams camParams = {
-            16.0f / 9.0f,                       
-            1200,                         
-            20.0f,                       
-            Vector3f(-2.0f, 2.0f, 1.0f), 
-            Vector3f(0.0f, 0.0f, -1.0f), 
-            Vector3f(0.0f, 1.0f, 0.0f),  
-            0.0f,                        
-            1.0f      
-        };
-        std::unique_ptr<Camera> camera = std::make_unique<Camera>();
-        camera->Create(camParams);
-
-        std::unique_ptr<Integrator> integrator = std::make_unique<Integrator>(camera->image_width, camera->image_height, 12, 50);
-        std::unique_ptr<Sampler> sampler = std::make_unique<Sampler>(FilterType::GAUSSIAN);
-        std::unique_ptr<Scene> scene = std::make_unique<Scene>();
-
-        auto groundMaterial = std::make_shared<Diffuse>(Vector3f(0.8f, 0.8f, 0.0f));
-        auto diffuseMaterial = std::make_shared<Diffuse>(Vector3f(0.1f, 0.2f, 0.5f));
-        auto emitMaterial = std::make_shared<Emission>(Vector3f(15.0f, 15.0f, 15.0f));
-        auto conductorMaterial = std::make_shared<Conductor>(Vector3f(0.8f, 0.6f, 0.2f),                                               
-                                                                                0.1f, 
-                                                                                0.1f, 
-                                                                                Vector3f(0.8f, 0.6f, 0.2f),                               
-                                                                                Vector3f(3.0f, 2.5f, 2.0f));
-        auto greenPlastic = std::make_shared<Plastic>(Vector3f(0.2f, 0.8f, 0.3f), 
-                                                                            Vector3f(0.3f, 0.3f, 0.3f), 
-                                                                            0.1f,                     
-                                                                            0.1f,                      
-                                                                            1.6f,                       
-                                                                            1.0f);
-        auto frostedGlassMaterial = std::make_shared<FrostedGlass>(Vector3f(0.95f, 0.95f, 0.98f),
-                                                                   0.05f,
-                                                                   0.05f,
-                                                                   1.3f,
-                                                                   1.0f);
-
-        scene->Add(std::make_shared<Quad>(Vector3f(-50.0f, -0.5f, -50.0f), 
-                                                Vector3f(0.0f, 0.0f, 100.0f),   
-                                                Vector3f(100.0f, 0.0f, 0.0f),    
-                                                groundMaterial));
-        scene->Add(std::make_shared<Sphere>(Vector3f(-0.5f, 0.0f, -1.2f), 0.5f, greenPlastic));
-        scene->Add(std::make_shared<Sphere>(Vector3f(1.0f, 0.0f, -1.2f), 0.5f, frostedGlassMaterial));
-
         scene->BuildLightTable(); 
         auto renderer = std::make_shared<Renderer>(std::move(camera), std::move(integrator), std::move(sampler), std::move(scene));
         return renderer;

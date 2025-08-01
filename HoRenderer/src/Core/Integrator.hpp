@@ -22,9 +22,11 @@ public:
     void RenderImage(Camera &cam, Scene &world, Sampler &sampler, int sample_index);
     void write_color(int u, int v, const Vector3f &color);
     Vector3f ray_color(const Ray &r, int bounce, const Scene &world, Sampler &sampler);
+    Vector3f ray_color_v2(const Ray &r, int bounce, const Scene &world, Sampler &sampler);
     Vector3f EstimateDirectLighting(const Ray &r_in, const Hit_Payload &rec, const Scene &world, Sampler &sampler);
     float PowerHeuristic(float pdf1, float pdf2, int beta = 2);
-    
+    Vector3f CalculateShadowTransmittance(const Ray &shadow_ray, const Scene &world);
+
     void SetNumThreads(int threads);
     int GetNumThreads() const;
 

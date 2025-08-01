@@ -14,16 +14,14 @@ namespace RendererScene
 {    
     std::shared_ptr<Renderer> CornellBox()
     {
-        CameraParams camParams = {
-            1.0f,                              
-            900,                              
-            40.0f,                             
-            Vector3f(278.0f, 278.0f, -800.0f), 
-            Vector3f(278.0f, 278.0f, 0.0f),   
-            Vector3f(0.0f, 1.0f, 0.0f),       
-            0.0f,                              
-            1.0f                               
-        };
+        CameraParams camParams = {1.0f,
+                                  900,
+                                  40.0f,
+                                  Vector3f(278.0f, 278.0f, -800.0f),
+                                  Vector3f(278.0f, 278.0f, 0.0f),
+                                  Vector3f(0.0f, 1.0f, 0.0f),
+                                  0.0f,
+                                  1.0f};
         std::unique_ptr<Camera> camera = std::make_unique<Camera>();
         camera->Create(camParams);
 
@@ -51,7 +49,6 @@ namespace RendererScene
                                                                    0.05f,
                                                                    1.3f,
                                                                    1.0f);
-        // auto smokePhase = std::make_shared<HenyeyGreensteinPhase>(Vector3f(0.7f, 0.7f, 0.7f), 0.3f);
 
         scene->Add(std::make_shared<Quad>(Vector3f(555.0f, 0.0f, 0.0f),
                                           Vector3f(0.0f, 555.0f, 0.0f),
@@ -90,16 +87,11 @@ namespace RendererScene
                                          whiteMaterial);
         auto rotate_box1 = Transform::rotate(box1, RotationAxis::Y,15.0f);
         auto translated_box1 = Transform::translate(rotate_box1, Vector3f(212.5f,82.5f,147.5f));
-        // scene->Add(translated_box1);
-        // auto smoke_medium = std::make_shared<HomogeneousMedium>(translated_box1,                
-        //                                                         Vector3f(0.05f, 0.05f, 0.05f),    
-        //                                                         Vector3f(0.02f, 0.02f, 0.02f), 
-        //                                                         smokePhase);
-        // scene->Add(smoke_medium);
+        scene->Add(translated_box1);
         
         auto box2 = std::make_shared<Box>(Vector3f(0.0f, 0.0f, 0.0f),
                                           Vector3f(165.0f, 330.0f, 165.0f),
-                                          frostedGlassMaterial);
+                                          whiteMaterial);
         auto rotate_box2 = Transform::rotate(box2, RotationAxis::Y,-18.0f);
         auto translated_box2 = Transform::translate(rotate_box2, Vector3f(347.5f, 165.0f, 377.5f));
         scene->Add(translated_box2);

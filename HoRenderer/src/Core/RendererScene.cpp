@@ -96,7 +96,21 @@ namespace RendererScene
         auto translated_box2 = Transform::translate(rotate_box2, Vector3f(347.5f, 165.0f, 377.5f));
         scene->Add(translated_box2);
 
-        // scene->BuildBVH();
+        auto smoke_boundary = std::make_shared<Box>(Vector3f(278.0f, 278.0f, 278.0f),
+                                                    Vector3f(555.0f, 555.0f, 555.0f),
+                                                    nullptr,
+                                                    0,
+                                                    -1);
+        scene->Add(smoke_boundary);
+
+        auto smoke_medium = std::make_shared<HomogeneousMedium>(Vector3f(0.005f, 0.005f, 0.005f),
+                                                                Vector3f(0.005f, 0.005f, 0.005f),
+                                                                std::make_shared<IsotropicPhase>());
+        scene->AddMedium(smoke_medium); 
+
+        camParams.medium_id = 0; 
+
+        scene->BuildBVH();
         scene->BuildLightTable(); 
         auto renderer = std::make_shared<Renderer>(std::move(camera), std::move(integrator), std::move(sampler), std::move(scene));
         return renderer;

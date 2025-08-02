@@ -18,9 +18,9 @@ public:
     
     // volume rendering
     virtual bool IsHomogeneous() const = 0;
-    // Transmission calculation T = exp(-σₜ * t)
+    // Transmission calculation
     virtual Vector3f Transmittance(const Vector3f& p1, const Vector3f& p2) const = 0;
-    // Distance sampling t ~ exp(-σₜ * t)
+    // Distance sampling 
     virtual float SampleDistance(const Ray& ray, float max_t, Sampler& sampler) const = 0;
 };
 
@@ -36,16 +36,13 @@ public:
     virtual Vector3f GetSigmaT(const Vector3f& p) const override;
     virtual std::shared_ptr<PhaseFunction> GetPhaseFunction() const override;
     
-    // volume rendering
     virtual bool IsHomogeneous() const override;
-    // Transmission calculation T = exp(-σₜ * t)
     virtual Vector3f Transmittance(const Vector3f& p1, const Vector3f& p2) const override;
-    // Distance sampling t ~ exp(-σₜ * t)
     virtual float SampleDistance(const Ray &ray, float max_t, Sampler &sampler) const override;
 
 private:
     Vector3f sigma_s; // Scattering coefficient
     Vector3f sigma_a; // Absorption coefficient
-    Vector3f sigma_t; // Extinction coefficient -> σₛ + σₐ
+    Vector3f sigma_t; // Extinction coefficient -> sigma_s + sigma_a
     std::shared_ptr<PhaseFunction> phase_function;
 };

@@ -67,13 +67,13 @@ Embree Accelerator ❎
 
 ## Requirements📝
 
-**Language:** C++23
-**Project Builder:** Xmake
-**Mathematical Library:** GLM
-**Window Manager:** GLFW
-**Graphics API:** OpenGL (GLAD)
-**Parallel Computing:** OpenMP
-**JSON Parser:** nlohmann_json (optional)
+**Language:** C++23  
+**Project Builder:** Xmake  
+**Mathematical Library:** GLM  
+**Window Manager:** GLFW  
+**Graphics API:** OpenGL (GLAD)  
+**Parallel Computing:** OpenMP  
+**JSON Parser:** nlohmann_json (optional)  
 **Ray Tracing Accelerator:** Embree (optional)
 
 ## Quick Start

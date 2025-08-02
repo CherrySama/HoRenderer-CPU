@@ -6,54 +6,54 @@ A physically based offline renderer with supports for path tracing, volume rende
 
 🎯 **Core Rendering Features**
 
-Path Tracing Integrator: Unbiased rendering based on Monte Carlo methods
-Volume Rendering: Supports scattering and absorption effects in homogeneous media
-Multiple Importance Sampling: Combines BRDF sampling and light sampling
-BVH Accelerator: Optimized using SAH (Surface Area Heuristic)
-Multi-Threaded Rendering: Parallel computing based on OpenMP
+Path Tracing Integrator 
+Volume Rendering 
+Multiple Importance Sampling 
+BVH Accelerator 
+Multi-Threaded Rendering
 
 🎨 **Material System**
 
-Diffuse: Diffuse material based on the Oren-Nayar model
-Conductor: Metal material with support for complex refraction
-Plastic: Plastic material with support for Fresnel reflections
-Emission: Emissive material
-FrostedGlass: Frosted glass with support for transmission and reflection
+Diffuse 
+Conductor 
+Plastic 
+Emission 
+FrostedGlass
 
 🔺 **Geometry Support**
 
 Base Geometries: Sphere, Quad, Cube
-Transformations: Rotation, Translation, Scale
-Normal Maps: Supports normal textures
+Transformations 
+Normal Maps 
 
 💡 **Lighting System**
 
-Area Light: Quad area light
-Spherical Light: Spherical area light
+Area Light: Quad area light 
+Spherical Light: Spherical area light 
 Ambient Light: Supports HDR environment maps
 
 🌫️ **Volume Rendering**
 
-Homogeneous Media: Supports scattering and absorption parameters
-Phase Functions: Isotropic and Henyey-Greenstein phase functions
-Multiple Scattering: Complete volumetric light transport simulation
+Homogeneous Media 
+Phase Functions 
+Multiple Scattering 
 
 🎲 **Sampling System**
 
-Sobol Sequence: Low-discrepancy sampling
-Importance Sampling: Optimized sampling for BRDFs and light sources
+Sobol Sequence 
+Importance Sampling 
 Filters: Uniform, Gaussian, and Tent filters
 
 🖼️ **Texture System**
 
-Solid Color Textures: Monochrome materials
-Image Textures: Supports common image formats
-HDR Textures: High Dynamic Range environment maps
+Solid Color Textures 
+Image Textures 
+HDR Textures
 
 📷 **Camera System**
 
-Perspective Camera: Adjustable field of view
-Depth of Field: Supports focal length and aperture settings
+Perspective Camera 
+Depth of Field
 
 📝 **TODO List**
 

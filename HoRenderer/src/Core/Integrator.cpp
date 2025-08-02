@@ -153,9 +153,11 @@ Vector3f Integrator::ray_color_v2(const Ray &r, int bounce, const Scene &world, 
         // Event judgement
         bool will_scatter = false;
         float t_scatter = Infinity;
+        int sampled_channel = 0;
+        Vector3f channel_pdfs(0.0f);
 
         if (medium) {
-            t_scatter = medium->SampleDistance(current_ray, t_surface, sampler);
+            t_scatter = medium->SampleDistance(current_ray, t_surface, sampler, sampled_channel, channel_pdfs);
             will_scatter = (t_scatter < t_surface);
         }
 
@@ -163,61 +165,67 @@ Vector3f Integrator::ray_color_v2(const Ray &r, int bounce, const Scene &world, 
             //  Volume Scattering
             Vector3f scatter_pos = current_ray.at(t_scatter);
 
-            // Calculate the transmission rate to the scattering point
+            // Get medium properties at scattering point
             Vector3f sigma_t = medium->GetSigmaT(scatter_pos);
             Vector3f sigma_s = medium->GetSigmaS(scatter_pos);
-            float avg_sigma_t = (sigma_t.x + sigma_t.y + sigma_t.z) / 3.0f;
-            // Calculating color transmittance
-            Vector3f transmittance = Vector3f(exp(-sigma_t.x * t_scatter),
-                                              exp(-sigma_t.y * t_scatter),
-                                              exp(-sigma_t.z * t_scatter));
-            float pdf = avg_sigma_t * exp(-avg_sigma_t * t_scatter);
-            path_throughput *= transmittance * sigma_s / pdf;
-            never_scattered = false;
+            
+            // Calculate unbiased transmittance and PDF
+            Vector3f transmittance = Vector3f(std::exp(-sigma_t.x * t_scatter),
+                                              std::exp(-sigma_t.y * t_scatter),
+                                              std::exp(-sigma_t.z * t_scatter));
+            
+            // Use average PDF from one-sample MIS for unbiased estimation
+            float avg_pdf = (channel_pdfs.x + channel_pdfs.y + channel_pdfs.z) / 3.0f;
+            
+            if (avg_pdf > Epsilon) {
+                path_throughput *= transmittance * sigma_s / avg_pdf;
+                never_scattered = false;
 
-            // The next event estimate calculates the transmittance to the scattering point
-            const auto &lights = world.GetLights();
-            if (!lights.empty()) {
-                Hit_Payload temp_hit;
-                temp_hit.p = scatter_pos;
-                temp_hit.normal = Vector3f(0, 1, 0);
-                temp_hit.front_face = true;
-                temp_hit.mat = nullptr; // No material in the volume
+                // The next event estimate calculates the transmittance to the scattering point
+                const auto &lights = world.GetLights();
+                if (!lights.empty()) {
+                    Hit_Payload temp_hit;
+                    temp_hit.p = scatter_pos;
+                    temp_hit.normal = Vector3f(0, 1, 0);
+                    temp_hit.front_face = true;
+                    temp_hit.mat = nullptr; // No material in the volume
 
-                Vector3f light_direction;
-                float light_pdf;
-                Vector3f light_radiance = world.SampleLightEnvironment(current_ray, temp_hit, light_direction, light_pdf, sampler);
+                    Vector3f light_direction;
+                    float light_pdf;
+                    Vector3f light_radiance = world.SampleLightEnvironment(current_ray, temp_hit, light_direction, light_pdf, sampler);
 
-                if (light_pdf > Epsilon && glm::length(light_radiance) > Epsilon) {
-                    Ray shadow_ray = Ray::SpawnRay(scatter_pos, light_direction, Vector3f(0, 1, 0));
-                    Vector3f shadow_transmittance = CalculateShadowTransmittance(shadow_ray, world);
+                    if (light_pdf > Epsilon && glm::length(light_radiance) > Epsilon) {
+                        Ray shadow_ray = Ray::SpawnRay(scatter_pos, light_direction, Vector3f(0, 1, 0));
+                        Vector3f shadow_transmittance = CalculateShadowTransmittance(shadow_ray, world);
 
-                    if (glm::length(shadow_transmittance) > Epsilon) {
-                        auto phase_func = medium->GetPhaseFunction();
-                        float phase_value = phase_func->Evaluate(-current_ray.direction(), light_direction);
-                        float phase_pdf = phase_func->Pdf(-current_ray.direction(), light_direction);
-                        float mis_weight = PowerHeuristic(light_pdf, phase_pdf);
+                        if (glm::length(shadow_transmittance) > Epsilon) {
+                            auto phase_func = medium->GetPhaseFunction();
+                            float phase_value = phase_func->Evaluate(-current_ray.direction(), light_direction);
+                            float phase_pdf = phase_func->Pdf(-current_ray.direction(), light_direction);
+                            float mis_weight = PowerHeuristic(light_pdf, phase_pdf);
 
-                        // Vector3f sigma_s = medium->GetSigmaS(scatter_pos);
-                        Vector3f direct_contrib = path_throughput * phase_value * light_radiance * shadow_transmittance * mis_weight / light_pdf;
-                        total_radiance += direct_contrib;
+                            Vector3f direct_contrib = path_throughput * phase_value * light_radiance * shadow_transmittance * mis_weight / light_pdf;
+                            total_radiance += direct_contrib;
+                        }
                     }
                 }
-            }
 
-            // Phase function sampling
-            Vector3f new_direction;
-            float phase_pdf;
-            Vector2f phase_sample = sampler.get_2d_sample();
-            auto phase_func = medium->GetPhaseFunction();
-            phase_func->Sample(-current_ray.direction(), phase_sample, new_direction, phase_pdf);
+                // Phase function sampling
+                Vector3f new_direction;
+                float phase_pdf;
+                Vector2f phase_sample = sampler.get_2d_sample();
+                auto phase_func = medium->GetPhaseFunction();
+                phase_func->Sample(-current_ray.direction(), phase_sample, new_direction, phase_pdf);
 
-            if (phase_pdf > Epsilon) {
-                float phase_value = phase_func->Evaluate(-current_ray.direction(), new_direction);
-                path_throughput *= phase_value / phase_pdf;
-                current_ray = Ray::SpawnRay(scatter_pos, new_direction, Vector3f(0, 1, 0));
+                if (phase_pdf > Epsilon) {
+                    float phase_value = phase_func->Evaluate(-current_ray.direction(), new_direction);
+                    path_throughput *= phase_value / phase_pdf;
+                    current_ray = Ray::SpawnRay(scatter_pos, new_direction, Vector3f(0, 1, 0));
+                } else {
+                    break;
+                }
             } else {
-                break;
+                break; // Invalid PDF
             }
 
         } else if (hit_surface) {

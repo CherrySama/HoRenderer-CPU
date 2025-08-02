@@ -21,7 +21,7 @@ public:
     // Transmission calculation
     virtual Vector3f Transmittance(const Vector3f& p1, const Vector3f& p2) const = 0;
     // Distance sampling 
-    virtual float SampleDistance(const Ray& ray, float max_t, Sampler& sampler) const = 0;
+    virtual float SampleDistance(const Ray& ray, float max_t, Sampler& sampler, int& sampled_channel, Vector3f& channel_pdfs) const = 0;
 };
 
 class HomogeneousMedium : public Medium {
@@ -38,7 +38,7 @@ public:
     
     virtual bool IsHomogeneous() const override;
     virtual Vector3f Transmittance(const Vector3f& p1, const Vector3f& p2) const override;
-    virtual float SampleDistance(const Ray &ray, float max_t, Sampler &sampler) const override;
+    virtual float SampleDistance(const Ray &ray, float max_t, Sampler &sampler, int& sampled_channel, Vector3f& channel_pdfs) const override;
 
 private:
     Vector3f sigma_s; // Scattering coefficient

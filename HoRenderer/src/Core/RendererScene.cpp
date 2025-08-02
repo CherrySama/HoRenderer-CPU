@@ -14,14 +14,15 @@ namespace RendererScene
 {    
     std::shared_ptr<Renderer> CornellBox()
     {
-        CameraParams camParams = {1.0f,
-                                  900,
-                                  40.0f,
-                                  Vector3f(278.0f, 278.0f, -800.0f),
-                                  Vector3f(278.0f, 278.0f, 0.0f),
-                                  Vector3f(0.0f, 1.0f, 0.0f),
-                                  0.0f,
-                                  1.0f};
+        CameraParams camParams = { 1.0f,
+                                   900,
+                                   40.0f,
+                                   Vector3f(278.0f, 278.0f, -800.0f),
+                                   Vector3f(278.0f, 278.0f, 0.0f),
+                                   Vector3f(0.0f, 1.0f, 0.0f),
+                                   0.0f,
+                                   1.0f,
+                                   0};
         std::unique_ptr<Camera> camera = std::make_unique<Camera>();
         camera->Create(camParams);
 
@@ -105,10 +106,8 @@ namespace RendererScene
 
         auto smoke_medium = std::make_shared<HomogeneousMedium>(Vector3f(0.005f, 0.005f, 0.005f),
                                                                 Vector3f(0.005f, 0.005f, 0.005f),
-                                                                std::make_shared<IsotropicPhase>());
+                                                                std::make_shared<HenyeyGreensteinPhase>(0.3f));
         scene->AddMedium(smoke_medium); 
-
-        camParams.medium_id = 0; 
 
         scene->BuildBVH();
         scene->BuildLightTable(); 

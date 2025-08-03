@@ -22,6 +22,22 @@ private:
 	float sumDistrib;
 };
 
+class AliasTable2D {
+public:
+    AliasTable2D() = default;
+    AliasTable2D(const std::vector<float>& weights, int width, int height);
+    
+    Vector2i Sample(const Vector2f& sample, Vector2f& marginal_sample) const;
+    float Pdf(int x, int y) const;
+    float Sum() const { return total_sum; }
+
+private:
+    int width, height;
+    float total_sum;
+    std::vector<AliasTable1D> rows;  
+    AliasTable1D marginal;           
+};
+
 //  A class that stores a list of class Hittable
 class Scene : public Hittable {
 public:

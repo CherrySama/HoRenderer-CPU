@@ -57,6 +57,44 @@ int AliasTable1D::Sample(const Vector2f& sample) const {
 	return (ry <= table[rx].second / sumDistrib) ? rx : table[rx].first;
 }
 
+AliasTable2D::AliasTable2D(const std::vector<float>& weights, int w, int h) : width(w), height(h) 
+{    
+    rows.resize(height);
+    std::vector<float> row_sums(height);
+    
+    for (int y = 0; y < height; y++) {
+        std::vector<float> row_weights(width);
+        for (int x = 0; x < width; x++) {
+            row_weights[x] = weights[y * width + x];
+        }
+        rows[y] = AliasTable1D(row_weights);
+        row_sums[y] = rows[y].Sum();
+    }
+    
+    marginal = AliasTable1D(row_sums);
+    total_sum = marginal.Sum();
+}
+
+Vector2i AliasTable2D::Sample(const Vector2f &sample, Vector2f &marginal_sample) const
+{
+    int y = marginal.Sample(Vector2f(sample.y, marginal_sample.y));
+    
+    int x = rows[y].Sample(Vector2f(sample.x, marginal_sample.x));
+    
+    return Vector2i(x, y);
+}
+
+float AliasTable2D::Pdf(int x, int y) const
+{
+    if (x < 0 || x >= width || y < 0 || y >= height)
+        return 0.0f;
+    
+    float row_pdf = marginal.Sum() > 0 ? (rows[y].Sum() / marginal.Sum()) : 0.0f;
+    float col_pdf = rows[y].Sum() > 0 ? (1.0f / width) : 0.0f; 
+    
+    return row_pdf * col_pdf * width * height / total_sum;
+}
+
 void Scene::Clean()
 {
     hit_objects.clear();

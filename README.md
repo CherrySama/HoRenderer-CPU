@@ -6,53 +6,53 @@ A physically based offline renderer with supports for path tracing, volume rende
 
 🎯 **Core Rendering Features**
 
-Path Tracing Integrator 
-Volume Rendering 
-Multiple Importance Sampling 
-BVH Accelerator 
+Path Tracing Integrator  
+Volume Rendering  
+Multiple Importance Sampling  
+BVH Accelerator  
 Multi-Threaded Rendering
 
 🎨 **Material System**
 
-Diffuse 
-Conductor 
-Plastic 
-Emission 
+Diffuse  
+Conductor  
+Plastic  
+Emission  
 FrostedGlass
 
 🔺 **Geometry Support**
 
-Base Geometries: Sphere, Quad, Cube
-Transformations 
+Base Geometries: Sphere, Quad, Cube  
+Transformations  
 Normal Maps 
 
 💡 **Lighting System**
 
-Area Light: Quad area light 
-Spherical Light: Spherical area light 
+Area Light: Quad area light  
+Spherical Light: Spherical area light  
 Ambient Light: Supports HDR environment maps
 
 🌫️ **Volume Rendering**
 
-Homogeneous Media 
-Phase Functions 
+Homogeneous Media  
+Phase Functions  
 Multiple Scattering 
 
 🎲 **Sampling System**
 
-Sobol Sequence 
-Importance Sampling 
+Sobol Sequence  
+Importance Sampling  
 Filters: Uniform, Gaussian, and Tent filters
 
 🖼️ **Texture System**
 
-Solid Color Textures 
-Image Textures 
+Solid Color Textures  
+Image Textures  
 HDR Textures
 
 📷 **Camera System**
 
-Perspective Camera 
+Perspective Camera  
 Depth of Field
 
 📝 **TODO List**
@@ -67,13 +67,13 @@ Embree Accelerator ❎
 
 ## Requirements📝
 
-**Language:** C++23
-**Project Builder:** Xmake
-**Mathematical Library:** GLM
-**Window Manager:** GLFW
-**Graphics API:** OpenGL (GLAD)
-**Parallel Computing:** OpenMP
-**JSON Parser:** nlohmann_json (optional)
+**Language:** C++23  
+**Project Builder:** Xmake  
+**Mathematical Library:** GLM  
+**Window Manager:** GLFW  
+**Graphics API:** OpenGL (GLAD)  
+**Parallel Computing:** OpenMP  
+**JSON Parser:** nlohmann_json (optional)  
 **Ray Tracing Accelerator:** Embree (optional)
 
 ## Quick Start

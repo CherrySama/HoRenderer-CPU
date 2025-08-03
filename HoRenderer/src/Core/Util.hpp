@@ -38,6 +38,7 @@ class Hittable;
 class Hit_Payload;
 class Scene;
 class AliasTable1D;
+class AliasTable2D;
 class Camera;
 class Sampler;
 class ProgressTracker;
@@ -260,4 +261,28 @@ inline Vector3f ToWorld(const Vector3f& dir, const Vector3f& up) {
 	B = glm::cross(C, up);
 
 	return glm::normalize(dir.x * B + dir.y * C + dir.z * up);
+}
+
+// direction vector -> spherical UV : (theta, phi) -> (u, v)
+inline Vector2f CartesianToSpherical(const Vector3f &dir) {
+    float theta = std::acos(glm::clamp(dir.y, -1.0f, 1.0f)); // [0, π]
+    float phi = std::atan2(dir.z, dir.x);                     // [-π, π]
+    if (phi < 0.0f) phi += 2.0f * PI;                        // [0, 2π]
+    
+    float u = phi * INV_2PI;      // [0, 1]
+    float v = theta * INV_PI;     // [0, 1]
+    return Vector2f(u, v);
+}
+
+// spherical UV -> direction vector : (u, v) -> direction
+inline Vector3f SphericalToCartesian(float u, float v) {
+    float phi = u * 2.0f * PI;    // [0, 2π]
+    float theta = v * PI;         // [0, π]
+    
+    float sin_theta = std::sin(theta);
+    float cos_theta = std::cos(theta);
+    float sin_phi = std::sin(phi);
+    float cos_phi = std::cos(phi);
+    
+    return Vector3f(sin_theta * cos_phi, cos_theta, sin_theta * sin_phi);
 }

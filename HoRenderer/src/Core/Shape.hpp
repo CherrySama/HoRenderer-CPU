@@ -20,6 +20,9 @@ public:
         return bbox;
     }
     Vector2f getSphereUV(const Vector3f &hit_point) const;
+    Vector3f getCenter() const { return center; }
+    float getRadius() const { return radius; }
+    std::shared_ptr<Material> get_mat() const {return mat;}
 
 private:
     Vector3f center;

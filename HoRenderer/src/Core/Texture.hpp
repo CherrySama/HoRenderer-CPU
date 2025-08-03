@@ -47,6 +47,8 @@ class HDRTexture : public Texture {
 public:
     HDRTexture(const std::string &filepath);
     Vector3f GetColor(float u, float v) const override;
+    int getWidth() const { return width; }
+    int getHeight() const { return height; }
 
 private:
     int width, height, channels;

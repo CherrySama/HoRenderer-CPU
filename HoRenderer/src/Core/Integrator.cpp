@@ -140,7 +140,7 @@ Vector3f Integrator::ray_color_v2(const Ray &r, int bounce, const Scene &world, 
     Hit_Payload last_hit;
     bool has_last_hit = false;
 
-    for (int path_length = 0; path_length < max_bounce && path_length < bounce; path_length++) {
+    for (int path_length = 0; path_length < max_bounce; path_length++) {
         // get current medium
         int current_medium_id = world.GetCurrentMediumId(current_ray, has_last_hit ? &last_hit : nullptr);
         auto medium = world.GetMedium(current_medium_id);

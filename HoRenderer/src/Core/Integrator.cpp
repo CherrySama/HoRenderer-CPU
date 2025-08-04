@@ -115,7 +115,7 @@ Vector3f Integrator::VolumeIntegrator(const Ray &r, int bounce, const Scene &wor
             
             Vector3f light_direction;
             float light_pdf;
-            Vector3f light_radiance = world.SampleEnvironmentLight(current_ray, temp_hit, light_direction, light_pdf, sampler);
+            Vector3f light_radiance = world.SampleLights(current_ray, temp_hit, light_direction, light_pdf, sampler);
             
             if (light_pdf > Epsilon) {
                 Ray shadow_ray = Ray::SpawnRay(scatter_pos, light_direction, Vector3f(0, 1, 0));
@@ -231,7 +231,7 @@ Vector3f Integrator::EstimateDirectLighting(const Ray &r_in, const Hit_Payload &
     // light sampling
     Vector3f light_direction;
     float light_pdf;
-    Vector3f light_radiance = world.SampleEnvironmentLight(r_in, rec, light_direction, light_pdf, sampler);
+    Vector3f light_radiance = world.SampleLights(r_in, rec, light_direction, light_pdf, sampler);
 
     if (light_pdf > Epsilon) {
         bool is_light_transmission = glm::dot(light_direction, rec.normal) * glm::dot(V, rec.normal) < 0;

@@ -62,8 +62,12 @@ Vector3f Integrator::VolumeIntegrator(const Ray &r, int bounce, const Scene &wor
 
     Hit_Payload last_hit;
     bool has_last_hit = false;
+    float last_sampling_pdf = 1.0f;        
+    float accumulated_trans_pdf = 1.0f;    
+    Vector3f last_scatter_pos;             
+    bool has_last_scatter = false; 
 
-    for (int path_length = 0; path_length < max_bounce; path_length++) {
+    for (int bounce = 0; bounce < max_bounce; bounce++) {
         // get current medium
         int current_medium_id = world.GetCurrentMediumId(current_ray, has_last_hit ? &last_hit : nullptr);
         auto medium = world.GetMedium(current_medium_id);
@@ -75,6 +79,7 @@ Vector3f Integrator::VolumeIntegrator(const Ray &r, int bounce, const Scene &wor
 
         // Event judgement
         bool will_scatter = false;
+        bool continue_path = false;
         float t_scatter = Infinity;
         int sampled_channel = 0;
         Vector3f channel_pdfs(0.0f);
@@ -103,8 +108,8 @@ Vector3f Integrator::VolumeIntegrator(const Ray &r, int bounce, const Scene &wor
             if (avg_pdf > Epsilon) {
                 path_throughput *= transmittance * sigma_s / avg_pdf;
                 never_scattered = false;
-
-                // The next event estimate calculates the transmittance to the scattering point
+                accumulated_trans_pdf *= avg_pdf;
+                // The NEE calculates the transmittance to the scattering point
                 const auto &lights = world.GetLights();
                 if (!lights.empty()) {
                     Hit_Payload temp_hit;
@@ -144,13 +149,13 @@ Vector3f Integrator::VolumeIntegrator(const Ray &r, int bounce, const Scene &wor
                     float phase_value = phase_func->Evaluate(-current_ray.direction(), new_direction);
                     path_throughput *= phase_value / phase_pdf;
                     current_ray = Ray::SpawnRay(scatter_pos, new_direction, Vector3f(0, 1, 0));
-                } else {
-                    break;
-                }
-            } else {
-                break; // Invalid PDF
-            }
 
+                    last_sampling_pdf = phase_pdf;
+                    last_scatter_pos = scatter_pos;
+                    has_last_scatter = true;
+                    continue_path = true;
+                }
+            }
         } else if (hit_surface) {
             // Calculate the transmittance to the surface
             if (medium) {
@@ -158,6 +163,9 @@ Vector3f Integrator::VolumeIntegrator(const Ray &r, int bounce, const Scene &wor
                 Vector3f surface_pos = current_ray.at(surface_hit.t);
                 Vector3f transmittance = medium->Transmittance(ray_start, surface_pos);
                 path_throughput *= transmittance;
+
+                // TODO: the actual transmission PDF needs to be calculated here
+                accumulated_trans_pdf *= 1.0f;
             }
 
             // Update medium ID
@@ -168,6 +176,7 @@ Vector3f Integrator::VolumeIntegrator(const Ray &r, int bounce, const Scene &wor
                 current_ray = Ray(surface_hit.p + Epsilon * current_ray.direction(), current_ray.direction());
                 last_hit = surface_hit;
                 has_last_hit = true;
+                bounce--;
                 continue; // continue next loop
             }
 
@@ -176,8 +185,33 @@ Vector3f Integrator::VolumeIntegrator(const Ray &r, int bounce, const Scene &wor
                 if (never_scattered) {
                     total_radiance += path_throughput * emission;
                 } else {
+                    float mis_weight = 1.0f;
+                    if (has_last_scatter) {
+                        Vector3f light_direction = glm::normalize(surface_hit.p - last_scatter_pos);
+                        float distance = glm::length(surface_hit.p - last_scatter_pos);
+
+                        float light_pdf = 0.0f;
+                        const auto& lights = world.GetLights();
+                        for (const auto& light : lights) {
+                            // TODO: Here you need to call the PDF calculation function of the light source
+                            Hit_Payload temp_rec;
+                            Vector3f temp_radiance = world.EvaluateLight(current_ray, surface_hit, light_pdf);
+                            break; 
+                        }
+                        
+                        Vector3f surface_normal = surface_hit.normal;
+                        float cos_theta = std::abs(glm::dot(-light_direction, surface_normal));
+                        float geometry_term = cos_theta / (distance * distance);
+                        
+                        float path_sampling_pdf = last_sampling_pdf * accumulated_trans_pdf * geometry_term;
+
+                        if (light_pdf > Epsilon && path_sampling_pdf > Epsilon) {
+                            mis_weight = PowerHeuristic(path_sampling_pdf, light_pdf);
+                        }
+                    }
                     total_radiance += path_throughput * emission;
                 }
+                break;
             }
 
             // non-emissive materials
@@ -207,25 +241,30 @@ Vector3f Integrator::VolumeIntegrator(const Ray &r, int bounce, const Scene &wor
                     last_hit = surface_hit;
                     has_last_hit = true;
                     never_scattered = false;
-                } else {
-                    break;
-                }
-            } else {
-                break; // Hit the light source, the path ends
-            }
 
+                    last_sampling_pdf = bsdf_pdf;
+                    last_scatter_pos = surface_hit.p;
+                    has_last_scatter = true;
+                    accumulated_trans_pdf = 1.0f; 
+                    continue_path = true;
+                } 
+            }
         } else {
+            // TODO: Add background light MIS processing
             break; // Light escape
         }
 
+        if (!continue_path) {
+            break;
+        }
+
         // Russian Roulette
-        if (path_length >= 3) {
+        if (bounce >= 3) {
             float max_component = std::max({path_throughput.x, path_throughput.y, path_throughput.z});
             float survival_prob = std::min(0.95f, max_component);
-
-            if (sampler.random_float() > survival_prob) {
+            if (sampler.random_float() > survival_prob) 
                 break;
-            }
+    
             path_throughput /= survival_prob;
         }
     }

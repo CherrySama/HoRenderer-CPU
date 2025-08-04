@@ -59,176 +59,130 @@ Vector3f Integrator::VolumeIntegrator(const Ray &r, int bounce, const Scene &wor
     Vector3f path_throughput(1.0f);
     Ray current_ray = r;
     bool never_scattered = true;
-
+    float last_pdf = 0.0f;
     Hit_Payload last_hit;
     bool has_last_hit = false;
-    float last_sampling_pdf = 1.0f;        
-    float accumulated_trans_pdf = 1.0f;    
-    Vector3f last_scatter_pos;             
-    bool has_last_scatter = false; 
+
+    auto HitLight = [](const Hit_Payload& hit) -> bool {
+        return hit.mat && hit.mat->IsEmit();
+    };
+
+    auto HitMediumBoundary = [](const Hit_Payload &hit) -> bool {
+        return hit.mat == nullptr; // index-matching surface
+    };
 
     for (int bounce = 0; bounce < max_bounce; bounce++) {
-        // get current medium
-        int current_medium_id = world.GetCurrentMediumId(current_ray, has_last_hit ? &last_hit : nullptr);
-        auto medium = world.GetMedium(current_medium_id);
-
-        // Scene intersection
         Hit_Payload surface_hit;
         bool hit_surface = world.isHit(current_ray, Vector2f(Epsilon, Infinity), surface_hit);
         float t_surface = hit_surface ? surface_hit.t : Infinity;
 
-        // Event judgement
+        int current_medium_id = world.GetCurrentMediumId(current_ray, has_last_hit ? &last_hit : nullptr);
+        auto medium = world.GetMedium(current_medium_id);
+
         bool will_scatter = false;
-        bool continue_path = false;
         float t_scatter = Infinity;
-        int sampled_channel = 0;
-        Vector3f channel_pdfs(0.0f);
+        Vector3f transmittance(1.0f);
+        float trans_pdf = 1.0f;
 
         if (medium) {
-            t_scatter = medium->SampleDistance(current_ray, t_surface, sampler, sampled_channel, channel_pdfs);
+            Vector3f sigma_t = medium->GetSigmaT(current_ray.origin());
+            float u = sampler.random_float();
+            t_scatter = -std::log(1.0f - u) / sigma_t.x;
             will_scatter = (t_scatter < t_surface);
+            
+            if (will_scatter) {
+                transmittance = Vector3f(std::exp(-sigma_t.x * t_scatter));
+                trans_pdf = std::exp(-sigma_t.x * t_scatter) * sigma_t.x;
+            } else {
+                transmittance = Vector3f(std::exp(-sigma_t.x * t_surface));
+                trans_pdf = std::exp(-sigma_t.x * t_surface);
+            }
         }
 
         if (will_scatter) {
-            //  Volume Scattering
             Vector3f scatter_pos = current_ray.at(t_scatter);
-
-            // Get medium properties at scattering point
-            Vector3f sigma_t = medium->GetSigmaT(scatter_pos);
             Vector3f sigma_s = medium->GetSigmaS(scatter_pos);
             
-            // Calculate unbiased transmittance and PDF
-            Vector3f transmittance = Vector3f(std::exp(-sigma_t.x * t_scatter),
-                                              std::exp(-sigma_t.y * t_scatter),
-                                              std::exp(-sigma_t.z * t_scatter));
+            path_throughput *= transmittance * sigma_s / trans_pdf;
+            never_scattered = false;
             
-            // Use average PDF from one-sample MIS for unbiased estimation
-            float avg_pdf = (channel_pdfs.x + channel_pdfs.y + channel_pdfs.z) / 3.0f;
+            // NEE
+            Hit_Payload temp_hit;
+            temp_hit.p = scatter_pos;
+            temp_hit.normal = Vector3f(0, 1, 0);
+            temp_hit.front_face = true;
+            temp_hit.mat = nullptr;
             
-            if (avg_pdf > Epsilon) {
-                path_throughput *= transmittance * sigma_s / avg_pdf;
-                never_scattered = false;
-                accumulated_trans_pdf *= avg_pdf;
-                // The NEE calculates the transmittance to the scattering point
-                const auto &lights = world.GetLights();
-                if (!lights.empty()) {
-                    Hit_Payload temp_hit;
-                    temp_hit.p = scatter_pos;
-                    temp_hit.normal = Vector3f(0, 1, 0);
-                    temp_hit.front_face = true;
-                    temp_hit.mat = nullptr; // No material in the volume
-
-                    Vector3f light_direction;
-                    float light_pdf;
-                    Vector3f light_radiance = world.SampleLightEnvironment(current_ray, temp_hit, light_direction, light_pdf, sampler);
-
-                    if (light_pdf > Epsilon && glm::length(light_radiance) > Epsilon) {
-                        Ray shadow_ray = Ray::SpawnRay(scatter_pos, light_direction, Vector3f(0, 1, 0));
-                        Vector3f shadow_transmittance = CalculateShadowTransmittance(shadow_ray, world);
-
-                        if (glm::length(shadow_transmittance) > Epsilon) {
-                            auto phase_func = medium->GetPhaseFunction();
-                            float phase_value = phase_func->Evaluate(-current_ray.direction(), light_direction);
-                            float phase_pdf = phase_func->Pdf(-current_ray.direction(), light_direction);
-                            float mis_weight = PowerHeuristic(light_pdf, phase_pdf);
-
-                            Vector3f direct_contrib = path_throughput * phase_value * light_radiance * shadow_transmittance * mis_weight / light_pdf;
-                            total_radiance += direct_contrib;
-                        }
-                    }
-                }
-
-                // Phase function sampling
-                Vector3f new_direction;
-                float phase_pdf;
-                Vector2f phase_sample = sampler.get_2d_sample();
+            Vector3f light_direction;
+            float light_pdf;
+            Vector3f light_radiance = world.SampleLightEnvironment(current_ray, temp_hit, light_direction, light_pdf, sampler);
+            
+            if (light_pdf > Epsilon) {
+                Ray shadow_ray = Ray::SpawnRay(scatter_pos, light_direction, Vector3f(0, 1, 0));
+                Vector3f shadow_transmittance = CalculateShadowTransmittance(shadow_ray, world);
+                
                 auto phase_func = medium->GetPhaseFunction();
-                phase_func->Sample(-current_ray.direction(), phase_sample, new_direction, phase_pdf);
-
-                if (phase_pdf > Epsilon) {
-                    float phase_value = phase_func->Evaluate(-current_ray.direction(), new_direction);
-                    path_throughput *= phase_value / phase_pdf;
-                    current_ray = Ray::SpawnRay(scatter_pos, new_direction, Vector3f(0, 1, 0));
-
-                    last_sampling_pdf = phase_pdf;
-                    last_scatter_pos = scatter_pos;
-                    has_last_scatter = true;
-                    continue_path = true;
+                float phase_value = phase_func->Evaluate(-current_ray.direction(), light_direction);
+                float phase_pdf = phase_func->Pdf(-current_ray.direction(), light_direction);
+                
+                if (phase_pdf > Epsilon && glm::length(shadow_transmittance) > Epsilon) {
+                    float mis_weight = PowerHeuristic(light_pdf, phase_pdf, 2);
+                    total_radiance += path_throughput * mis_weight * phase_value * 
+                                    light_radiance * shadow_transmittance / light_pdf;
                 }
+            }
+            
+            // phase func sampling
+            Vector3f new_direction;
+            float phase_pdf;
+            Vector2f phase_sample = sampler.get_2d_sample();
+            auto phase_func = medium->GetPhaseFunction();
+            phase_func->Sample(-current_ray.direction(), phase_sample, new_direction, phase_pdf);
+            
+            if (phase_pdf > Epsilon) {
+                float phase_value = phase_func->Evaluate(-current_ray.direction(), new_direction);
+                path_throughput *= phase_value / phase_pdf;
+                current_ray = Ray::SpawnRay(scatter_pos, new_direction, Vector3f(0, 1, 0));
+                last_pdf = phase_pdf;
+            } else {
+                break;
             }
         } else if (hit_surface) {
-            // Calculate the transmittance to the surface
-            if (medium) {
-                Vector3f ray_start = current_ray.origin();
-                Vector3f surface_pos = current_ray.at(surface_hit.t);
-                Vector3f transmittance = medium->Transmittance(ray_start, surface_pos);
-                path_throughput *= transmittance;
-
-                // TODO: the actual transmission PDF needs to be calculated here
-                accumulated_trans_pdf *= 1.0f;
-            }
-
-            // Update medium ID
+            path_throughput *= transmittance / trans_pdf;
             current_medium_id = world.UpdateMediumId(current_ray, surface_hit, current_medium_id);
+            if (HitLight(surface_hit)) {
+                float mis_weight = 1.0f;
+                Vector3f emission = surface_hit.mat->Emit(current_ray, surface_hit, surface_hit.uv.x, surface_hit.uv.y);
+                if (!never_scattered) {
+                    float light_pdf;
+                    world.EvaluateLight(current_ray, surface_hit, light_pdf);
 
-            // Check if there is a material
-            if (!surface_hit.mat) {
+                    if (light_pdf > Epsilon)
+                        mis_weight = PowerHeuristic(last_pdf, light_pdf, 2);
+                }
+                total_radiance += path_throughput * mis_weight * emission;
+                break;
+            } else if (HitMediumBoundary(surface_hit)) {
                 current_ray = Ray(surface_hit.p + Epsilon * current_ray.direction(), current_ray.direction());
                 last_hit = surface_hit;
                 has_last_hit = true;
-                bounce--;
-                continue; // continue next loop
-            }
+                bounce--; 
+                continue;
+            } else {
+                // NEE
+                Vector3f direct_lighting = EstimateDirectLighting(current_ray, surface_hit, world, sampler);
+                total_radiance += path_throughput * direct_lighting;
 
-            Vector3f emission = surface_hit.mat->Emit(current_ray, surface_hit, surface_hit.uv.x, surface_hit.uv.y);
-            if (glm::length(emission) > Epsilon) {
-                if (never_scattered) {
-                    total_radiance += path_throughput * emission;
-                } else {
-                    float mis_weight = 1.0f;
-                    if (has_last_scatter) {
-                        Vector3f light_direction = glm::normalize(surface_hit.p - last_scatter_pos);
-                        float distance = glm::length(surface_hit.p - last_scatter_pos);
-
-                        float light_pdf = 0.0f;
-                        const auto& lights = world.GetLights();
-                        for (const auto& light : lights) {
-                            // TODO: Here you need to call the PDF calculation function of the light source
-                            Hit_Payload temp_rec;
-                            Vector3f temp_radiance = world.EvaluateLight(current_ray, surface_hit, light_pdf);
-                            break; 
-                        }
-                        
-                        Vector3f surface_normal = surface_hit.normal;
-                        float cos_theta = std::abs(glm::dot(-light_direction, surface_normal));
-                        float geometry_term = cos_theta / (distance * distance);
-                        
-                        float path_sampling_pdf = last_sampling_pdf * accumulated_trans_pdf * geometry_term;
-
-                        if (light_pdf > Epsilon && path_sampling_pdf > Epsilon) {
-                            mis_weight = PowerHeuristic(path_sampling_pdf, light_pdf);
-                        }
-                    }
-                    total_radiance += path_throughput * emission;
-                }
-                break;
-            }
-
-            // non-emissive materials
-            if (!surface_hit.mat->IsEmit()) {
-                // Direct lighting sampling
-                Vector3f surface_direct_lighting = EstimateDirectLighting(current_ray, surface_hit, world, sampler);
-                total_radiance += path_throughput * surface_direct_lighting;
-
-                // BSDF sampling
-                Vector3f scatter_direction;
+                // BSDF
+                 Vector3f scatter_direction;
                 float bsdf_pdf;
                 Vector3f brdf = surface_hit.mat->Sample(current_ray, surface_hit, scatter_direction, bsdf_pdf, sampler);
-
+                
                 if (bsdf_pdf > Epsilon) {
-                    bool is_transmission = (glm::dot(scatter_direction, surface_hit.normal) * glm::dot(-current_ray.direction(), surface_hit.normal)) < 0;
+                    bool is_transmission = (glm::dot(scatter_direction, surface_hit.normal) * 
+                                          glm::dot(-current_ray.direction(), surface_hit.normal)) < 0;
                     Vector3f surface_normal = is_transmission ? -surface_hit.normal : surface_hit.normal;
-
+                    
                     if (is_transmission) {
                         float cos_theta = std::abs(glm::dot(surface_hit.normal, scatter_direction));
                         path_throughput *= brdf * cos_theta / bsdf_pdf;
@@ -236,35 +190,27 @@ Vector3f Integrator::VolumeIntegrator(const Ray &r, int bounce, const Scene &wor
                         float cos_theta = glm::dot(surface_hit.normal, scatter_direction);
                         path_throughput *= brdf * cos_theta / bsdf_pdf;
                     }
-
+                    
                     current_ray = Ray::SpawnRay(surface_hit.p, scatter_direction, surface_normal);
                     last_hit = surface_hit;
                     has_last_hit = true;
+                    last_pdf = bsdf_pdf;
                     never_scattered = false;
-
-                    last_sampling_pdf = bsdf_pdf;
-                    last_scatter_pos = surface_hit.p;
-                    has_last_scatter = true;
-                    accumulated_trans_pdf = 1.0f; 
-                    continue_path = true;
-                } 
+                } else {
+                    break;
+                }
             }
         } else {
-            // TODO: Add background light MIS processing
-            break; // Light escape
-        }
-
-        if (!continue_path) {
             break;
         }
 
-        // Russian Roulette
         if (bounce >= 3) {
             float max_component = std::max({path_throughput.x, path_throughput.y, path_throughput.z});
             float survival_prob = std::min(0.95f, max_component);
-            if (sampler.random_float() > survival_prob) 
+            
+            if (sampler.random_float() > survival_prob) {
                 break;
-    
+            }
             path_throughput /= survival_prob;
         }
     }

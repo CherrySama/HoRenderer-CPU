@@ -142,13 +142,7 @@ const std::shared_ptr<Medium> Scene::GetMedium(int medium_id) const
 void Scene::BuildBVH()
 {
     if (!hit_objects.empty()) 
-    {
-        // auto start_time = std::chrono::high_resolution_clock::now();
         bvh_tree = std::make_shared<BVHnode>(hit_objects, 0, hit_objects.size());
-        // auto end_time = std::chrono::high_resolution_clock::now();
-        // auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
-        // std::cout << "BVH build: " << hit_objects.size() << " objects, Time: " << duration.count() << "ms" << std::endl;
-    }
 }
 
 void Scene::BuildLightTable()

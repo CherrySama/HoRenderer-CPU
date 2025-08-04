@@ -191,7 +191,7 @@ AABB Scene::getBoundingBox() const
     return output_box;
 }
 
-Vector3f Scene::SampleLightEnvironment(const Ray& r_in, const Hit_Payload& rec, Vector3f& light_direction, float& pdf, Sampler& sampler) const
+Vector3f Scene::SampleEnvironmentLight(const Ray& r_in, const Hit_Payload& rec, Vector3f& light_direction, float& pdf, Sampler& sampler) const
 {
     if (lights.empty()) {
         pdf = 0.0f;

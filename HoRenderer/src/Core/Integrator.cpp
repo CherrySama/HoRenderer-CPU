@@ -28,7 +28,7 @@ void Integrator::RenderImage(Camera &cam, Scene &world, Sampler &sampler, int sa
                 thread_sampler.SetPixel(i, j);
                 Vector2f offset = thread_sampler.sample_square();
                 Ray r = cam.GenerateRay(i, j, thread_sampler, offset);
-                Vector3f pixel_color = ray_color_v2(r, max_bounce, world, thread_sampler);
+                Vector3f pixel_color = VolumeIntegrator(r, max_bounce, world, thread_sampler);
 
                 write_color(i, j, pixel_color);  
             }
@@ -50,84 +50,7 @@ void Integrator::write_color(int u, int v, const Vector3f &color)
     _mm_store_ps(float_pixels.get() + offset, c);
 }
 
-Vector3f Integrator::ray_color(const Ray &r, int bounce, const Scene &world, Sampler &sampler)
-{
-    if (bounce <= 0)
-        return Vector3f(0, 0, 0);
-
-    Hit_Payload rec;
-    if (!world.isHit(r, Vector2f(0.0f, Infinity), rec)) {
-        return Vector3f(0.05f, 0.05f, 0.05f); 
-    }
-
-    // emission
-    Vector3f total_radiance = rec.mat->Emit(r, rec, rec.uv.x, rec.uv.y);
-
-    // light sampling
-    Vector3f direct_lighting = EstimateDirectLighting(r, rec, world, sampler);
-    total_radiance += direct_lighting;
-
-    // BRDF sampling
-    Vector3f scatter_direction;
-    float pdf;
-    Vector3f brdf = rec.mat->Sample(r, rec, scatter_direction, pdf, sampler);
-    if (pdf > Epsilon && bounce > 1) {
-        bool is_transmission = (glm::dot(scatter_direction, rec.normal) * glm::dot(-r.direction(), rec.normal)) < 0;
-        Vector3f surface_normal = is_transmission ? -rec.normal : rec.normal;
-        Ray scattered = Ray::SpawnRay(rec.p, scatter_direction, surface_normal);
-
-        // check if it hits anything
-        Hit_Payload light_rec;
-        if (world.isHit(scattered, Vector2f(Epsilon, Infinity), light_rec)) {
-            // Check if it hits a light source
-            if (light_rec.mat && light_rec.mat->IsEmit()) {
-                // Hitting the Light Source - Calculating Direct Lighting Contribution Using MIS
-                float light_eval_pdf;
-                Vector3f light_emission = world.EvaluateLight(scattered, light_rec, light_eval_pdf);
-
-                if (light_eval_pdf > Epsilon && pdf > Epsilon) {
-                    float mis_weight = PowerHeuristic(pdf, light_eval_pdf);
-
-                    if (is_transmission) {
-                        float cos_theta = std::abs(glm::dot(rec.normal, scatter_direction));
-                        total_radiance += mis_weight * brdf * cos_theta * light_emission / pdf;
-                    } else {
-                        float cos_theta = glm::dot(rec.normal, scatter_direction);
-                        total_radiance += mis_weight * brdf * cos_theta * light_emission / pdf;
-                    }
-                } // After hitting the light source, no longer recurse and end this path directly
-            } else {
-                // Hitting a non-light source - indirect lighting is handled recursively as normal
-                Vector3f attenuation;
-                if (is_transmission) {
-                    attenuation = brdf / pdf;
-                } else {
-                    float cos_theta = glm::dot(rec.normal, scatter_direction);
-                    attenuation = brdf * cos_theta / pdf;
-                }
-
-                // Russian Roulette
-                int bounces_count = max_bounce - bounce;
-                if (bounces_count > 3) {
-                    float max_component = std::max({attenuation.x, attenuation.y, attenuation.z});
-                    float survival_prob = std::min(0.95f, max_component);
-
-                    if (sampler.random_float() > survival_prob) {
-                        return total_radiance; // End Path
-                    }
-                    attenuation /= survival_prob;
-                }
-
-                // Only recurse if hitting a non-light source
-                total_radiance += attenuation * ray_color(scattered, bounce - 1, world, sampler);
-            }
-        }
-    }
-
-    return total_radiance;
-}
-
-Vector3f Integrator::ray_color_v2(const Ray &r, int bounce, const Scene &world, Sampler &sampler)
+Vector3f Integrator::VolumeIntegrator(const Ray &r, int bounce, const Scene &world, Sampler &sampler)
 {
     if (bounce <= 0)
         return Vector3f(0.0f);

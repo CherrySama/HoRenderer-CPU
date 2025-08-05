@@ -208,7 +208,6 @@ Vector3f InfiniteAreaLight::Sample(const Ray &r_in, const Hit_Payload &rec, Vect
     }
     
     float luminance = Luminance(color);
-    pdf = (luminance * sin_theta / table.Sum()) * (width * height) / (2.0f * PI * PI * sin_theta);
     pdf = luminance / table.Sum() * width * height / (2.0f * PI * PI);
     
     return color * scale;
@@ -239,7 +238,9 @@ Vector3f InfiniteAreaLight::Evaluate(const Ray &r_in, const Hit_Payload &rec, fl
 
 float InfiniteAreaLight::GetPower() const
 {
-    return table.Sum() * scale * 4.0f * PI;  
+    int width = hdr_texture->getWidth();
+    int height = hdr_texture->getHeight();
+    return table.Sum() * scale * 2.0f * PI * PI / (width * height);  
 }
 
 std::shared_ptr<Hittable> InfiniteAreaLight::GetShape() const

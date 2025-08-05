@@ -50,3 +50,8 @@ std::string FileManager::getMaterialPath(const std::string &filename) {
     std::filesystem::path materialPath = std::filesystem::path(projectRoot) / "assets" / "materials" / filename;
     return materialPath.generic_string();
 }
+
+std::string FileManager::getEnvBGPath(const std::string &filename) {
+    std::filesystem::path materialPath = std::filesystem::path(projectRoot) / "assets" / "scenes" / filename;
+    return materialPath.generic_string();
+}

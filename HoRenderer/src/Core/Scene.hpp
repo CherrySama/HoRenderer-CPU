@@ -48,6 +48,7 @@ public:
     void Add(std::shared_ptr<Hittable> object);
     void AddLights(std::shared_ptr<Light> light);
     void AddMedium(std::shared_ptr<Medium> medium);
+    void AddEnvLight(std::shared_ptr<InfiniteAreaLight> env_light);
     const std::vector<std::shared_ptr<Hittable>> GetObjects() const;
     const std::vector<std::shared_ptr<Light>> &GetLights() const;
     const std::shared_ptr<Medium> GetMedium(int medium_id) const;
@@ -57,8 +58,10 @@ public:
     bool isHit(const Ray &r, Vector2f t_interval, Hit_Payload &rec) const override;
     AABB getBoundingBox() const override;
 
-    Vector3f SampleLights(const Ray& r_in, const Hit_Payload& rec, Vector3f& light_direction, float& pdf, Sampler& sampler) const;
-    Vector3f EvaluateLight(const Ray& light_ray, const Hit_Payload& light_rec, float& pdf) const;
+    Vector3f SampleLights(const Ray &r_in, const Hit_Payload &rec, Vector3f &light_direction, float &pdf, Sampler &sampler) const;
+    Vector3f EvaluateLights(const Ray &light_ray, const Hit_Payload &light_rec, float &pdf) const;
+    Vector3f SampleEnvLight(const Ray &ray) const;
+    Vector3f EvaluateEnvLight(const Ray &ray, float &pdf) const;
 
     // Media Management
     int GetCurrentMediumId(const Ray &ray, const Hit_Payload *last_hit = nullptr) const;
@@ -69,5 +72,6 @@ private:
     std::shared_ptr<BVHnode> bvh_tree;
     std::vector<std::shared_ptr<Light>> lights;
     std::vector<std::shared_ptr<Medium>> media;
+    std::shared_ptr<InfiniteAreaLight> environment_light = nullptr;
     AliasTable1D lightTable;
 };

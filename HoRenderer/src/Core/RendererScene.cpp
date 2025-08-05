@@ -26,7 +26,7 @@ namespace RendererScene
         std::unique_ptr<Camera> camera = std::make_unique<Camera>();
         camera->Create(camParams);
 
-        std::unique_ptr<Integrator> integrator = std::make_unique<Integrator>(camera->image_width, camera->image_height, 12, 30);
+        std::unique_ptr<Integrator> integrator = std::make_unique<Integrator>(camera->image_width, camera->image_height, 12, 50);
         std::unique_ptr<Sampler> sampler = std::make_unique<Sampler>(FilterType::GAUSSIAN);
         std::unique_ptr<Scene> scene = std::make_unique<Scene>();
 
@@ -111,6 +111,32 @@ namespace RendererScene
 
         scene->BuildBVH();
         scene->BuildLightTable(); 
+        auto renderer = std::make_shared<Renderer>(std::move(camera), std::move(integrator), std::move(sampler), std::move(scene));
+        return renderer;
+    }
+
+    std::shared_ptr<Renderer> TestEnvLight()
+    {
+        CameraParams camParams = {1.0f,
+                                  900,
+                                  40.0f,
+                                  Vector3f(278.0f, 278.0f, -800.0f),
+                                  Vector3f(278.0f, 278.0f, 0.0f),
+                                  Vector3f(0.0f, 1.0f, 0.0f),
+                                  0.0f,
+                                  1.0f,
+                                  0};
+        std::unique_ptr<Camera> camera = std::make_unique<Camera>();
+        camera->Create(camParams);
+
+        std::unique_ptr<Integrator> integrator = std::make_unique<Integrator>(camera->image_width, camera->image_height, 12, 30);
+        std::unique_ptr<Sampler> sampler = std::make_unique<Sampler>(FilterType::GAUSSIAN);
+        std::unique_ptr<Scene> scene = std::make_unique<Scene>();
+
+
+        scene->BuildBVH();
+        scene->BuildLightTable();
+
         auto renderer = std::make_shared<Renderer>(std::move(camera), std::move(integrator), std::move(sampler), std::move(scene));
         return renderer;
     }

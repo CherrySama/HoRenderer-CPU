@@ -155,7 +155,7 @@ Vector3f Integrator::VolumeIntegrator(const Ray &r, int bounce, const Scene &wor
                 Vector3f emission = surface_hit.mat->Emit(current_ray, surface_hit, surface_hit.uv.x, surface_hit.uv.y);
                 if (!never_scattered) {
                     float light_pdf;
-                    world.EvaluateLight(current_ray, surface_hit, light_pdf);
+                    world.EvaluateLights(current_ray, surface_hit, light_pdf);
 
                     if (light_pdf > Epsilon)
                         mis_weight = PowerHeuristic(last_pdf, light_pdf, 2);
@@ -190,7 +190,7 @@ Vector3f Integrator::VolumeIntegrator(const Ray &r, int bounce, const Scene &wor
                         float cos_theta = glm::dot(surface_hit.normal, scatter_direction);
                         path_throughput *= brdf * cos_theta / bsdf_pdf;
                     }
-                    
+
                     current_ray = Ray::SpawnRay(surface_hit.p, scatter_direction, surface_normal);
                     last_hit = surface_hit;
                     has_last_hit = true;
@@ -201,6 +201,20 @@ Vector3f Integrator::VolumeIntegrator(const Ray &r, int bounce, const Scene &wor
                 }
             }
         } else {
+            float mis_weight = 1.0f;
+            if (!never_scattered) {
+                float env_pdf = 0.0f;
+                world.EvaluateEnvLight(current_ray, env_pdf);
+
+                if (medium && env_pdf > Epsilon) {
+                    mis_weight = PowerHeuristic(last_pdf, env_pdf);
+                } else if (env_pdf > Epsilon) {
+                    mis_weight = PowerHeuristic(last_pdf, env_pdf);
+                }
+            }
+            
+            Vector3f background = world.SampleEnvLight(current_ray);
+            total_radiance += path_throughput * mis_weight * background;
             break;
         }
 

@@ -121,6 +121,11 @@ void Scene::AddMedium(std::shared_ptr<Medium> medium)
     media.push_back(medium);
 }
 
+void Scene::AddEnvLight(std::shared_ptr<InfiniteAreaLight> env_light)
+{
+    environment_light = env_light;
+}
+
 const std::vector<std::shared_ptr<Hittable>> Scene::GetObjects() const
 {
     return hit_objects;        
@@ -193,26 +198,49 @@ AABB Scene::getBoundingBox() const
 
 Vector3f Scene::SampleLights(const Ray& r_in, const Hit_Payload& rec, Vector3f& light_direction, float& pdf, Sampler& sampler) const
 {
-    if (lights.empty()) {
+    float total_power = lightTable.Sum();
+    float env_power = 0.0f;
+    
+    if (environment_light) {
+        env_power = environment_light->GetPower();
+        total_power += env_power;
+    }
+
+    if (total_power <= 0.0f) {
         pdf = 0.0f;
         return Vector3f(0.0f);
     }
 
-    int index = lightTable.Sample(sampler.get_2d_sample());
-    auto light = lights[index];
+    float env_prob = env_power / total_power;
+    if (sampler.random_float() < env_prob && environment_light) {
+        Vector3f radiance = environment_light->Sample(r_in, rec, light_direction, pdf, sampler);
+        pdf *= env_prob;
+        return radiance;
+    } else if (!lights.empty()) {
+        int index = lightTable.Sample(sampler.get_2d_sample());
+        auto light = lights[index];
 
-    float light_pdf = 0.0f;
-    Vector3f radiance = light->Sample(r_in, rec, light_direction, light_pdf, sampler);
+        float light_pdf = 0.0f;
+        Vector3f radiance = light->Sample(r_in, rec, light_direction, light_pdf, sampler);
 
-    float light_selection_pdf = light->GetPower() / lightTable.Sum();
-    pdf = light_pdf * light_selection_pdf;
-    
-    return radiance;
+        float light_selection_pdf = light->GetPower() / lightTable.Sum();
+        pdf = light_pdf * light_selection_pdf * (1.0f - env_prob);
+
+        return radiance;
+    }
+
+    pdf = 0.0f;
+    return Vector3f(0.0f);
 }
 
-Vector3f Scene::EvaluateLight(const Ray &light_ray, const Hit_Payload &light_rec, float &pdf) const
+Vector3f Scene::EvaluateLights(const Ray &light_ray, const Hit_Payload &light_rec, float &pdf) const
 {
-    if (lights.empty()) {
+    float total_power = lightTable.Sum();
+    if (environment_light) {
+        total_power += environment_light->GetPower();
+    }
+    
+    if (total_power <= 0.0f) {
         pdf = 0.0f;
         return Vector3f(0.0f);
     }
@@ -235,6 +263,26 @@ Vector3f Scene::EvaluateLight(const Ray &light_ray, const Hit_Payload &light_rec
     }
     
     return radiance;
+}
+
+Vector3f Scene::SampleEnvLight(const Ray &ray) const
+{
+    if (environment_light) {
+        Hit_Payload dummy_hit;
+        float dummy_pdf;
+        return environment_light->Evaluate(ray, dummy_hit, dummy_pdf);
+    }
+    return Vector3f(0.05f, 0.05f, 0.05f); // default env light color
+}
+
+Vector3f Scene::EvaluateEnvLight(const Ray &ray, float &pdf) const
+{
+    if (environment_light) {
+        Hit_Payload dummy_hit;
+        return environment_light->Evaluate(ray, dummy_hit, pdf);
+    }
+    pdf = 0.0f;
+    return Vector3f(0.05f, 0.05f, 0.05f); // default env light color
 }
 
 // Get the medium ID where the ray is currently located

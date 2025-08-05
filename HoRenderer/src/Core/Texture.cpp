@@ -114,7 +114,7 @@ Vector3f HDRTexture::GetColor(float u, float v) const
     }
 
     u = u - std::floor(u);
-    v = 1.0f - (v - std::floor(v)); 
+    v = v - std::floor(v); 
 
     int i = static_cast<int>(u * width);
     int j = static_cast<int>(v * height);

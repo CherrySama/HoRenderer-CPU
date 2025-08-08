@@ -54,16 +54,19 @@ namespace RendererScene
         scene->Add(std::make_shared<Quad>(Vector3f(555.0f, 0.0f, 0.0f),
                                           Vector3f(0.0f, 555.0f, 0.0f),
                                           Vector3f(0.0f, 0.0f, 555.0f),
+                                          Transform(),
                                           greenMaterial));
 
         scene->Add(std::make_shared<Quad>(Vector3f(0.0f, 0.0f, 0.0f),
                                           Vector3f(0.0f, 555.0f, 0.0f),
                                           Vector3f(0.0f, 0.0f, 555.0f),
+                                          Transform(),
                                           redMaterial));
 
         auto ceiling_quad = std::make_shared<Quad>(Vector3f(213.0f, 548.8f, 227.0f),
                                                    Vector3f(130.0f, 0.0f, 0.0f),
                                                    Vector3f(0.0f, 0.0f, 105.0f),
+                                                   Transform(),
                                                    emitMaterial);
         auto ceiling_light = std::make_shared<QuadAreaLight>(ceiling_quad);
         scene->AddLights(ceiling_light);
@@ -71,43 +74,47 @@ namespace RendererScene
         scene->Add(std::make_shared<Quad>(Vector3f(0.0f, 0.0f, 0.0f),
                                           Vector3f(555.0f, 0.0f, 0.0f),
                                           Vector3f(0.0f, 0.0f, 555.0f),
+                                          Transform(),
                                           whiteMaterial));
 
         scene->Add(std::make_shared<Quad>(Vector3f(555.0f, 555.0f, 555.0f),
                                           Vector3f(-555.0f, 0.0f, 0.0f),
                                           Vector3f(0.0f, 0.0f, -555.0f),
+                                          Transform(),
                                           whiteMaterial));
 
         scene->Add(std::make_shared<Quad>(Vector3f(0.0f, 0.0f, 555.0f),
                                           Vector3f(0.0f, 555.0f, 0.0f),
                                           Vector3f(555.0f, 0.0f, 0.0f),
+                                          Transform(),
                                           whiteMaterial));
 
-        auto box1 = std::make_shared<Box>(Vector3f(0.0f,0.0f,0.0f),
-                                         Vector3f(165.0f, 165.0f, 165.0f),
-                                         whiteMaterial);
-        auto rotate_box1 = Transform::rotate(box1, RotationAxis::Y,15.0f);
-        auto translated_box1 = Transform::translate(rotate_box1, Vector3f(212.5f,82.5f,147.5f));
-        scene->Add(translated_box1);
-        
+        Transform box1_transform = Transform::Translate(Vector3f(212.5f, 82.5f, 147.5f)) * Transform::Rotate(Vector3f(0.0f, 15.0f, 0.0f));
+        auto box1 = std::make_shared<Box>(Vector3f(0.0f, 0.0f, 0.0f),
+                                          Vector3f(165.0f, 165.0f, 165.0f),
+                                          box1_transform,
+                                          whiteMaterial);
+        scene->Add(box1);
+
+        Transform box2_transform = Transform::Translate(Vector3f(347.5f, 165.0f, 377.5f)) * Transform::Rotate(Vector3f(0.0f, -18.0f, 0.0f));
         auto box2 = std::make_shared<Box>(Vector3f(0.0f, 0.0f, 0.0f),
                                           Vector3f(165.0f, 330.0f, 165.0f),
+                                          box2_transform,
                                           whiteMaterial);
-        auto rotate_box2 = Transform::rotate(box2, RotationAxis::Y,-18.0f);
-        auto translated_box2 = Transform::translate(rotate_box2, Vector3f(347.5f, 165.0f, 377.5f));
-        scene->Add(translated_box2);
+        scene->Add(box2);
 
-        auto smoke_boundary = std::make_shared<Box>(Vector3f(278.0f, 278.0f, 278.0f),
-                                                    Vector3f(555.0f, 555.0f, 555.0f),
-                                                    nullptr,
-                                                    0,
-                                                    -1);
-        scene->Add(smoke_boundary);
+        // auto smoke_boundary = std::make_shared<Box>(Vector3f(278.0f, 278.0f, 278.0f),
+        //                                             Vector3f(555.0f, 555.0f, 555.0f),
+        //                                             Transform(),
+        //                                             nullptr,
+        //                                             0,
+        //                                             -1);
+        // scene->Add(smoke_boundary);
 
-        auto smoke_medium = std::make_shared<HomogeneousMedium>(Vector3f(0.005f, 0.005f, 0.005f),
-                                                                Vector3f(0.005f, 0.005f, 0.005f),
-                                                                std::make_shared<HenyeyGreensteinPhase>(0.3f));
-        scene->AddMedium(smoke_medium); 
+        // auto smoke_medium = std::make_shared<HomogeneousMedium>(Vector3f(0.005f, 0.005f, 0.005f),
+        //                                                         Vector3f(0.005f, 0.005f, 0.005f),
+        //                                                         std::make_shared<HenyeyGreensteinPhase>(0.3f));
+        // scene->AddMedium(smoke_medium); 
 
         scene->BuildBVH();
         scene->BuildLightTable(); 
@@ -134,13 +141,15 @@ namespace RendererScene
         std::unique_ptr<Scene> scene = std::make_unique<Scene>();
 
         auto whiteMaterial = std::make_shared<Diffuse>(Vector3f(0.73f, 0.73f, 0.73f));
-        scene->Add(std::make_shared<Quad>(Vector3f(-800.0f, 0.0f, -200.0f), 
-                                          Vector3f(600.0f, 0.0f, 0.0f),     
-                                          Vector3f(0.0f, 0.0f, 400.0f),     
+        scene->Add(std::make_shared<Quad>(Vector3f(-800.0f, 0.0f, -200.0f),
+                                          Vector3f(600.0f, 0.0f, 0.0f),
+                                          Vector3f(0.0f, 0.0f, 400.0f),
+                                          Transform(),
                                           whiteMaterial));
 
-        scene->Add(std::make_shared<Box>(Vector3f(-400.0f, 25.0f, -25.0f), 
-                                         Vector3f(50.0f, 50.0f, 50.0f),    
+        scene->Add(std::make_shared<Box>(Vector3f(-400.0f, 25.0f, -25.0f),
+                                         Vector3f(50.0f, 50.0f, 50.0f),
+                                         Transform(),
                                          whiteMaterial));
 
         // Env Light

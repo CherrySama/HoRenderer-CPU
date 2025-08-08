@@ -8,7 +8,7 @@
 #include "Transform.hpp"
 #include "Light.hpp"
 #include "Medium.hpp"
-// #include "../Common/FileManager.hpp"
+#include "../Common/FileManager.hpp"
 
 namespace RendererScene
 {    
@@ -115,13 +115,13 @@ namespace RendererScene
         return renderer;
     }
 
-    std::shared_ptr<Renderer> TestEnvLight()
+    std::shared_ptr<Renderer> TestScene()
     {
-        CameraParams camParams = {1.0f,
-                                  900,
+        CameraParams camParams = {16.0f / 9.0f,
+                                  1600,
                                   40.0f,
-                                  Vector3f(278.0f, 278.0f, -800.0f),
-                                  Vector3f(278.0f, 278.0f, 0.0f),
+                                  Vector3f(-200.0f, 50.0f, 0.0f),
+                                  Vector3f(-700.0f, 50.0f, -50.0f),
                                   Vector3f(0.0f, 1.0f, 0.0f),
                                   0.0f,
                                   1.0f,
@@ -133,6 +133,22 @@ namespace RendererScene
         std::unique_ptr<Sampler> sampler = std::make_unique<Sampler>(FilterType::GAUSSIAN);
         std::unique_ptr<Scene> scene = std::make_unique<Scene>();
 
+        auto whiteMaterial = std::make_shared<Diffuse>(Vector3f(0.73f, 0.73f, 0.73f));
+        scene->Add(std::make_shared<Quad>(Vector3f(-800.0f, 0.0f, -200.0f), 
+                                          Vector3f(600.0f, 0.0f, 0.0f),     
+                                          Vector3f(0.0f, 0.0f, 400.0f),     
+                                          whiteMaterial));
+
+        scene->Add(std::make_shared<Box>(Vector3f(-400.0f, 25.0f, -25.0f), 
+                                         Vector3f(50.0f, 50.0f, 50.0f),    
+                                         whiteMaterial));
+
+        // Env Light
+        auto fm = FileManager::getInstance();
+        fm->init();
+        auto hdr_texture = std::make_shared<HDRTexture>(fm->getEnvBGPath("circus_arena_4k.hdr").c_str());
+        auto env_light = std::make_shared<InfiniteAreaLight>(hdr_texture, 3.0f);
+        scene->AddEnvLight(env_light);
 
         scene->BuildBVH();
         scene->BuildLightTable();

@@ -9,5 +9,5 @@
 namespace RendererScene {
     std::shared_ptr<Renderer> CornellBox();
     
-    std::shared_ptr<Renderer> TestEnvLight();
+    std::shared_ptr<Renderer> TestScene();
 }

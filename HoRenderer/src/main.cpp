@@ -8,8 +8,8 @@
 int main() {
     srand(static_cast<unsigned int>(time(nullptr)));
 
-    auto renderer = RendererScene::CornellBox();
-    // auto renderer = RendererScene::TestEnvLight();
+    // auto renderer = RendererScene::CornellBox();
+    auto renderer = RendererScene::TestScene();
     renderer->Run();
 
     return 0;

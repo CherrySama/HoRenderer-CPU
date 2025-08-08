@@ -3,7 +3,7 @@
 */
 #pragma once
 
-#include "Util.hpp"
+#include <iostream>
 
 const int SobolMatricesDim = 1024;
 const int SobolMatricesSize = 52;

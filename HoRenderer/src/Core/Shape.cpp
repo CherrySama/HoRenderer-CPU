@@ -116,52 +116,69 @@ bool Box::isHit(const Ray &r, Vector2f t_interval, Hit_Payload &rec) const {
     return hit_anything;
 }
 
-void Box::CreateSides()
+void Box::CreateSides(const Vector3f& center, const Vector3f& dimensions, const Transform& transform)
 {
     sides.clear();
-
-    // Calculate the half size (the distance from the center point in all directions)
     Vector3f half_dim = dimensions * 0.5f;
-
-    // Front (z+)
+    
+    // bottom (y-)
     sides.push_back(std::make_shared<Quad>(
-        Vector3f(center.x - half_dim.x, center.y - half_dim.y, center.z + half_dim.z), 
-        Vector3f(dimensions.x, 0, 0),                                                  
-        Vector3f(0, dimensions.y, 0),                                                  
-        mat, interior_id, exterior_id));
-
-    // back (z-)
-    sides.push_back(std::make_shared<Quad>(
-        Vector3f(center.x + half_dim.x, center.y - half_dim.y, center.z - half_dim.z),
-        Vector3f(-dimensions.x, 0, 0),
-        Vector3f(0, dimensions.y, 0),
-        mat, interior_id, exterior_id));
+        Vector3f(center.x - half_dim.x, center.y - half_dim.y, center.z - half_dim.z), // Q
+        Vector3f(dimensions.x, 0, 0),                                                   // u
+        Vector3f(0, 0, dimensions.z),                                                   // v
+        transform, mat, interior_id, exterior_id));
 
     // top (y+)
     sides.push_back(std::make_shared<Quad>(
-        Vector3f(center.x - half_dim.x, center.y + half_dim.y, center.z + half_dim.z),
-        Vector3f(dimensions.x, 0, 0),
-        Vector3f(0, 0, -dimensions.z),
-        mat, interior_id, exterior_id));
+        Vector3f(center.x - half_dim.x, center.y + half_dim.y, center.z + half_dim.z), // Q
+        Vector3f(dimensions.x, 0, 0),                                                   // u
+        Vector3f(0, 0, -dimensions.z),                                                  // v
+        transform, mat, interior_id, exterior_id));
 
-    // bottom (y-)
+    // front (z+)
     sides.push_back(std::make_shared<Quad>(
-        Vector3f(center.x - half_dim.x, center.y - half_dim.y, center.z - half_dim.z),
-        Vector3f(dimensions.x, 0, 0),
-        Vector3f(0, 0, dimensions.z),
-        mat, interior_id, exterior_id));
+        Vector3f(center.x - half_dim.x, center.y - half_dim.y, center.z + half_dim.z), // Q
+        Vector3f(dimensions.x, 0, 0),                                                   // u
+        Vector3f(0, dimensions.y, 0),                                                   // v
+        transform, mat, interior_id, exterior_id));
+
+    // back (z-)
+    sides.push_back(std::make_shared<Quad>(
+        Vector3f(center.x + half_dim.x, center.y - half_dim.y, center.z - half_dim.z), // Q
+        Vector3f(-dimensions.x, 0, 0),                                                  // u
+        Vector3f(0, dimensions.y, 0),                                                   // v
+        transform, mat, interior_id, exterior_id));
 
     // right (x+)
     sides.push_back(std::make_shared<Quad>(
-        Vector3f(center.x + half_dim.x, center.y - half_dim.y, center.z + half_dim.z),
-        Vector3f(0, 0, -dimensions.z),
-        Vector3f(0, dimensions.y, 0),
-        mat, interior_id, exterior_id));
+        Vector3f(center.x + half_dim.x, center.y - half_dim.y, center.z - half_dim.z), // Q
+        Vector3f(0, 0, dimensions.z),                                                   // u
+        Vector3f(0, dimensions.y, 0),                                                   // v
+        transform, mat, interior_id, exterior_id));
 
     // left (x-)
     sides.push_back(std::make_shared<Quad>(
-        Vector3f(center.x - half_dim.x, center.y - half_dim.y, center.z - half_dim.z),
-        Vector3f(0, 0, dimensions.z),
-        Vector3f(0, dimensions.y, 0),
-        mat, interior_id, exterior_id));
+        Vector3f(center.x - half_dim.x, center.y - half_dim.y, center.z + half_dim.z), // Q
+        Vector3f(0, 0, -dimensions.z),                                                  // u
+        Vector3f(0, dimensions.y, 0),                                                   // v
+        transform, mat, interior_id, exterior_id));
+
+    if (!sides.empty()) {
+        bbox = sides[0]->getBoundingBox();
+        for (size_t i = 1; i < sides.size(); i++) {
+            Vector3f side_min = sides[i]->getBoundingBox().min();
+            Vector3f side_max = sides[i]->getBoundingBox().max();
+            
+            Vector3f current_min = bbox.min();
+            Vector3f current_max = bbox.max();
+            
+            min_corner = Vector3f(std::min(current_min.x, side_min.x),
+                                 std::min(current_min.y, side_min.y),
+                                 std::min(current_min.z, side_min.z));
+            max_corner = Vector3f(std::max(current_max.x, side_max.x),
+                                 std::max(current_max.y, side_max.y),
+                                 std::max(current_max.z, side_max.z));
+            bbox = AABB(min_corner, max_corner);
+        }
+    }
 }

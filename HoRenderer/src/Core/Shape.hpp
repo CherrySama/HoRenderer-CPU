@@ -5,14 +5,21 @@
 
 #include "Util.hpp"
 #include "Hittable.hpp"
+#include "Transform.hpp"
 
 class Sphere : public Hittable {
 public:
     Sphere() {}
-    Sphere(const Vector3f center, float radius, std::shared_ptr<Material> material = nullptr, int interior_medium_id = -1, int exterior_medium_id = -1) :
+    Sphere(const Vector3f center, float radius, const Transform &transform = Transform(), std::shared_ptr<Material> material = nullptr, int interior_medium_id = -1, int exterior_medium_id = -1) :
         center(center), radius(std::fmax(0, radius)), mat(material), interior_id(interior_medium_id), exterior_id(exterior_medium_id) {
-        Vector3f rvec = Vector3f(radius, radius, radius);
-        bbox = AABB(center - rvec, center + rvec);
+        this->center = transform.TransformPoint(center);
+        Vector3f scale_x = transform.TransformVector(Vector3f(1,0,0));
+        Vector3f scale_y = transform.TransformVector(Vector3f(0,1,0));
+        Vector3f scale_z = transform.TransformVector(Vector3f(0, 0, 1));
+        float max_scale = std::max({glm::length(scale_x), glm::length(scale_y), glm::length(scale_z)});
+        this->radius = radius * max_scale;
+        Vector3f rvec = Vector3f(this->radius, this->radius, this->radius);
+        bbox = AABB(this->center - rvec, this->center + rvec);
     }
 
     bool isHit(const Ray &r, Vector2f t_interval, Hit_Payload &rec) const override;
@@ -36,19 +43,22 @@ private:
 class Quad : public Hittable {
 public:
     Quad() {}
-    Quad(const Vector3f &Q, const Vector3f &u, const Vector3f &v, std::shared_ptr<Material> material = nullptr, int interior_medium_id = -1, int exterior_medium_id = -1) :
+    Quad(const Vector3f &Q, const Vector3f &u, const Vector3f &v, const Transform &transform = Transform(), std::shared_ptr<Material> material = nullptr, int interior_medium_id = -1, int exterior_medium_id = -1) :
         Q(Q), u(u), v(v), mat(material), interior_id(interior_medium_id), exterior_id(exterior_medium_id) {
-        normal = glm::normalize(glm::cross(u, v));
-        D = glm::dot(normal, Q);
-        Vector3f n = glm::cross(u, v);
+        this->Q = transform.TransformPoint(Q);
+        this->u = transform.TransformVector(u);
+        this->v = transform.TransformVector(v);
+
+        normal = glm::normalize(glm::cross(this->u, this->v));
+        D = glm::dot(normal, this->Q);
+        Vector3f n = glm::cross(this->u, this->v);
         w = n / glm::dot(n, n);
 
         // Calculate bounding box
-        Vector3f corners[4] = {
-            Q,
-            Q + u,
-            Q + v,
-            Q + u + v};
+        Vector3f corners[4] = {this->Q,
+                               this->Q + this->u,
+                               this->Q + this->v,
+                               this->Q + this->u + this->v};
 
         Vector3f min_point = corners[0];
         Vector3f max_point = corners[0];
@@ -60,7 +70,6 @@ public:
                                  std::fmax(max_point.y, corners[i].y),
                                  std::fmax(max_point.z, corners[i].z));
         }
-
         bbox = AABB(min_point, max_point);
     }
 
@@ -89,14 +98,10 @@ private:
 class Box : public Hittable {
 public:
     Box() {}
-    Box(const Vector3f &center, const Vector3f &dimensions, std::shared_ptr<Material> material = nullptr, int interior_medium_id = -1, int exterior_medium_id = -1) :
+    Box(const Vector3f &center, const Vector3f &dimensions, const Transform& transform = Transform(), std::shared_ptr<Material> material = nullptr, int interior_medium_id = -1, int exterior_medium_id = -1) :
         center(center), dimensions(dimensions), mat(material), interior_id(interior_medium_id), exterior_id(exterior_medium_id) {
-        // Calculate minimum and maximum points
-        min_corner = center - dimensions * 0.5f;
-        max_corner = center + dimensions * 0.5f;
-        bbox = AABB(min_corner, max_corner);
         // Create 6 faces
-        CreateSides();
+        CreateSides(center, dimensions, transform);
     }
 
     bool isHit(const Ray &r, Vector2f t_interval, Hit_Payload &rec) const override;
@@ -118,5 +123,5 @@ private:
     std::vector<std::shared_ptr<Quad>> sides;
 
     // Auxiliary functions for calculating 6 faces
-    void CreateSides();
+    void CreateSides(const Vector3f& center, const Vector3f& dimensions, const Transform& transform);
 };

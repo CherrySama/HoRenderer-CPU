@@ -28,6 +28,6 @@ public:
     // Get paths to different types of resources
     std::string getShaderPath(const std::string &filename);
     std::string getTexturePath(const std::string &filename);
-    std::string getMaterialPath(const std::string &filename);
+    std::string getModelPath(const std::string &filename);
     std::string getEnvBGPath(const std::string &filename);
 };

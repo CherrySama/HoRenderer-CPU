@@ -46,8 +46,8 @@ std::string FileManager::getTexturePath(const std::string &filename) {
     return texturePath.generic_string();
 }
 
-std::string FileManager::getMaterialPath(const std::string &filename) {
-    std::filesystem::path materialPath = std::filesystem::path(projectRoot) / "assets" / "materials" / filename;
+std::string FileManager::getModelPath(const std::string &filename) {
+    std::filesystem::path materialPath = std::filesystem::path(projectRoot) / "assets" / "models" / filename;
     return materialPath.generic_string();
 }
 

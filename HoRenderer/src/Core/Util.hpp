@@ -72,9 +72,7 @@ class SolidTexture;
 class ImageTexture;
 class HDRTexture;
 
-class Translate;
-class Rotate;
-class Scale;
+class Transform;
 
 class Light;
 class QuadAreaLight;

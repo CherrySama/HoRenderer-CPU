@@ -39,7 +39,7 @@ private:
 
 class SphereAreaLight : public Light {
 public:
-    SphereAreaLight(std::shared_ptr<Sphere> sphere, const Vector3f &color, float intensity = 1.0f)
+    SphereAreaLight(std::shared_ptr<Sphere> sphere)
         : sphere(sphere) {
         center = sphere->getCenter();
         radius = sphere->getRadius();

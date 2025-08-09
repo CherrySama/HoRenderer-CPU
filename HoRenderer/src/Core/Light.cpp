@@ -84,7 +84,8 @@ Vector3f SphereAreaLight::Sample(const Ray &r_in, const Hit_Payload &rec, Vector
         pdf = 1.0f / area;
         pdf *= dist * dist / cos_theta;
         
-        return sphere->get_mat()->Emit(Vector2f(0.5f, 0.5f)); 
+        Vector2f uv = sphere->getSphereUV(surface_point);  
+        return sphere->get_mat()->Emit(uv); 
     }
 
     float cos_theta_max = std::sqrt(1.0f - sin_theta_max * sin_theta_max);

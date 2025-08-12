@@ -63,7 +63,7 @@ namespace RendererScene
                                           Transform(),
                                           redMaterial));
 
-        auto ceiling_quad = std::make_shared<Quad>(Vector3f(213.0f, 548.8f, 227.0f),
+        auto ceiling_quad = std::make_shared<Quad>(Vector3f(213.0f, 549.5f, 227.0f),
                                                    Vector3f(130.0f, 0.0f, 0.0f),
                                                    Vector3f(0.0f, 0.0f, 105.0f),
                                                    Transform(),
@@ -89,19 +89,26 @@ namespace RendererScene
                                           Transform(),
                                           whiteMaterial));
 
-        Transform box1_transform = Transform::Translate(Vector3f(212.5f, 82.5f, 147.5f)) * Transform::Rotate(Vector3f(0.0f, 15.0f, 0.0f));
-        auto box1 = std::make_shared<Box>(Vector3f(0.0f, 0.0f, 0.0f),
-                                          Vector3f(165.0f, 165.0f, 165.0f),
-                                          box1_transform,
-                                          whiteMaterial);
-        scene->Add(box1);
+        // Transform box1_transform = Transform::Translate(Vector3f(212.5f, 82.5f, 147.5f)) * Transform::Rotate(Vector3f(0.0f, 15.0f, 0.0f));
+        // auto box1 = std::make_shared<Box>(Vector3f(0.0f, 0.0f, 0.0f),
+        //                                   Vector3f(165.0f, 165.0f, 165.0f),
+        //                                   box1_transform,
+        //                                   whiteMaterial);
+        // scene->Add(box1);
 
-        Transform box2_transform = Transform::Translate(Vector3f(347.5f, 165.0f, 377.5f)) * Transform::Rotate(Vector3f(0.0f, -18.0f, 0.0f));
-        auto box2 = std::make_shared<Box>(Vector3f(0.0f, 0.0f, 0.0f),
-                                          Vector3f(165.0f, 330.0f, 165.0f),
-                                          box2_transform,
-                                          whiteMaterial);
-        scene->Add(box2);
+        // Transform box2_transform = Transform::Translate(Vector3f(347.5f, 165.0f, 377.5f)) * Transform::Rotate(Vector3f(0.0f, -18.0f, 0.0f));
+        // auto box2 = std::make_shared<Box>(Vector3f(0.0f, 0.0f, 0.0f),
+        //                                   Vector3f(165.0f, 330.0f, 165.0f),
+        //                                   box2_transform,
+        //                                   whiteMaterial);
+        // scene->Add(box2);
+        auto fm = FileManager::getInstance();
+        fm->init();
+        Transform dragon_transform = Transform::Translate(Vector3f(200.0f, 80.0f, 200.0f)) * Transform::Rotate(Vector3f(0.0f, 25.0f, 0.0f)) * Transform::Scale(300.0f);
+        auto dragon_mesh = std::make_shared<Mesh>(fm->getModelPath("dragon.obj"),
+                                                  dragon_transform,
+                                                  plasticMaterial);
+        scene->Add(dragon_mesh);
 
         // auto smoke_boundary = std::make_shared<Box>(Vector3f(278.0f, 278.0f, 278.0f),
         //                                             Vector3f(555.0f, 555.0f, 555.0f),

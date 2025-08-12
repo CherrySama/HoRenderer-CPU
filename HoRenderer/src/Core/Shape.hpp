@@ -125,3 +125,38 @@ private:
     // Auxiliary functions for calculating 6 faces
     void CreateSides(const Vector3f& center, const Vector3f& dimensions, const Transform& transform);
 };
+
+class Mesh : public Hittable {
+public:
+    Mesh() {}
+    Mesh(const std::string &obj_path, const Transform &transform = Transform(), std::shared_ptr<Material> material = nullptr, int interior_medium_id = -1, int exterior_medium_id = -1);
+    ~Mesh();
+
+    bool isHit(const Ray& r, Vector2f t_interval, Hit_Payload& rec) const override;
+    AABB getBoundingBox() const override { return bbox; }
+    std::shared_ptr<Material> get_mat() const { return mat; }
+
+private:
+    bool LoadOBJ(const std::string& filepath);
+    void CommitEmbree();
+    void CalculateFaceNormals();
+    void ApplyTransform(const Transform& transform);
+    void CalculateBoundingBox();
+
+    Vector3f InterpolateNormal(int triangle_id, float u, float v) const;
+    Vector2f InterpolateTexCoord(int triangle_id, float u, float v) const;
+
+private:
+    std::vector<Vector3f> vertices; 
+    std::vector<Vector3f> normals;  
+    std::vector<Vector2f> texcoords; 
+    std::vector<Vector3i> indices;      
+    
+    RTCDevice embree_device;
+    RTCScene embree_scene; 
+    RTCGeometry embree_geometry;
+    
+    std::shared_ptr<Material> mat;
+    AABB bbox;  
+    int interior_id, exterior_id;
+};

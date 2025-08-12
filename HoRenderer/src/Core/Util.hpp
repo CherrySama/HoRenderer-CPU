@@ -21,6 +21,8 @@
 #include <map>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include <embree4/rtcore.h>
+#include <embree4/rtcore_scene.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -46,6 +48,7 @@ class ProgressTracker;
 class Sphere;
 class Quad;
 class Box;
+class Mesh;
 
 class Material;
 class Diffuse;

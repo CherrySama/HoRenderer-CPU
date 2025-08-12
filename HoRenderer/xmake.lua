@@ -1,6 +1,6 @@
 add_rules("mode.debug", "mode.release")
 
-add_requires("glfw", "glad", "glm", "embree", "nlohmann_json")
+add_requires("glfw", "glad", "glm", "embree", "nlohmann_json", "tinyobjloader")
 add_rules("plugin.compile_commands.autoupdate", {outputdir = "../.vscode"})
 set_languages("c++23") 
 
@@ -21,7 +21,7 @@ target("HoRenderer")
         os.cp("Shader/*.frag", target:targetdir())
     end)
 
-    add_packages("glfw", "glad", "glm", "embree", "nlohmann_json")
+    add_packages("glfw", "glad", "glm", "embree", "nlohmann_json", "tinyobjloader")
 
     add_cxflags("/openmp:llvm")
 --

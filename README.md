@@ -57,13 +57,7 @@ Depth of Field
 
 📝 **TODO List**
 
-Model Loader ❎
-
-Spherical Light & Ambient Light ❎
-
 Heterogeneous media ❎
-
-Embree Accelerator ❎
 
 ## Requirements📝
 

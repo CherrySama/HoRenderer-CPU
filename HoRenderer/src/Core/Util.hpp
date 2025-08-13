@@ -56,6 +56,7 @@ class Conductor;
 class Plastic;
 class Emission;
 class Dielectric;
+class Fabric;
 
 class Medium;
 class HomogeneousMedium;

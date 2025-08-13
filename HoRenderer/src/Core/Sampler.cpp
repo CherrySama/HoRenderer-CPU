@@ -85,6 +85,22 @@ Vector3f Sampler::SampleCosineHemisphere(const Vector3f& normal) const
     return ToWorld(local_direction, normal);
 }
 
+Vector3f Sampler::SampleUniformHemisphere(const Vector3f& normal) const
+{
+    Vector2f sample = get_2d_sample();
+    
+    // Uniform hemisphere sampling
+    float cos_theta = sample.x;  
+    float sin_theta = std::sqrt(std::max(0.0f, 1.0f - cos_theta * cos_theta));
+    float phi = 2.0f * PI * sample.y;
+
+    Vector3f local_direction(sin_theta * std::cos(phi),
+                             sin_theta * std::sin(phi),
+                             cos_theta);
+
+    return ToWorld(local_direction, normal);
+}
+
 Vector3f Sampler::GGXNVDSample(const Vector3f &normal, const Vector3f &view, float alpha_u, float alpha_v) const
 {
     Vector2f sample = get_2d_sample();

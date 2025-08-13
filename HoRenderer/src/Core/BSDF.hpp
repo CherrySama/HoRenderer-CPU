@@ -23,4 +23,9 @@ namespace BSDF {
     float FresnelDielectric(const Vector3f &V, const Vector3f &H, float eta_inv);
 
     float AverageFresnelDielectric(float eta);
+
+    // reference: Production Friendly Microfacet Sheen BRDF
+    float CharlieL(float x, float a, float b, float c, float d, float e);
+    float CharlieLambda(float cosTheta, float roughness);
+    float CharlieG(float NdotV, float NdotL, float roughness);
 }

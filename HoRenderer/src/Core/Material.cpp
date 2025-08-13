@@ -476,7 +476,7 @@ Vector3f Fabric::Sample(const Ray& r_in, const Hit_Payload& rec, Vector3f& scatt
     Vector3f N = GetSurfaceNormal(rec);
     Vector3f V = -glm::normalize(r_in.direction());
     Vector3f albedo = albedo_texture->GetColor(rec.uv.x, rec.uv.y);
-    float roughness = glm::clamp(roughness_texture->GetColor(rec.uv.x, rec.uv.y)[0], 0.01f, 1.0f);
+    float roughness = glm::clamp(roughness_texture->GetColor(rec.uv.x, rec.uv.y)[0], 0.0001f, 1.0f);
 
     float NdotV = glm::dot(N, V);
     if (NdotV <= 0.0f) {
@@ -484,7 +484,7 @@ Vector3f Fabric::Sample(const Ray& r_in, const Hit_Payload& rec, Vector3f& scatt
         return Vector3f(0.0f);
     }
 
-    scatter_direction = sampler.SampleCosineHemisphere(N);
+    scatter_direction = sampler.SampleUniformHemisphere(N);
     float NdotL = glm::dot(N, scatter_direction);
     if (NdotL <= 0.0f) {
         pdf = 0.0f;
@@ -494,47 +494,92 @@ Vector3f Fabric::Sample(const Ray& r_in, const Hit_Payload& rec, Vector3f& scatt
     Vector3f H = glm::normalize(V + scatter_direction);
     float NdotH = glm::max(glm::dot(N, H), 0.0f);
     
-    Vector3f diffuse = albedo * INV_PI;
+    Vector3f base_diffuse = albedo * INV_PI;
     
-    if (NdotH > 0.0f) {
-        float charlie_d = BSDF::DistributionCharlie(roughness, NdotH);
+    // F * G * D / (4 |ωo · N| |ωi · N|)
+    Vector3f sheen_brdf = Vector3f(0.0f);
+    if (NdotH > 0.0f && NdotV > 0.0f && NdotL > 0.0f) {
+        // Charlie distribution
+        float D = BSDF::DistributionCharlie(roughness, NdotH);
+        // shadowing term
+        float G = BSDF::CharlieG(NdotV, NdotL, roughness);
+        float F = 1.0f;
         Vector3f sheen_color = glm::mix(Vector3f(1.0f), albedo, tint);
-        Vector3f sheen = intensity * sheen_color * charlie_d;
-        diffuse += sheen;
+        sheen_brdf = (intensity * sheen_color * F * G * D) / (4.0f * NdotV * NdotL);
     }
 
-    pdf = NdotL * INV_PI;
-    return diffuse;
+    float sheen_max = std::max({sheen_brdf.r, sheen_brdf.g, sheen_brdf.b});
+    float base_max = std::max({base_diffuse.r, base_diffuse.g, base_diffuse.b});
+    
+    Vector3f brdf;
+    if (sheen_max > 0.0f) {
+        float total_max = sheen_max + base_max;
+        float albedo_max = std::max({albedo.r, albedo.g, albedo.b});
+        
+        if (total_max > albedo_max) {
+            float scale = albedo_max / total_max;
+            brdf = scale * (base_diffuse + sheen_brdf);
+        } else {
+            brdf = base_diffuse + sheen_brdf;
+        }
+    } else {
+        brdf = base_diffuse;
+    }
+
+    pdf = INV_2PI;
+    
+    return brdf;
 }
 
 Vector3f Fabric::Evaluate(const Ray& r_in, const Hit_Payload& rec, const Vector3f& scatter_direction, float& pdf) const
 {
     Vector3f N = GetSurfaceNormal(rec);
     Vector3f V = -glm::normalize(r_in.direction());
-    Vector3f L = glm::normalize(scatter_direction);
     Vector3f albedo = albedo_texture->GetColor(rec.uv.x, rec.uv.y);
-    float roughness = glm::clamp(roughness_texture->GetColor(rec.uv.x, rec.uv.y)[0], 0.01f, 1.0f);
+    float roughness = glm::clamp(roughness_texture->GetColor(rec.uv.x, rec.uv.y)[0], 0.0001f, 1.0f);
 
     float NdotV = glm::dot(N, V);
-    float NdotL = glm::dot(N, L);
+    float NdotL = glm::dot(N, scatter_direction);
     
     if (NdotV <= 0.0f || NdotL <= 0.0f) {
         pdf = 0.0f;
         return Vector3f(0.0f);
     }
 
-    Vector3f H = glm::normalize(V + L);
+    Vector3f H = glm::normalize(V + scatter_direction);
     float NdotH = glm::max(glm::dot(N, H), 0.0f);
     
-    Vector3f diffuse = albedo * INV_PI;
+    Vector3f base_diffuse = albedo * INV_PI;
     
-    if (NdotH > 0.0f) {
-        float charlie_d = BSDF::DistributionCharlie(roughness, NdotH);
+    Vector3f sheen_brdf = Vector3f(0.0f);
+    if (NdotH > 0.0f && NdotV > 0.0f && NdotL > 0.0f) {
+        float D = BSDF::DistributionCharlie(roughness, NdotH);
+        float G = BSDF::CharlieG(NdotV, NdotL, roughness);
+        float F = 1.0f;
+        
         Vector3f sheen_color = glm::mix(Vector3f(1.0f), albedo, tint);
-        Vector3f sheen = intensity * sheen_color * charlie_d;
-        diffuse += sheen;
+        sheen_brdf = (intensity * sheen_color * F * G * D) / (4.0f * NdotV * NdotL);
     }
 
-    pdf = NdotL * INV_PI;
-    return diffuse;
+    float sheen_max = std::max({sheen_brdf.r, sheen_brdf.g, sheen_brdf.b});
+    float base_max = std::max({base_diffuse.r, base_diffuse.g, base_diffuse.b});
+    
+    Vector3f brdf;
+    if (sheen_max > 0.0f) {
+        float total_max = sheen_max + base_max;
+        float albedo_max = std::max({albedo.r, albedo.g, albedo.b});
+        
+        if (total_max > albedo_max) {
+            float scale = albedo_max / total_max;
+            brdf = scale * (base_diffuse + sheen_brdf);
+        } else {
+            brdf = base_diffuse + sheen_brdf;
+        }
+    } else {
+        brdf = base_diffuse;
+    }
+
+    pdf = INV_2PI;  // 1/(2π)
+    
+    return brdf;
 }

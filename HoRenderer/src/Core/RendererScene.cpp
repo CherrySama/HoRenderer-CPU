@@ -50,6 +50,10 @@ namespace RendererScene
                                                                    0.05f,
                                                                    1.3f,
                                                                    1.0f);
+        auto goldSilkMaterial = std::make_shared<Fabric>(Vector3f(0.9f, 0.7f, 0.2f), 
+                                                         0.12f,                      
+                                                         4.0f,                      
+                                                         0.9f);
 
         scene->Add(std::make_shared<Quad>(Vector3f(555.0f, 0.0f, 0.0f),
                                           Vector3f(0.0f, 555.0f, 0.0f),
@@ -107,7 +111,7 @@ namespace RendererScene
         Transform dragon_transform = Transform::Translate(Vector3f(200.0f, 80.0f, 200.0f)) * Transform::Rotate(Vector3f(0.0f, 25.0f, 0.0f)) * Transform::Scale(300.0f);
         auto dragon_mesh = std::make_shared<Mesh>(fm->getModelPath("dragon.obj"),
                                                   dragon_transform,
-                                                  plasticMaterial);
+                                                  goldSilkMaterial);
         scene->Add(dragon_mesh);
 
         // auto smoke_boundary = std::make_shared<Box>(Vector3f(278.0f, 278.0f, 278.0f),

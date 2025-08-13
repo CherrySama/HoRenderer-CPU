@@ -128,7 +128,7 @@ private:
     float eta;
 };
 
-class Fabric : public Material {
+class Fabric : public Material { // reference: Production Friendly Microfacet Sheen BRDF
 public:
     Fabric(const Vector3f &albedo, float roughness, float sheen_intensity = 1.0f, float sheen_tint = 0.0f) :
         albedo_texture(std::make_shared<SolidTexture>(albedo)), roughness_texture(std::make_shared<SolidTexture>(Vector3f(roughness))), intensity(sheen_intensity), tint(sheen_tint) {}

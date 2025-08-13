@@ -32,7 +32,7 @@ namespace BSDF {
 
     float DistributionCharlie(float roughness, float NdotH)
     {
-        float alpha = std::max(roughness * roughness, 0.0001f);
+        float alpha = std::max(roughness, 0.0001f);
         float invAlpha = 1.0f / alpha;
         float cos2h = NdotH * NdotH;
         float sin2h = std::max(1.0f - cos2h, 0.0001f);
@@ -145,4 +145,36 @@ namespace BSDF {
         }
     }
 
+    float CharlieL(float x, float a, float b, float c, float d, float e)
+    {
+        return a / (1.0f + b * std::pow(x, c)) + d * x + e;
+    }
+
+    float CharlieLambda(float cosTheta, float roughness) {
+        // params from the Table 1 of Production Friendly Microfacet Sheen BRDF
+        // r=0.0: a=25.3245, b=3.32435, c=0.16801, d=-1.27393, e=-4.85967
+        // r=1.0: a=21.5473, b=3.82987, c=0.19823, d=-1.97760, e=-4.32054
+        
+        // P = (1-r)²P₀.₀ + (1-(1-r)²)P₁.₀
+        float r = glm::clamp(roughness, 0.0001f, 1.0f);
+        float t = (1.0f - r) * (1.0f - r);
+        
+        float a = t * 25.3245f + (1.0f - t) * 21.5473f;
+        float b = t * 3.32435f + (1.0f - t) * 3.82987f;
+        float c = t * 0.16801f + (1.0f - t) * 0.19823f;
+        float d = t * (-1.27393f) + (1.0f - t) * (-1.97760f);
+        float e = t * (-4.85967f) + (1.0f - t) * (-4.32054f);
+        
+        cosTheta = glm::clamp(cosTheta, 0.0f, 1.0f);
+        
+        if (cosTheta < 0.5f) {
+            return std::exp(CharlieL(cosTheta, a, b, c, d, e));
+        } else {
+            return std::exp(2.0f * CharlieL(0.5f, a, b, c, d, e) - CharlieL(1.0f - cosTheta, a, b, c, d, e));
+        }
+    }
+
+    float CharlieG(float NdotV, float NdotL, float roughness) {
+        return 1.0f / (1.0f + CharlieLambda(NdotV, roughness) + CharlieLambda(NdotL, roughness));
+    }
 }

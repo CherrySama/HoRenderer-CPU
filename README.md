@@ -57,7 +57,8 @@ Depth of Field
 
 📝 **TODO List**
 
-Heterogeneous media ❎
+Heterogeneous media ❎  
+Spectrum Sampling ❎
 
 ## Requirements📝
 

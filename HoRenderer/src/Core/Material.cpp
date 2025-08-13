@@ -322,7 +322,7 @@ Vector3f Emission::Emit(const Vector2f &uv) const
     return intensity * albedo_texture->GetColor(uv.x, uv.y);
 }
 
-Vector3f FrostedGlass::Sample(const Ray &r_in, const Hit_Payload &rec, Vector3f &scatter_direction, float &pdf, Sampler &sampler) const
+Vector3f Dielectric::Sample(const Ray &r_in, const Hit_Payload &rec, Vector3f &scatter_direction, float &pdf, Sampler &sampler) const
 {
     Vector3f albedo = albedo_texture->GetColor(rec.uv.x, rec.uv.y);
     float roughness_u = roughness_texture_u->GetColor(rec.uv.x, rec.uv.y)[0];
@@ -396,7 +396,7 @@ Vector3f FrostedGlass::Sample(const Ray &r_in, const Hit_Payload &rec, Vector3f 
     }
 }
 
-Vector3f FrostedGlass::Evaluate(const Ray& r_in, const Hit_Payload& rec, const Vector3f& scatter_direction, float& pdf) const
+Vector3f Dielectric::Evaluate(const Ray& r_in, const Hit_Payload& rec, const Vector3f& scatter_direction, float& pdf) const
 {
     Vector3f albedo = albedo_texture->GetColor(rec.uv.x, rec.uv.y);
     float roughness_u = roughness_texture_u->GetColor(rec.uv.x, rec.uv.y)[0];

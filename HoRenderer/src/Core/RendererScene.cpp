@@ -45,7 +45,7 @@ namespace RendererScene
                                                          0.5f,
                                                          1.6f,
                                                          1.0f);
-        auto frostedGlassMaterial = std::make_shared<FrostedGlass>(Vector3f(0.95f, 0.95f, 0.98f),
+        auto frostedGlassMaterial = std::make_shared<Dielectric>(Vector3f(0.95f, 0.95f, 0.98f),
                                                                    0.05f,
                                                                    0.05f,
                                                                    1.3f,
@@ -107,7 +107,7 @@ namespace RendererScene
         Transform dragon_transform = Transform::Translate(Vector3f(200.0f, 80.0f, 200.0f)) * Transform::Rotate(Vector3f(0.0f, 25.0f, 0.0f)) * Transform::Scale(300.0f);
         auto dragon_mesh = std::make_shared<Mesh>(fm->getModelPath("dragon.obj"),
                                                   dragon_transform,
-                                                  plasticMaterial);
+                                                  frostedGlassMaterial);
         scene->Add(dragon_mesh);
 
         // auto smoke_boundary = std::make_shared<Box>(Vector3f(278.0f, 278.0f, 278.0f),

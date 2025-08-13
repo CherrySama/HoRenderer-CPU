@@ -104,15 +104,15 @@ private:
     float intensity;
 };
 
-class FrostedGlass : public Material {
+class Dielectric : public Material {
 public:
-    FrostedGlass(const Vector3f &albedo, float roughness_u, float roughness_v, float int_ior, float ext_ior) :
+    Dielectric(const Vector3f &albedo, float roughness_u, float roughness_v, float int_ior, float ext_ior) :
         albedo_texture(std::make_shared<SolidTexture>(albedo)),
         roughness_texture_u(std::make_shared<SolidTexture>(Vector3f(roughness_u))),
         roughness_texture_v(std::make_shared<SolidTexture>(Vector3f(roughness_v))),
         eta(int_ior / ext_ior) {}
 
-    FrostedGlass(std::shared_ptr<Texture> albedo, std::shared_ptr<Texture> roughness_u, std::shared_ptr<Texture> roughness_v, float int_ior, float ext_ior) :
+    Dielectric(std::shared_ptr<Texture> albedo, std::shared_ptr<Texture> roughness_u, std::shared_ptr<Texture> roughness_v, float int_ior, float ext_ior) :
         albedo_texture(albedo),
         roughness_texture_u(roughness_u),
         roughness_texture_v(roughness_v),

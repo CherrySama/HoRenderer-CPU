@@ -55,7 +55,7 @@ class Diffuse;
 class Conductor;
 class Plastic;
 class Emission;
-class FrostedGlass;
+class Dielectric;
 
 class Medium;
 class HomogeneousMedium;

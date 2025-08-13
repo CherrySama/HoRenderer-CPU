@@ -27,5 +27,6 @@ namespace BSDF {
     // reference: Production Friendly Microfacet Sheen BRDF
     float CharlieL(float x, float a, float b, float c, float d, float e);
     float CharlieLambda(float cosTheta, float roughness);
+    float CharlieLambdaSoftened(float cosTheta, float roughness);
     float CharlieG(float NdotV, float NdotL, float roughness);
 }

@@ -174,7 +174,16 @@ namespace BSDF {
         }
     }
 
+    float CharlieLambdaSoftened(float cosTheta, float roughness) {
+        float original_lambda = CharlieLambda(cosTheta, roughness);
+        // Λ'(θi) = Λ(θi) / (1 + 2(1-cos θi)^8)
+        float softening_factor = 1.0f + 2.0f * std::pow(1.0f - cosTheta, 8.0f);
+        return original_lambda / softening_factor;
+    }
+
     float CharlieG(float NdotV, float NdotL, float roughness) {
-        return 1.0f / (1.0f + CharlieLambda(NdotV, roughness) + CharlieLambda(NdotL, roughness));
+        float lambda_v = CharlieLambda(NdotV, roughness);
+        float lambda_l_softened = CharlieLambdaSoftened(NdotL, roughness);
+        return 1.0f / (1.0f + lambda_v + lambda_l_softened);
     }
 }

@@ -30,6 +30,18 @@ namespace BSDF {
         return (alpha2 - 1.0f) / (PI * std::log(alpha2) * t);
     }
 
+    float DistributionCharlie(float roughness, float NdotH)
+    {
+        float alpha = std::max(roughness * roughness, 0.0001f);
+        float invAlpha = 1.0f / alpha;
+        float cos2h = NdotH * NdotH;
+        float sin2h = std::max(1.0f - cos2h, 0.0001f);
+        float sinTheta = std::sqrt(sin2h);
+
+        // Charlie distribution: D(h) = (2 + 1/α) * sin^(1/α)(θh) / (2π)
+        return (2.0f + invAlpha) * std::pow(sinTheta, invAlpha) / (2.0f * PI);
+    }
+
     float GeometrySmithG1(const Vector3f &V, const Vector3f &H, const Vector3f &N, float alpha_u, float alpha_v)
     {
         float cos_v_n = glm::dot(V, N);
@@ -133,9 +145,4 @@ namespace BSDF {
         }
     }
 
-    Vector3f MultipleScatteringCompensation(const Vector3f &albedo, float roughness, float F_avg)
-    {
-        Vector3f f_add = albedo * albedo * F_avg / (Vector3f(1.0f) - albedo * (1.0f - F_avg));
-        return f_add;    
-    }
 }

@@ -471,3 +471,70 @@ Vector3f Dielectric::Evaluate(const Ray& r_in, const Hit_Payload& rec, const Vec
     return bsdf;
 }
 
+Vector3f Fabric::Sample(const Ray& r_in, const Hit_Payload& rec, Vector3f& scatter_direction, float& pdf, Sampler& sampler) const
+{
+    Vector3f N = GetSurfaceNormal(rec);
+    Vector3f V = -glm::normalize(r_in.direction());
+    Vector3f albedo = albedo_texture->GetColor(rec.uv.x, rec.uv.y);
+    float roughness = glm::clamp(roughness_texture->GetColor(rec.uv.x, rec.uv.y)[0], 0.01f, 1.0f);
+
+    float NdotV = glm::dot(N, V);
+    if (NdotV <= 0.0f) {
+        pdf = 0.0f;
+        return Vector3f(0.0f);
+    }
+
+    scatter_direction = sampler.SampleCosineHemisphere(N);
+    float NdotL = glm::dot(N, scatter_direction);
+    if (NdotL <= 0.0f) {
+        pdf = 0.0f;
+        return Vector3f(0.0f);
+    }
+
+    Vector3f H = glm::normalize(V + scatter_direction);
+    float NdotH = glm::max(glm::dot(N, H), 0.0f);
+    
+    Vector3f diffuse = albedo * INV_PI;
+    
+    if (NdotH > 0.0f) {
+        float charlie_d = BSDF::DistributionCharlie(roughness, NdotH);
+        Vector3f sheen_color = glm::mix(Vector3f(1.0f), albedo, tint);
+        Vector3f sheen = intensity * sheen_color * charlie_d;
+        diffuse += sheen;
+    }
+
+    pdf = NdotL * INV_PI;
+    return diffuse;
+}
+
+Vector3f Fabric::Evaluate(const Ray& r_in, const Hit_Payload& rec, const Vector3f& scatter_direction, float& pdf) const
+{
+    Vector3f N = GetSurfaceNormal(rec);
+    Vector3f V = -glm::normalize(r_in.direction());
+    Vector3f L = glm::normalize(scatter_direction);
+    Vector3f albedo = albedo_texture->GetColor(rec.uv.x, rec.uv.y);
+    float roughness = glm::clamp(roughness_texture->GetColor(rec.uv.x, rec.uv.y)[0], 0.01f, 1.0f);
+
+    float NdotV = glm::dot(N, V);
+    float NdotL = glm::dot(N, L);
+    
+    if (NdotV <= 0.0f || NdotL <= 0.0f) {
+        pdf = 0.0f;
+        return Vector3f(0.0f);
+    }
+
+    Vector3f H = glm::normalize(V + L);
+    float NdotH = glm::max(glm::dot(N, H), 0.0f);
+    
+    Vector3f diffuse = albedo * INV_PI;
+    
+    if (NdotH > 0.0f) {
+        float charlie_d = BSDF::DistributionCharlie(roughness, NdotH);
+        Vector3f sheen_color = glm::mix(Vector3f(1.0f), albedo, tint);
+        Vector3f sheen = intensity * sheen_color * charlie_d;
+        diffuse += sheen;
+    }
+
+    pdf = NdotL * INV_PI;
+    return diffuse;
+}

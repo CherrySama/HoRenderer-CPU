@@ -128,3 +128,19 @@ private:
     float eta;
 };
 
+class Fabric : public Material {
+public:
+    Fabric(const Vector3f &albedo, float roughness, float sheen_intensity = 1.0f, float sheen_tint = 0.0f) :
+        albedo_texture(std::make_shared<SolidTexture>(albedo)), roughness_texture(std::make_shared<SolidTexture>(Vector3f(roughness))), intensity(sheen_intensity), tint(sheen_tint) {}
+    Fabric(std::shared_ptr<Texture> albedo_tex, std::shared_ptr<Texture> rough_tex, float sheen_intensity = 1.0f, float sheen_tint = 0.0f) :
+        albedo_texture(albedo_tex), roughness_texture(rough_tex), intensity(sheen_intensity), tint(sheen_tint) {}
+
+    virtual Vector3f Sample(const Ray &r_in, const Hit_Payload &rec, Vector3f &scatter_direction, float &pdf, Sampler &sampler) const override;
+    virtual Vector3f Evaluate(const Ray &r_in, const Hit_Payload &rec, const Vector3f &scatter_direction, float &pdf) const override;
+
+private:
+    std::shared_ptr<Texture> albedo_texture;
+    std::shared_ptr<Texture> roughness_texture;
+    float intensity;
+    float tint;
+};

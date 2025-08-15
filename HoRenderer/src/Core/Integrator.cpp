@@ -68,7 +68,7 @@ Vector3f Integrator::VolumeIntegrator(const Ray &r, int bounce, const Scene &wor
     };
 
     auto HitMediumBoundary = [](const Hit_Payload &hit) -> bool {
-        return hit.mat == nullptr; // index-matching surface
+        return hit.interior_medium_id != hit.exterior_medium_id;
     };
 
     for (int bounce = 0; bounce < max_bounce; bounce++) {
@@ -163,7 +163,10 @@ Vector3f Integrator::VolumeIntegrator(const Ray &r, int bounce, const Scene &wor
                 total_radiance += path_throughput * mis_weight * emission;
                 break;
             } else if (HitMediumBoundary(surface_hit)) {
-                current_ray = Ray(surface_hit.p + Epsilon * current_ray.direction(), current_ray.direction());
+                current_medium_id = world.UpdateMediumId(current_ray, surface_hit, current_medium_id);
+                bool entering = glm::dot(current_ray.direction(), surface_hit.normal) < 0;
+                Vector3f offset_normal = entering ? surface_hit.normal : -surface_hit.normal;
+                current_ray = Ray::SpawnRay(surface_hit.p, current_ray.direction(), offset_normal);
                 last_hit = surface_hit;
                 has_last_hit = true;
                 bounce--; 
@@ -312,7 +315,8 @@ Vector3f Integrator::CalculateShadowTransmittance(const Ray &shadow_ray, const S
         // Check what was hit
         if (!hit.mat) {
             // There is no material. It might be an index-matching surface. Continue propagation.
-            current_ray = Ray(hit.p + Epsilon * current_ray.direction(), current_ray.direction());
+            Vector3f offset_normal = glm::dot(current_ray.direction(), hit.normal) > 0 ? hit.normal : -hit.normal;
+            current_ray = Ray::SpawnRay(hit.p, current_ray.direction(), offset_normal);
             continue;
         }
         if (hit.mat->IsEmit()) {

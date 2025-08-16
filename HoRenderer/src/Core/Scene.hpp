@@ -43,6 +43,7 @@ class Scene : public Hittable {
 public:
     Scene() {}
     Scene(std::shared_ptr<Hittable> object) { Add(std::move(object)); }
+    ~Scene() { Clean(); }
 
     void Clean();
     void Add(std::shared_ptr<Hittable> object);

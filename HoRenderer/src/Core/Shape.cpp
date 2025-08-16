@@ -208,10 +208,10 @@ Mesh::Mesh(const std::string &obj_path, const Transform &transform, std::shared_
 
     // apply transform
     ApplyTransform(transform);
-    // setup Embree
-    CommitEmbree();
     // calculate AABB
     CalculateBoundingBox();
+    // setup Embree
+    CommitEmbree();
 }
 
 Mesh::~Mesh()
@@ -351,6 +351,8 @@ void Mesh::CommitEmbree()
     rtcCommitGeometry(embree_geometry);
     rtcAttachGeometry(embree_scene, embree_geometry);
     rtcCommitScene(embree_scene);
+    vertices.clear();
+    vertices.shrink_to_fit();
 }
 
 void Mesh::CalculateFaceNormals()

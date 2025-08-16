@@ -26,7 +26,7 @@ namespace RendererScene
         std::unique_ptr<Camera> camera = std::make_unique<Camera>();
         camera->Create(camParams);
 
-        std::unique_ptr<Integrator> integrator = std::make_unique<Integrator>(camera->image_width, camera->image_height, 12, 50);
+        std::unique_ptr<Integrator> integrator = std::make_unique<Integrator>(camera->image_width, camera->image_height, 12, 25);
         std::unique_ptr<Sampler> sampler = std::make_unique<Sampler>(FilterType::GAUSSIAN);
         std::unique_ptr<Scene> scene = std::make_unique<Scene>();
 
@@ -111,7 +111,7 @@ namespace RendererScene
         Transform dragon_transform = Transform::Translate(Vector3f(200.0f, 80.0f, 200.0f)) * Transform::Rotate(Vector3f(0.0f, 25.0f, 0.0f)) * Transform::Scale(300.0f);
         auto dragon_mesh = std::make_shared<Mesh>(fm->getModelPath("dragon.obj"),
                                                   dragon_transform,
-                                                  goldSilkMaterial);
+                                                  frostedGlassMaterial);
         scene->Add(dragon_mesh);
 
         // auto smoke_boundary = std::make_shared<Box>(Vector3f(278.0f, 278.0f, 278.0f),
@@ -129,6 +129,52 @@ namespace RendererScene
 
         scene->BuildBVH();
         scene->BuildLightTable(); 
+        auto renderer = std::make_shared<Renderer>(std::move(camera), std::move(integrator), std::move(sampler), std::move(scene));
+        return renderer;
+    }
+
+    std::shared_ptr<Renderer> SpaichingenHill()
+    {
+        CameraParams camParams = { 1.0f,
+                                   900,
+                                   40.0f,
+                                   Vector3f(278.0f, 278.0f, -800.0f),
+                                   Vector3f(278.0f, 278.0f, 0.0f),
+                                   Vector3f(0.0f, 1.0f, 0.0f),
+                                   0.0f,
+                                   1.0f,
+                                   0};
+        std::unique_ptr<Camera> camera = std::make_unique<Camera>();
+        camera->Create(camParams);
+
+        std::unique_ptr<Integrator> integrator = std::make_unique<Integrator>(camera->image_width, camera->image_height, 12, 25);
+        std::unique_ptr<Sampler> sampler = std::make_unique<Sampler>(FilterType::GAUSSIAN);
+        std::unique_ptr<Scene> scene = std::make_unique<Scene>();
+
+        // material
+        auto frostedGlassMaterial = std::make_shared<Dielectric>(Vector3f(0.95f, 0.95f, 0.98f),
+                                                                   0.05f,
+                                                                   0.05f,
+                                                                   1.3f,
+                                                                   1.0f);
+
+        // Env Light
+        auto fm = FileManager::getInstance();
+        fm->init();
+        auto hdr_texture = std::make_shared<HDRTexture>(fm->getEnvBGPath("spaichingen_hill_4k.hdr").c_str());
+        auto env_light = std::make_shared<InfiniteAreaLight>(hdr_texture, 1.0f);
+        scene->AddEnvLight(env_light);
+
+        // model
+        Transform dragon_transform = Transform::Translate(Vector3f(200.0f, 80.0f, 200.0f)) * Transform::Rotate(Vector3f(0.0f, 25.0f, 0.0f)) * Transform::Scale(300.0f);
+        auto dragon_mesh = std::make_shared<Mesh>(fm->getModelPath("dragon.obj"),
+                                                  dragon_transform,
+                                                  frostedGlassMaterial);
+        scene->Add(dragon_mesh);
+
+        scene->BuildBVH();
+        scene->BuildLightTable();
+
         auto renderer = std::make_shared<Renderer>(std::move(camera), std::move(integrator), std::move(sampler), std::move(scene));
         return renderer;
     }

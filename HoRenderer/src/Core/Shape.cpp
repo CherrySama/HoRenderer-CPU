@@ -279,7 +279,7 @@ bool Mesh::LoadOBJ(const std::string& filepath)
                             attrib.normals[3 * idx.normal_index + 2]
                         ));
                     } else {
-                        normals.push_back(Vector3f(0.0f)); // 稍后计算
+                        normals.push_back(Vector3f(0.0f)); 
                     }
                     
                     if (idx.texcoord_index >= 0 && !attrib.texcoords.empty()) {

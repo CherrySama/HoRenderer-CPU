@@ -23,6 +23,7 @@
 #include <GLFW/glfw3.h>
 #include <embree4/rtcore.h>
 #include <embree4/rtcore_scene.h>
+#include <OpenImageDenoise/oidn.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>

@@ -137,7 +137,7 @@ namespace RendererScene
     {
         CameraParams camParams = { 1.0f,
                                    900,
-                                   40.0f,
+                                   35.0f,
                                    Vector3f(278.0f, 278.0f, -800.0f),
                                    Vector3f(278.0f, 278.0f, 0.0f),
                                    Vector3f(0.0f, 1.0f, 0.0f),
@@ -152,11 +152,19 @@ namespace RendererScene
         std::unique_ptr<Scene> scene = std::make_unique<Scene>();
 
         // material
-        auto frostedGlassMaterial = std::make_shared<Dielectric>(Vector3f(0.95f, 0.95f, 0.98f),
-                                                                   0.05f,
-                                                                   0.05f,
-                                                                   1.3f,
-                                                                   1.0f);
+        auto whiteMaterial = std::make_shared<Diffuse>(Vector3f(0.73f, 0.73f, 0.73f));
+
+        auto plasticMaterial = std::make_shared<Plastic>(Vector3f(0.2f, 0.2f, 0.8f),
+                                                         Vector3f(0.9f, 0.9f, 0.9f),
+                                                         0.15f,
+                                                         0.15f,
+                                                         1.49f,
+                                                         1.0f);
+        auto goldFabricMaterial = std::make_shared<Fabric>(Vector3f(0.9f, 0.7f, 0.2f), 
+                                                         0.12f,                      
+                                                         4.0f,                      
+                                                         0.9f);
+        auto emitMaterial = std::make_shared<Emission>(Vector3f(15.0f, 12.0f, 8.0f), 1.0f);
 
         // Env Light
         auto fm = FileManager::getInstance();
@@ -165,11 +173,35 @@ namespace RendererScene
         auto env_light = std::make_shared<InfiniteAreaLight>(hdr_texture, 1.0f);
         scene->AddEnvLight(env_light);
 
+        // direct light
+        auto light = std::make_shared<QuadAreaLight>(std::make_shared<Quad>(Vector3f(-100.0f, 0.0f, 0.0f),
+                                                                            Vector3f(0.0f, 100.0f, 0.0f),
+                                                                            Vector3f(0.0f, 0.0f, 100.0f),
+                                                                            Transform::Rotate(Vector3f(0.0f, 25.0f, 0.0f)),
+                                                                            emitMaterial));
+        scene->AddLights(light);
+        // ground & wall
+        scene->Add(std::make_shared<Quad>(Vector3f(555.0f, 0.0f, 0.0f),
+                                          Vector3f(0.0f, 555.0f, 0.0f),
+                                          Vector3f(0.0f, 0.0f, 555.0f),
+                                          Transform(),
+                                          whiteMaterial));
+        scene->Add(std::make_shared<Quad>(Vector3f(0.0f, 0.0f, 0.0f),
+                                          Vector3f(555.0f, 0.0f, 0.0f),
+                                          Vector3f(0.0f, 0.0f, 555.0f),
+                                          Transform(),
+                                          whiteMaterial));
+        scene->Add(std::make_shared<Quad>(Vector3f(0.0f, 0.0f, 555.0f),
+                                          Vector3f(0.0f, 555.0f, 0.0f),
+                                          Vector3f(555.0f, 0.0f, 0.0f),
+                                          Transform(),
+                                          whiteMaterial));
+
         // model
-        Transform dragon_transform = Transform::Translate(Vector3f(200.0f, 80.0f, 200.0f)) * Transform::Rotate(Vector3f(0.0f, 25.0f, 0.0f)) * Transform::Scale(300.0f);
+        Transform dragon_transform = Transform::Translate(Vector3f(250.0f, 90.0f, 200.0f)) * Transform::Rotate(Vector3f(0.0f, -20.0f, 0.0f)) * Transform::Scale(300.0f);
         auto dragon_mesh = std::make_shared<Mesh>(fm->getModelPath("dragon.obj"),
                                                   dragon_transform,
-                                                  frostedGlassMaterial);
+                                                  goldFabricMaterial);
         scene->Add(dragon_mesh);
 
         scene->BuildBVH();

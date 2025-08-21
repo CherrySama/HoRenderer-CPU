@@ -106,7 +106,7 @@ void Renderer::Run() {
 
         integrator->RenderImage(*camera, *scene, *sampler, frameCounter);
         glBindTexture(GL_TEXTURE_2D, nowFrame);
-        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RGBA, GL_FLOAT, integrator->GetBeautyPixels());
+        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RGBA, GL_FLOAT, integrator->GetFloatPixels());
         pass1.m_shader.Use();
         pass1.m_shader.SetUnInt("frameCounter", frameCounter++);
 

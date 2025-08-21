@@ -44,7 +44,7 @@ float HomogeneousMedium::SampleDistance(const Ray &ray, float max_t, Sampler &sa
     }
 
     float channel_u = sampler.random_float();
-    sampled_channel = std::min(2, static_cast<int>(channel_u * 3.0f));
+    sampled_channel = (sigma_t.x >= sigma_t.y && sigma_t.x >= sigma_t.z) ? 0 : (sigma_t.y >= sigma_t.z) ? 1 : 2;
     float sigma_t_channel = sigma_t[sampled_channel];
     if (sigma_t_channel <= Epsilon) {
         // If selected channel has no extinction, try other channels

@@ -72,6 +72,7 @@ Vector3f Integrator::VolumeIntegrator(const Ray &r, int bounce, const Scene &wor
     };
 
     for (int bounce = 0; bounce < max_bounce; bounce++) {
+        float cumulative_trans_pdf = 1.0f;
         Hit_Payload surface_hit;
         bool hit_surface = world.isHit(current_ray, Vector2f(Epsilon, Infinity), surface_hit);
         float t_surface = hit_surface ? surface_hit.t : Infinity;
@@ -86,17 +87,23 @@ Vector3f Integrator::VolumeIntegrator(const Ray &r, int bounce, const Scene &wor
 
         if (medium) {
             Vector3f sigma_t = medium->GetSigmaT(current_ray.origin());
+            float max_sigma_t = std::max({sigma_t.x, sigma_t.y, sigma_t.z});
             float u = sampler.random_float();
-            t_scatter = -std::log(1.0f - u) / sigma_t.x;
+            t_scatter = -std::log(1.0f - u) / max_sigma_t;
             will_scatter = (t_scatter < t_surface);
             
             if (will_scatter) {
-                transmittance = Vector3f(std::exp(-sigma_t.x * t_scatter));
-                trans_pdf = std::exp(-sigma_t.x * t_scatter) * sigma_t.x;
+                transmittance = Vector3f(std::exp(-sigma_t.x * t_scatter),
+                                       std::exp(-sigma_t.y * t_scatter),
+                                       std::exp(-sigma_t.z * t_scatter));
+                trans_pdf = max_sigma_t * std::exp(-max_sigma_t * t_scatter);
             } else {
-                transmittance = Vector3f(std::exp(-sigma_t.x * t_surface));
-                trans_pdf = std::exp(-sigma_t.x * t_surface);
+                transmittance = Vector3f(std::exp(-sigma_t.x * t_surface),
+                                       std::exp(-sigma_t.y * t_surface),
+                                       std::exp(-sigma_t.z * t_surface));
+                trans_pdf = std::exp(-max_sigma_t * t_surface);
             }
+            cumulative_trans_pdf *= trans_pdf;
         }
 
         if (will_scatter) {
@@ -124,9 +131,9 @@ Vector3f Integrator::VolumeIntegrator(const Ray &r, int bounce, const Scene &wor
                 auto phase_func = medium->GetPhaseFunction();
                 float phase_value = phase_func->Evaluate(-current_ray.direction(), light_direction);
                 float phase_pdf = phase_func->Pdf(-current_ray.direction(), light_direction);
-                
+                float effective_phase_pdf = phase_pdf * cumulative_trans_pdf;
                 if (phase_pdf > Epsilon && glm::length(shadow_transmittance) > Epsilon) {
-                    float mis_weight = PowerHeuristic(light_pdf, phase_pdf, 2);
+                    float mis_weight = PowerHeuristic(light_pdf, effective_phase_pdf, 2);
                     total_radiance += path_throughput * mis_weight * phase_value * 
                                     light_radiance * shadow_transmittance / light_pdf;
                 }
@@ -143,7 +150,7 @@ Vector3f Integrator::VolumeIntegrator(const Ray &r, int bounce, const Scene &wor
                 float phase_value = phase_func->Evaluate(-current_ray.direction(), new_direction);
                 path_throughput *= phase_value / phase_pdf;
                 current_ray = Ray::SpawnRay(scatter_pos, new_direction, Vector3f(0, 1, 0));
-                last_pdf = phase_pdf;
+                last_pdf = phase_pdf * cumulative_trans_pdf;
             } else {
                 break;
             }
@@ -173,7 +180,7 @@ Vector3f Integrator::VolumeIntegrator(const Ray &r, int bounce, const Scene &wor
                 continue;
             } else {
                 // NEE
-                Vector3f direct_lighting = EstimateDirectLighting(current_ray, surface_hit, world, sampler);
+                Vector3f direct_lighting = EstimateDirectLighting(current_ray, surface_hit, world, sampler, cumulative_trans_pdf);
                 total_radiance += path_throughput * direct_lighting;
 
                 // BSDF
@@ -197,7 +204,7 @@ Vector3f Integrator::VolumeIntegrator(const Ray &r, int bounce, const Scene &wor
                     current_ray = Ray::SpawnRay(surface_hit.p, scatter_direction, surface_normal);
                     last_hit = surface_hit;
                     has_last_hit = true;
-                    last_pdf = bsdf_pdf;
+                    last_pdf = bsdf_pdf * cumulative_trans_pdf;
                     never_scattered = false;
                 } else {
                     break;
@@ -235,7 +242,7 @@ Vector3f Integrator::VolumeIntegrator(const Ray &r, int bounce, const Scene &wor
     return total_radiance;
 }
 
-Vector3f Integrator::EstimateDirectLighting(const Ray &r_in, const Hit_Payload &rec, const Scene &world, Sampler &sampler)
+Vector3f Integrator::EstimateDirectLighting(const Ray &r_in, const Hit_Payload &rec, const Scene &world, Sampler &sampler, float cumulative_trans_pdf)
 {
     Vector3f direct_lighting(0.0f); 
     const auto& lights = world.GetLights();
@@ -261,7 +268,8 @@ Vector3f Integrator::EstimateDirectLighting(const Ray &r_in, const Hit_Payload &
             float brdf_pdf;
             Vector3f brdf = rec.mat->Evaluate(r_in, rec, light_direction, brdf_pdf);
             if (brdf_pdf > Epsilon) {
-                float mis_weight = PowerHeuristic(light_pdf, brdf_pdf);
+                float effective_brdf_pdf = brdf_pdf * cumulative_trans_pdf;
+                float mis_weight = PowerHeuristic(light_pdf, effective_brdf_pdf);
                 Vector3f light_contrib;
                 if (is_light_transmission) {
                     float cos_theta = std::abs(glm::dot(rec.normal, light_direction));

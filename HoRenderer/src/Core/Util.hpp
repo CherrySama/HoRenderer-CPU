@@ -19,6 +19,7 @@
 #include <sstream>
 #include <queue>
 #include <map>
+#include <chrono>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <embree4/rtcore.h>
@@ -45,6 +46,7 @@ class AliasTable2D;
 class Camera;
 class Sampler;
 class ProgressTracker;
+class Denoiser;
 
 class Sphere;
 class Quad;

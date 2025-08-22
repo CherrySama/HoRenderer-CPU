@@ -368,6 +368,8 @@ void Mesh::CalculateFaceNormals()
     if (!needs_calculation)
         return;
 
+    std::fill(normals.begin(), normals.end(), Vector3f(0.0f));
+    
     // Calculate the face normal of each triangle
     for (size_t i = 0; i < indices.size(); i++) {
         const Vector3i& triangle = indices[i];
@@ -378,9 +380,18 @@ void Mesh::CalculateFaceNormals()
         Vector3f face_normal = glm::normalize(glm::cross(v1 - v0, v2 - v0));
 
         // set surface normal for each point of each triangle
-        normals[triangle.x] = face_normal;
-        normals[triangle.y] = face_normal;
-        normals[triangle.z] = face_normal;
+        normals[triangle.x] += face_normal;
+        normals[triangle.y] += face_normal;
+        normals[triangle.z] += face_normal;
+    }
+
+    for (auto& normal : normals) {
+        float length = glm::length(normal);
+        if (length > Epsilon) {
+            normal = normal / length;  
+        } else {
+            normal = Vector3f(0.0f, 1.0f, 0.0f);
+        }
     }
 }
 
@@ -395,6 +406,7 @@ void Mesh::ApplyTransform(const Transform& transform)
     for (auto& normal : normals) {
         if (glm::length(normal) > Epsilon) {
             normal = transform.TransformNormal(normal);
+            normal = glm::normalize(normal);
         }
     }
 }
@@ -427,7 +439,15 @@ Vector3f Mesh::InterpolateNormal(int triangle_id, float u, float v) const
     float w = 1.0f - u - v;
 
     Vector3f normal = w * normals[triangle.x] + u * normals[triangle.y] + v * normals[triangle.z];
-    return glm::normalize(normal);
+    float length = glm::length(normal);
+    if (length > Epsilon) {
+        return normal / length;
+    } else {
+        Vector3f v0 = vertices[triangle.x];
+        Vector3f v1 = vertices[triangle.y];
+        Vector3f v2 = vertices[triangle.z];
+        return glm::normalize(glm::cross(v1 - v0, v2 - v0));
+    }
 }
 
 Vector2f Mesh::InterpolateTexCoord(int triangle_id, float u, float v) const

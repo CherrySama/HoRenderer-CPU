@@ -7,9 +7,9 @@ namespace BSDF {
 	float DistributionGGX(const Vector3f &H, const Vector3f &N, float alpha_u, float alpha_v)
     {
         float NdotH = glm::max(glm::dot(N, H), 0.0f);
-        if (NdotH <= 0.0f) return 0.0f;
+        if (NdotH <= 1e-6f) return 0.0f;
         
-        if (alpha_u == alpha_v) {
+        if (std::abs(alpha_u - alpha_v) < 1e-6f) {
             float alpha2 = alpha_u * alpha_u;
             float NdotH2 = NdotH * NdotH;
             float denom = (NdotH2 * (alpha2 - 1.0f) + 1.0f);
@@ -32,10 +32,10 @@ namespace BSDF {
 
     float DistributionCharlie(float roughness, float NdotH)
     {
-        float alpha = std::max(roughness, 0.0001f);
+        float alpha = std::max(roughness, 0.01f);
         float invAlpha = 1.0f / alpha;
         float cos2h = NdotH * NdotH;
-        float sin2h = std::max(1.0f - cos2h, 0.0001f);
+        float sin2h = std::max(1.0f - cos2h, 0.01f);
         float sinTheta = std::sqrt(sin2h);
 
         // Charlie distribution: D(h) = (2 + 1/α) * sin^(1/α)(θh) / (2π)
@@ -46,7 +46,7 @@ namespace BSDF {
     {
         float cos_v_n = glm::dot(V, N);
 
-        if (cos_v_n * glm::dot(V, H) <= 0.0f) {
+        if (cos_v_n * glm::dot(V, H) <= Epsilon) {
             return 0.0f;
         }
 

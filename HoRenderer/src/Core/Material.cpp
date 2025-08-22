@@ -476,7 +476,7 @@ Vector3f Fabric::Sample(const Ray& r_in, const Hit_Payload& rec, Vector3f& scatt
     Vector3f N = GetSurfaceNormal(rec);
     Vector3f V = -glm::normalize(r_in.direction());
     Vector3f albedo = albedo_texture->GetColor(rec.uv.x, rec.uv.y);
-    float roughness = glm::clamp(roughness_texture->GetColor(rec.uv.x, rec.uv.y)[0], 0.0001f, 1.0f);
+    float roughness = glm::clamp(roughness_texture->GetColor(rec.uv.x, rec.uv.y)[0], 0.01f, 1.0f);
 
     float NdotV = glm::dot(N, V);
     if (NdotV <= 0.0f) {

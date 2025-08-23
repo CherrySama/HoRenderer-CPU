@@ -90,7 +90,7 @@ Vector3f Sampler::SampleUniformHemisphere(const Vector3f& normal) const
     Vector2f sample = get_2d_sample();
     
     // Uniform hemisphere sampling
-    float cos_theta = sample.x;  
+    float cos_theta = 1.0f - sample.x;  
     float sin_theta = std::sqrt(std::max(0.0f, 1.0f - cos_theta * cos_theta));
     float phi = 2.0f * PI * sample.y;
 

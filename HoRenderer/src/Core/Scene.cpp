@@ -236,8 +236,10 @@ Vector3f Scene::SampleLights(const Ray& r_in, const Hit_Payload& rec, Vector3f& 
 Vector3f Scene::EvaluateLights(const Ray &light_ray, const Hit_Payload &light_rec, float &pdf) const
 {
     float total_power = lightTable.Sum();
+    float env_power = 0.0f;
     if (environment_light) {
-        total_power += environment_light->GetPower();
+        env_power = environment_light->GetPower();
+        total_power += env_power;
     }
     
     if (total_power <= 0.0f) {
@@ -255,11 +257,22 @@ Vector3f Scene::EvaluateLights(const Ray &light_ray, const Hit_Payload &light_re
         Vector3f light_radiance = light->Evaluate(light_ray, light_rec, light_pdf);
         
         if (light_pdf > 0.0f) {
-            light_pdf *= (light->GetPower() / lightTable.Sum());
+            float light_prob = light->GetPower() / lightTable.Sum();
+            float env_prob = env_power / total_power;
+            
+            light_pdf *= light_prob * (1.0f - env_prob);
             radiance = light_radiance;
             pdf = light_pdf;
-            break;
+            return radiance;  
         }
+    }
+
+    if (environment_light) {
+        float env_pdf = 0.0f;
+        Vector3f env_radiance = environment_light->Evaluate(light_ray, light_rec, env_pdf);
+        float env_prob = env_power / total_power;
+        pdf = env_pdf * env_prob;
+        return env_radiance;
     }
     
     return radiance;

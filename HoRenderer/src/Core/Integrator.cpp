@@ -311,7 +311,7 @@ Vector3f Integrator::CalculateShadowTransmittance(const Ray &shadow_ray, const S
         bool hit_surface = world.isHit(current_ray, Vector2f(Epsilon, Infinity), hit);
 
         if (!hit_surface) 
-            break; // reach infinity
+            return transmittance; 
 
         // Calculate the current segment's transmittance.
         int medium_id = world.GetCurrentMediumId(current_ray, nullptr);

@@ -188,8 +188,8 @@ InfiniteAreaLight::InfiniteAreaLight(std::shared_ptr<HDRTexture> hdr, float scal
 
 Vector3f InfiniteAreaLight::Sample(const Ray &r_in, const Hit_Payload &rec, Vector3f &light_direction, float &pdf, Sampler &sampler) const
 {
-    Vector2f marginal_sample;
     Vector2f sample_2d = sampler.get_2d_sample();
+    Vector2f marginal_sample = sampler.get_2d_sample();
     Vector2i pixel = table.Sample(sample_2d, marginal_sample);
     
     int width = hdr_texture->getWidth();

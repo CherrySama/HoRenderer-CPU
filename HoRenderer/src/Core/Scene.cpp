@@ -291,8 +291,13 @@ Vector3f Scene::SampleEnvLight(const Ray &ray) const
 Vector3f Scene::EvaluateEnvLight(const Ray &ray, float &pdf) const
 {
     if (environment_light) {
+        float env_power = environment_light->GetPower();
+        float total_power = lightTable.Sum() + env_power;
+        float env_prob = total_power > 0.0f ? env_power / total_power : 1.0f;
         Hit_Payload dummy_hit;
-        return environment_light->Evaluate(ray, dummy_hit, pdf);
+        Vector3f color = environment_light->Evaluate(ray, dummy_hit, pdf);
+        pdf *= env_prob;
+        return color;
     }
     pdf = 0.0f;
     return Vector3f(0.05f, 0.05f, 0.05f); // default env light color

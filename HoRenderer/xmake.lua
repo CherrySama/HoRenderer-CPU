@@ -1,6 +1,12 @@
 add_rules("mode.debug", "mode.release")
 
-add_requires("glfw", "glad", "glm", "embree", "nlohmann_json", "tinyobjloader", "openimagedenoise")
+add_requires("glfw", "glad", "glm", "embree", "nlohmann_json", "tinyobjloader")
+add_requires("openimagedenoise", {
+    configs = {
+        shared = true,        
+        runtime = 'MD'        
+    }
+})
 add_rules("plugin.compile_commands.autoupdate", {outputdir = "../.vscode"})
 set_languages("c++23") 
 

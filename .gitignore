@@ -79,3 +79,4 @@ build/
 *.code-workspace
 
 .clang-format
+.xmake/

@@ -1,12 +1,6 @@
 add_rules("mode.debug", "mode.release")
 
 add_requires("glfw", "glad", "glm", "embree", "nlohmann_json", "tinyobjloader")
-add_requires("openimagedenoise", {
-    configs = {
-        shared = true,        
-        runtime = 'MD'        
-    }
-})
 add_rules("plugin.compile_commands.autoupdate", {outputdir = "../.vscode"})
 set_languages("c++23") 
 
@@ -27,9 +21,45 @@ target("HoRenderer")
         os.cp("Shader/*.frag", target:targetdir())
     end)
 
-    add_packages("glfw", "glad", "glm", "embree", "nlohmann_json", "tinyobjloader", "openimagedenoise")
+    add_packages("glfw", "glad", "glm", "embree", "nlohmann_json", "tinyobjloader")
 
-    add_cxflags("/openmp:llvm")
+    on_load(function (target)
+        if target:is_plat("macosx") then
+            -- xmake packages such as Embree/TBB use @rpath on macOS.
+            local package_linkdirs = target:get_from("linkdirs", "package::*")
+            if package_linkdirs then
+                for _, linkdirs in ipairs(package_linkdirs) do
+                    for _, linkdir in ipairs(table.wrap(linkdirs)) do
+                        target:add("rpathdirs", linkdir)
+                    end
+                end
+            end
+        end
+    end)
+
+    if is_plat("windows") then
+        add_cxflags("/openmp:llvm")
+    elseif is_plat("macosx") then
+        -- Apple Clang needs the LLVM OpenMP runtime explicitly enabled.
+        add_defines("GL_SILENCE_DEPRECATION")
+        add_frameworks("Cocoa", "IOKit", "OpenGL")
+        add_cxflags("-Xpreprocessor", "-fopenmp")
+        add_links("omp")
+
+        local libomp_prefix = os.getenv("LIBOMP_PREFIX")
+        if not libomp_prefix or not os.isdir(libomp_prefix .. "/include") then
+            if os.isdir("/opt/homebrew/opt/libomp/include") then
+                libomp_prefix = "/opt/homebrew/opt/libomp"
+            elseif os.isdir("/usr/local/opt/libomp/include") then
+                libomp_prefix = "/usr/local/opt/libomp"
+            end
+        end
+
+        if libomp_prefix and os.isdir(libomp_prefix .. "/include") and os.isdir(libomp_prefix .. "/lib") then
+            add_includedirs(libomp_prefix .. "/include")
+            add_linkdirs(libomp_prefix .. "/lib")
+        end
+    end
 --
 -- If you want to known more usage about xmake, please see https://xmake.io
 --
@@ -98,4 +128,3 @@ target("HoRenderer")
 --
 -- @endcode
 --
-

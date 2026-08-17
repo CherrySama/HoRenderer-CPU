@@ -11,18 +11,25 @@ Renderer::Renderer(std::unique_ptr<Camera> cam, std::unique_ptr<Integrator> it, 
     sampler = std::move(sam);
     scene = std::move(sc);
 
-    frameCounter = 0;
     width = camera->image_width;
     height = camera->image_height;
+    t1 = clock();
     WindowInit();
 	PipelineConfiguration(FileManager::getInstance());
 }
 
 Renderer::~Renderer()
 {
-    glDeleteTextures(1, &lastFrame);
-    glDeleteTextures(1, &nowFrame);
-    glfwDestroyWindow(window);
+    if (window != nullptr) {
+        glfwMakeContextCurrent(window);
+        if (lastFrame != 0) {
+            glDeleteTextures(1, &lastFrame);
+        }
+        if (nowFrame != 0) {
+            glDeleteTextures(1, &nowFrame);
+        }
+        glfwDestroyWindow(window);
+    }
     glfwTerminate();
 }
 
@@ -36,8 +43,15 @@ void Renderer::WindowInit()
 	}
     
     // OpenGL setting
+#if defined(__APPLE__)
+    // macOS provides the OpenGL 4.1 Core Profile as its highest native version.
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
+    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+#else
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
+#endif
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	glfwWindowHint(GLFW_REFRESH_RATE, 60);
 	glfwWindowHint(GLFW_RESIZABLE, GL_FALSE); // the size of window will be unresizable
@@ -82,8 +96,9 @@ void Renderer::PipelineConfiguration(FileManager *fm)
     pass2.colorAttachments.push_back(lastFrame);
     pass2.BindData();
     // pass3: Finally output to the screen
-    pass3.width = width;
-    pass3.height = height;
+    // On macOS Retina displays, the default framebuffer can be larger than
+    // the logical window size used by the renderer's image buffers.
+    glfwGetFramebufferSize(window, &pass3.width, &pass3.height);
     pass3.ShaderConfig(fm->getShaderPath("VertexShader.vert").c_str(),
                        fm->getShaderPath("OutputShader.frag").c_str());
     pass3.BindData(true);

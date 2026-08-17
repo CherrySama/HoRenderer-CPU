@@ -14,7 +14,7 @@ namespace RendererScene
 {    
     std::shared_ptr<Renderer> CornellBox()
     {
-        CameraParams camParams = { 1.0f,
+        CameraParams camParams = { 16.0f / 9.0f,
                                    900,
                                    40.0f,
                                    Vector3f(278.0f, 278.0f, -800.0f),
@@ -135,7 +135,7 @@ namespace RendererScene
 
     std::shared_ptr<Renderer> SpaichingenHill()
     {
-        CameraParams camParams = { 1.0f,
+        CameraParams camParams = { 16.0f / 9.0f,
                                    900,
                                    35.0f,
                                    Vector3f(278.0f, 278.0f, -800.0f),

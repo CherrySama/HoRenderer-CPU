@@ -42,12 +42,10 @@ void Integrator::write_color(int u, int v, const Vector3f &color)
     Vector3f tone_mapped = ACESFilmicToneMapping(color);
     Vector3f srgb_color = LinearToSRGB(tone_mapped);
 
-    __m128 c = _mm_set_ps(1.0f, srgb_color.b, srgb_color.g, srgb_color.r); // RGBA
-    __m128 zero = _mm_setzero_ps();
-    __m128 one = _mm_set1_ps(1.0f);
-    c = _mm_max_ps(c, zero); // clamp to [0, 1]
-    c = _mm_min_ps(c, one);
-    _mm_store_ps(float_pixels.get() + offset, c);
+    float_pixels[offset + 0] = std::clamp(srgb_color.r, 0.0f, 1.0f);
+    float_pixels[offset + 1] = std::clamp(srgb_color.g, 0.0f, 1.0f);
+    float_pixels[offset + 2] = std::clamp(srgb_color.b, 0.0f, 1.0f);
+    float_pixels[offset + 3] = 1.0f;
 }
 
 Vector3f Integrator::VolumeIntegrator(const Ray &r, int bounce, const Scene &world, Sampler &sampler)
@@ -365,4 +363,3 @@ void Integrator::Clean()
     // delete[] pixels;
     float_pixels.reset();
 }
-

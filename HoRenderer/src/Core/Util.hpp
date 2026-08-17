@@ -10,21 +10,22 @@
 #include <random>
 #include <cmath>
 #include <omp.h>
-#include <immintrin.h>
+#include <cstring>
 #include <string>
 #include <fstream>
 #include <filesystem>
-#include <Windows.h>
 #include <vector>
 #include <sstream>
 #include <queue>
 #include <map>
 #include <chrono>
 #include <glad/glad.h>
+#ifndef GLFW_INCLUDE_NONE
+#define GLFW_INCLUDE_NONE
+#endif
 #include <GLFW/glfw3.h>
 #include <embree4/rtcore.h>
 #include <embree4/rtcore_scene.h>
-#include <OpenImageDenoise/oidn.hpp>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>

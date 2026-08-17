@@ -22,10 +22,13 @@ public:
 
 public:
     RenderPass pass1, pass2, pass3;
-    GLuint lastFrame, nowFrame;
-    clock_t t1, t2;
-	float dt, fps;
-    unsigned int frameCounter;
+    GLuint lastFrame = 0;
+    GLuint nowFrame = 0;
+    clock_t t1 = 0;
+    clock_t t2 = 0;
+    float dt = 0.0f;
+    float fps = 0.0f;
+    unsigned int frameCounter = 0;
     std::unique_ptr<Camera> camera;
     std::unique_ptr<Integrator> integrator;
 	std::unique_ptr<Sampler> sampler;
@@ -34,7 +37,7 @@ public:
     bool enable_denoising = true;
 
 private:
-	GLFWwindow *window;
+	GLFWwindow *window = nullptr;
     int width;
     int height;
 };

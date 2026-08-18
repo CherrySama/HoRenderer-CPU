@@ -14,8 +14,8 @@ namespace RendererScene
 {    
     std::shared_ptr<Renderer> CornellBox()
     {
-        CameraParams camParams = { 16.0f / 9.0f,
-                                   900,
+        CameraParams camParams = { 1.0f,
+                                   600,
                                    40.0f,
                                    Vector3f(278.0f, 278.0f, -800.0f),
                                    Vector3f(278.0f, 278.0f, 0.0f),

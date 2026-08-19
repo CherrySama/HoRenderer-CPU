@@ -48,6 +48,10 @@ AliasTable1D::AliasTable1D(const std::vector<float>& distrib) {
 }
 
 int AliasTable1D::Sample(const Vector2f& sample) const {
+	if (table.empty() || sumDistrib <= 0.0f) {
+		return -1;
+	}
+
 	int rx = sample.x * table.size();
 	if (rx == table.size()) {
 		rx--;
@@ -57,8 +61,15 @@ int AliasTable1D::Sample(const Vector2f& sample) const {
 	return (ry <= table[rx].second / sumDistrib) ? rx : table[rx].first;
 }
 
-AliasTable2D::AliasTable2D(const std::vector<float>& weights, int w, int h) : width(w), height(h) 
-{    
+AliasTable2D::AliasTable2D(const std::vector<float>& source_weights, int w, int h) : width(w), height(h)
+{
+    if (width <= 0 || height <= 0 || source_weights.size() != static_cast<size_t>(width * height)) {
+        width = 0;
+        height = 0;
+        return;
+    }
+
+    weights = source_weights;
     rows.resize(height);
     std::vector<float> row_sums(height);
     
@@ -78,21 +89,24 @@ AliasTable2D::AliasTable2D(const std::vector<float>& weights, int w, int h) : wi
 Vector2i AliasTable2D::Sample(const Vector2f &sample, Vector2f &marginal_sample) const
 {
     int y = marginal.Sample(Vector2f(sample.y, marginal_sample.y));
-    
+    if (y < 0 || y >= rows.size()) {
+        return Vector2i(-1);
+    }
+
     int x = rows[y].Sample(Vector2f(sample.x, marginal_sample.x));
-    
+    if (x < 0 || x >= width) {
+        return Vector2i(-1);
+    }
+
     return Vector2i(x, y);
 }
 
 float AliasTable2D::Pdf(int x, int y) const
 {
-    if (x < 0 || x >= width || y < 0 || y >= height)
+    if (x < 0 || x >= width || y < 0 || y >= height || total_sum <= 0.0f)
         return 0.0f;
-    
-    float row_pdf = marginal.Sum() > 0 ? (rows[y].Sum() / marginal.Sum()) : 0.0f;
-    float col_pdf = rows[y].Sum() > 0 ? (1.0f / width) : 0.0f; 
-    
-    return row_pdf * col_pdf * width * height / total_sum;
+
+    return weights[y * width + x] * width * height / total_sum;
 }
 
 void Scene::Clean()
@@ -101,6 +115,8 @@ void Scene::Clean()
     bvh_tree.reset();
     lights.clear();
     media.clear();
+    environment_light.reset();
+    lightTable = AliasTable1D();
 }
 
 void Scene::Add(std::shared_ptr<Hittable> object)
@@ -152,6 +168,7 @@ void Scene::BuildBVH()
 
 void Scene::BuildLightTable()
 {
+    lightTable = AliasTable1D();
     if (lights.empty()) return;
     
     std::vector<float> power(lights.size());
@@ -218,6 +235,10 @@ Vector3f Scene::SampleLights(const Ray& r_in, const Hit_Payload& rec, Vector3f& 
         return radiance;
     } else if (!lights.empty()) {
         int index = lightTable.Sample(sampler.get_2d_sample());
+        if (index < 0 || index >= lights.size()) {
+            pdf = 0.0f;
+            return Vector3f(0.0f);
+        }
         auto light = lights[index];
 
         float light_pdf = 0.0f;
@@ -304,15 +325,14 @@ Vector3f Scene::EvaluateEnvLight(const Ray &ray, float &pdf) const
 }
 
 // Get the medium ID where the ray is currently located
-int Scene::GetCurrentMediumId(const Ray &ray, const Hit_Payload *last_hit) const
+int Scene::GetCurrentMediumId(const Ray &, const Hit_Payload *last_hit) const
 {
     // TODO: Judging by scene geometry and medium boundaries
     
     // If there is the last intersection information,
     // determine the medium conversion based on the surface normal
     if (last_hit) {
-        bool entering = glm::dot(ray.direction(), last_hit->normal) < 0;
-        if (entering) {
+        if (last_hit->front_face) {
             return last_hit->interior_medium_id;
         } else {
             return last_hit->exterior_medium_id;
@@ -323,17 +343,11 @@ int Scene::GetCurrentMediumId(const Ray &ray, const Hit_Payload *last_hit) const
 }
 
 // Update the medium ID
-int Scene::UpdateMediumId(const Ray &ray, const Hit_Payload &hit, int current_medium_id) const
+int Scene::UpdateMediumId(const Ray &, const Hit_Payload &hit, int current_medium_id) const
 {
     if (hit.interior_medium_id != hit.exterior_medium_id) {
         // Medium Boundary Transition
-        if (glm::dot(ray.direction(), hit.normal) > 0) {
-            // Rays emitted from the inside
-            return hit.exterior_medium_id;
-        } else {
-            // Rays entering from outside
-            return hit.interior_medium_id;
-        }
+        return hit.front_face ? hit.interior_medium_id : hit.exterior_medium_id;
     }
     // No media conversion
     return current_medium_id;

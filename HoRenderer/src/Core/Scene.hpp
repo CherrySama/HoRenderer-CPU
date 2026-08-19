@@ -19,7 +19,7 @@ public:
 private:
     typedef std::pair<int, float> Element;
     std::vector<Element> table;
-	float sumDistrib;
+    float sumDistrib = 0.0f;
 };
 
 class AliasTable2D {
@@ -32,8 +32,10 @@ public:
     float Sum() const { return total_sum; }
 
 private:
-    int width, height;
-    float total_sum;
+    int width = 0;
+    int height = 0;
+    float total_sum = 0.0f;
+    std::vector<float> weights;
     std::vector<AliasTable1D> rows;  
     AliasTable1D marginal;           
 };

@@ -163,8 +163,15 @@ Vector3f SphereAreaLight::SampleSphereSurface(Sampler &sampler) const
 
 InfiniteAreaLight::InfiniteAreaLight(std::shared_ptr<HDRTexture> hdr, float scale) : hdr_texture(hdr), scale(scale)
 {
+    if (!hdr_texture) {
+        throw std::invalid_argument("Environment light requires an HDR texture");
+    }
+
     int width = hdr_texture->getWidth();
     int height = hdr_texture->getHeight();
+    if (width <= 0 || height <= 0) {
+        throw std::runtime_error("Cannot create an environment light from an invalid HDR texture");
+    }
 
     std::vector<float> weights(width * height);
     
@@ -188,9 +195,18 @@ InfiniteAreaLight::InfiniteAreaLight(std::shared_ptr<HDRTexture> hdr, float scal
 
 Vector3f InfiniteAreaLight::Sample(const Ray &r_in, const Hit_Payload &rec, Vector3f &light_direction, float &pdf, Sampler &sampler) const
 {
+    if (table.Sum() <= 0.0f) {
+        pdf = 0.0f;
+        return Vector3f(0.0f);
+    }
+
     Vector2f sample_2d = sampler.get_2d_sample();
     Vector2f marginal_sample = sampler.get_2d_sample();
     Vector2i pixel = table.Sample(sample_2d, marginal_sample);
+    if (pixel.x < 0 || pixel.y < 0) {
+        pdf = 0.0f;
+        return Vector3f(0.0f);
+    }
     
     int width = hdr_texture->getWidth();
     int height = hdr_texture->getHeight();
@@ -215,6 +231,11 @@ Vector3f InfiniteAreaLight::Sample(const Ray &r_in, const Hit_Payload &rec, Vect
 }
 
 Vector3f InfiniteAreaLight::Evaluate(const Ray &r_in, const Hit_Payload &rec, float &pdf) const {
+    if (table.Sum() <= 0.0f) {
+        pdf = 0.0f;
+        return Vector3f(0.0f);
+    }
+
     Vector3f dir = glm::normalize(r_in.direction());
     Vector2f uv = CartesianToSpherical(dir);
     
@@ -241,6 +262,9 @@ float InfiniteAreaLight::GetPower() const
 {
     int width = hdr_texture->getWidth();
     int height = hdr_texture->getHeight();
+    if (width <= 0 || height <= 0) {
+        return 0.0f;
+    }
     return table.Sum() * scale * 2.0f * PI * PI / (width * height);  
 }
 

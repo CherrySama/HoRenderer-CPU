@@ -74,8 +74,8 @@ Vector3f Sampler::sample_square() const
 Vector3f Sampler::SampleCosineHemisphere(const Vector3f& normal) const
 {
     Vector2f sample = get_2d_sample();
-    float cos_theta = std::sqrt(1.0f - sample.x * sample.x - sample.y * sample.y); 
-    float sin_theta = std::sqrt(sample.x);         
+    float cos_theta = std::sqrt(std::max(0.0f, 1.0f - sample.x));
+    float sin_theta = std::sqrt(sample.x);
     float phi = 2.0f * PI * sample.y;                
 
     Vector3f local_direction(sin_theta * std::cos(phi),

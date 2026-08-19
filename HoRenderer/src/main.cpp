@@ -8,9 +8,14 @@
 int main() {
     srand(static_cast<unsigned int>(time(nullptr)));
 
-    // auto renderer = RendererScene::CornellBox();
-    auto renderer = RendererScene::SpaichingenHill();
-    renderer->Run();
+    try {
+        // auto renderer = RendererScene::CornellBox();
+        auto renderer = RendererScene::SpaichingenHill();
+        renderer->Run();
+    } catch (const std::exception& error) {
+        std::cerr << "Renderer startup failed: " << error.what() << std::endl;
+        return EXIT_FAILURE;
+    }
 
-    return 0;
+    return EXIT_SUCCESS;
 }

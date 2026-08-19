@@ -11,35 +11,46 @@ Renderer::Renderer(std::unique_ptr<Camera> cam, std::unique_ptr<Integrator> it, 
     sampler = std::move(sam);
     scene = std::move(sc);
 
+    if (!camera || !integrator || !sampler || !scene) {
+        throw std::invalid_argument("Renderer dependencies must not be null");
+    }
+
     width = camera->image_width;
     height = camera->image_height;
-    t1 = clock();
-    WindowInit();
-	PipelineConfiguration(FileManager::getInstance());
+    if (!WindowInit()) {
+        throw std::runtime_error("Failed to initialize the renderer window");
+    }
+
+    FileManager* fm = FileManager::getInstance();
+    bool pipeline_ready = PipelineConfiguration(fm);
+    FileManager::DestroyInstance();
+    if (!pipeline_ready) {
+        CleanupOpenGLResources();
+        glfwDestroyWindow(window);
+        window = nullptr;
+        glfwTerminate();
+        throw std::runtime_error("Failed to configure the rendering pipeline");
+    }
 }
 
 Renderer::~Renderer()
 {
     if (window != nullptr) {
         glfwMakeContextCurrent(window);
-        if (lastFrame != 0) {
-            glDeleteTextures(1, &lastFrame);
-        }
-        if (nowFrame != 0) {
-            glDeleteTextures(1, &nowFrame);
-        }
+        CleanupOpenGLResources();
         glfwDestroyWindow(window);
+        window = nullptr;
     }
     glfwTerminate();
 }
 
-void Renderer::WindowInit()
+bool Renderer::WindowInit()
 {
 	// glfw: initialize and configure
 	if (!glfwInit())
 	{
 		std::cout << "Failed to initialize GLFW..." << std::endl;
-		return;
+		return false;
 	}
     
     // OpenGL setting
@@ -61,63 +72,84 @@ void Renderer::WindowInit()
     if (window == NULL) {
         std::cout << "Failed to create GLFW window" << std::endl;
         glfwTerminate();
-		return;
+		return false;
 	}
     glfwMakeContextCurrent(window);
     
     // initialize GLAD
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
         std::cout << "Failed to initialize GLAD" << std::endl;
-		return;
+		glfwDestroyWindow(window);
+		window = nullptr;
+		glfwTerminate();
+		return false;
 	}
+
+	glfwSetKeyCallback(window, [](GLFWwindow* target, int key, int, int action, int) {
+		if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
+			glfwSetWindowShouldClose(target, GLFW_TRUE);
+		}
+	});
+
+	return true;
 }
 
-void Renderer::PipelineConfiguration(FileManager *fm)
+bool Renderer::PipelineConfiguration(FileManager *fm)
 {
 	if (fm == nullptr)
 	{
 		std::cout << "fm is null ptr" << std::endl;
-		return;
+		return false;
 	}
     fm->init();
     // pass1: Mix current frame and history frames
 	pass1.width = width;
 	pass1.height = height;
-    pass1.ShaderConfig(fm->getShaderPath("VertexShader.vert").c_str(),
-                       fm->getShaderPath("MixFrameShader.frag").c_str());
+    if (!pass1.ShaderConfig(fm->getShaderPath("VertexShader.vert").c_str(),
+                            fm->getShaderPath("MixFrameShader.frag").c_str())) {
+        return false;
+    }
     pass1.colorAttachments.push_back(CreateTextureRGB32F(width, height));
-    pass1.BindData();
+    if (pass1.colorAttachments.back() == 0 || !pass1.BindData()) {
+        return false;
+    }
     // pass2: Save history frames 
     pass2.width = width;
     pass2.height = height;
-    pass2.ShaderConfig(fm->getShaderPath("VertexShader.vert").c_str(),
-                       fm->getShaderPath("LastFrameShader.frag").c_str());
+    if (!pass2.ShaderConfig(fm->getShaderPath("VertexShader.vert").c_str(),
+                            fm->getShaderPath("LastFrameShader.frag").c_str())) {
+        return false;
+    }
     lastFrame = CreateTextureRGB32F(width, height);
+    if (lastFrame == 0) {
+        return false;
+    }
     pass2.colorAttachments.push_back(lastFrame);
-    pass2.BindData();
+    if (!pass2.BindData()) {
+        return false;
+    }
     // pass3: Finally output to the screen
     // On macOS Retina displays, the default framebuffer can be larger than
     // the logical window size used by the renderer's image buffers.
     glfwGetFramebufferSize(window, &pass3.width, &pass3.height);
-    pass3.ShaderConfig(fm->getShaderPath("VertexShader.vert").c_str(),
-                       fm->getShaderPath("OutputShader.frag").c_str());
-    pass3.BindData(true);
+    if (!pass3.ShaderConfig(fm->getShaderPath("VertexShader.vert").c_str(),
+                            fm->getShaderPath("OutputShader.frag").c_str()) ||
+        !pass3.BindData(true)) {
+        return false;
+    }
 
     nowFrame = CreateTextureRGB32F(width, height);
-    FileManager::DestroyInstance();
+    return nowFrame != 0;
 }
 
 void Renderer::Run() {
     while (!glfwWindowShouldClose(window)) {
-        if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-            glfwSetWindowShouldClose(window, true);
+        glfwPollEvents();
+        if (glfwWindowShouldClose(window)) {
+            break;
+        }
 
-        t2 = clock();
-		dt = (float)(t2 - t1) / CLOCKS_PER_SEC;
-		fps = 1.0 / dt;
-		std::cout << "\r";
-        std::cout << std::fixed << std::setprecision(2) << "FPS : " << fps << "    FrameCounter: " << frameCounter << "    Application average: " << 1000.0f * dt << " ms/frame";
-        t1 = t2;
+        auto frame_start = std::chrono::steady_clock::now();
 
         integrator->RenderImage(*camera, *scene, *sampler, frameCounter);
         if (enable_denoising) {
@@ -142,16 +174,43 @@ void Renderer::Run() {
         
         pass2.Draw(pass1.colorAttachments);
 
+        glfwGetFramebufferSize(window, &pass3.width, &pass3.height);
         pass3.Draw(pass2.colorAttachments);
         
         glfwSwapBuffers(window);
-        glfwPollEvents();
+
+        auto frame_end = std::chrono::steady_clock::now();
+        dt = std::chrono::duration<float>(frame_end - frame_start).count();
+        fps = dt > 0.0f ? 1.0f / dt : 0.0f;
+        std::cout << "\r";
+        std::cout << std::fixed << std::setprecision(2) << "FPS : " << fps << "    FrameCounter: " << frameCounter << "    Application average: " << 1000.0f * dt << " ms/frame";
     }
+	std::cout << std::endl;
+}
+
+void Renderer::CleanupOpenGLResources()
+{
+    if (!pass1.colorAttachments.empty()) {
+        glDeleteTextures(static_cast<GLsizei>(pass1.colorAttachments.size()), pass1.colorAttachments.data());
+        pass1.colorAttachments.clear();
+    }
+    if (lastFrame != 0) {
+        glDeleteTextures(1, &lastFrame);
+        lastFrame = 0;
+    }
+    if (nowFrame != 0) {
+        glDeleteTextures(1, &nowFrame);
+        nowFrame = 0;
+    }
+    pass2.colorAttachments.clear();
+    pass1.Clean();
+    pass2.Clean();
+    pass3.Clean();
 }
 
 GLuint CreateTextureRGB32F(int w, int h)
 {
-    GLuint renderTexture;
+    GLuint renderTexture = 0;
     glGenTextures(1, &renderTexture);
     glBindTexture(GL_TEXTURE_2D, renderTexture);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, w, h, 0, GL_RGBA, GL_FLOAT, nullptr);

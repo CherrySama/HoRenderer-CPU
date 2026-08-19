@@ -19,6 +19,7 @@
 #include <queue>
 #include <map>
 #include <chrono>
+#include <stdexcept>
 #include <glad/glad.h>
 #ifndef GLFW_INCLUDE_NONE
 #define GLFW_INCLUDE_NONE

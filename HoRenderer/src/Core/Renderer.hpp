@@ -16,16 +16,14 @@ public:
     Renderer(std::unique_ptr<Camera> cam, std::unique_ptr<Integrator> it, std::unique_ptr<Sampler> sam, std::unique_ptr<Scene> sc);
     ~Renderer();
 
-    void WindowInit();
-	void PipelineConfiguration(FileManager *fm);
+	bool WindowInit();
+	bool PipelineConfiguration(FileManager *fm);
 	void Run();
 
 public:
     RenderPass pass1, pass2, pass3;
     GLuint lastFrame = 0;
     GLuint nowFrame = 0;
-    clock_t t1 = 0;
-    clock_t t2 = 0;
     float dt = 0.0f;
     float fps = 0.0f;
     unsigned int frameCounter = 0;
@@ -37,6 +35,8 @@ public:
     bool enable_denoising = true;
 
 private:
+	void CleanupOpenGLResources();
+
 	GLFWwindow *window = nullptr;
     int width;
     int height;

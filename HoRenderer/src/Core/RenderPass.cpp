@@ -5,14 +5,16 @@
 
 RenderPass::~RenderPass()
 {
-	glDeleteVertexArrays(1, &vao);
-    glDeleteBuffers(1, &vbo);
-    if (fbo != 0) 
-        glDeleteFramebuffers(1, &fbo);
+	Clean();
 }
 
-void RenderPass::BindData(bool finalPass)
+bool RenderPass::BindData(bool finalPass)
 {
+	if (!finalPass && colorAttachments.empty()) {
+		std::cout << "Render pass requires at least one color attachment" << std::endl;
+		return false;
+	}
+
     if (!finalPass) {
 		glGenFramebuffers(1, &fbo);
 	}
@@ -46,15 +48,38 @@ void RenderPass::BindData(bool finalPass)
 			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i, GL_TEXTURE_2D, colorAttachments[i], 0);
 			attachments.push_back(GL_COLOR_ATTACHMENT0 + i);
 		}
-		glDrawBuffers(attachments.size(), &attachments[0]);
+		glDrawBuffers(static_cast<GLsizei>(attachments.size()), attachments.data());
+		if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+			std::cout << "Framebuffer is incomplete" << std::endl;
+			glBindFramebuffer(GL_FRAMEBUFFER, 0);
+			return false;
+		}
 	}
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	return true;
 }
 
-void RenderPass::ShaderConfig(const char* vertexPath, const char* fragmentPath, const char* geometryPath)
+bool RenderPass::ShaderConfig(const char* vertexPath, const char* fragmentPath, const char* geometryPath)
 {
-    m_shader.ShaderConfig(vertexPath, fragmentPath, geometryPath);
+    return m_shader.ShaderConfig(vertexPath, fragmentPath, geometryPath);
+}
+
+void RenderPass::Clean()
+{
+	if (vao != 0) {
+		glDeleteVertexArrays(1, &vao);
+		vao = 0;
+	}
+	if (vbo != 0) {
+		glDeleteBuffers(1, &vbo);
+		vbo = 0;
+	}
+	if (fbo != 0) {
+		glDeleteFramebuffers(1, &fbo);
+		fbo = 0;
+	}
+	m_shader.Clean();
 }
 
 void RenderPass::Draw(const std::vector<unsigned int>& texPassArray) {
@@ -77,4 +102,3 @@ void RenderPass::Draw(const std::vector<unsigned int>& texPassArray) {
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glUseProgram(0);
 }
-

@@ -1,6 +1,8 @@
 /*
 	Created by Yinghao He on 2025-05-15
 */
+#pragma once
+
 #include "Util.hpp"
 
 class Shader
@@ -8,7 +10,7 @@ class Shader
 public:
 	Shader();
 	~Shader();
-	void ShaderConfig(const char* vertexPath, const char* fragmentPath, const char* geometryPath = nullptr);
+	bool ShaderConfig(const char* vertexPath, const char* fragmentPath, const char* geometryPath = nullptr);
 
 	void Use();
 	void UnUse();
@@ -29,5 +31,5 @@ public:
 private:
 	unsigned int m_ID = 0u;
 
-	void CheckCompileErrors(GLuint shader, std::string type);
+	bool CheckCompileErrors(GLuint shader, const std::string& type);
 };

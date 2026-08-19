@@ -9,7 +9,8 @@
 class RenderPass {
 public:
 	unsigned int fbo = 0;
-	unsigned int vao, vbo;
+	unsigned int vao = 0;
+	unsigned int vbo = 0;
 	std::vector<unsigned int> colorAttachments;
 	Shader m_shader;
 	int width = 0;
@@ -17,7 +18,8 @@ public:
 
 public:
 	~RenderPass();
-	void BindData(bool finalPass = false);
-	void ShaderConfig(const char* vertexPath, const char* fragmentPath, const char* geometryPath = nullptr);
+	bool BindData(bool finalPass = false);
+	bool ShaderConfig(const char* vertexPath, const char* fragmentPath, const char* geometryPath = nullptr);
+	void Clean();
 	void Draw(const std::vector<unsigned int>& texPassArray);
 };

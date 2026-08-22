@@ -5,6 +5,60 @@
 #define TINYOBJLOADER_IMPLEMENTATION
 #include "tiny_obj_loader.h"
 
+namespace {
+
+void BuildFallbackTangentFrame(const Vector3f& normal,
+                               Vector3f& tangent,
+                               Vector3f& bitangent)
+{
+    const float normal_length = glm::length(normal);
+    if (normal_length <= Epsilon) {
+        tangent = Vector3f(0.0f);
+        bitangent = Vector3f(0.0f);
+        return;
+    }
+
+    const Vector3f n = normal / normal_length;
+    const Vector3f reference = std::abs(n.z) < 0.999f
+        ? Vector3f(0.0f, 0.0f, 1.0f)
+        : Vector3f(0.0f, 1.0f, 0.0f);
+    tangent = glm::normalize(glm::cross(reference, n));
+    bitangent = glm::normalize(glm::cross(n, tangent));
+}
+
+void SetHitTangentFrame(Hit_Payload& rec,
+                        const Vector3f& outward_normal,
+                        const Vector3f& outward_tangent,
+                        const Vector3f& outward_bitangent)
+{
+    const float normal_length = glm::length(outward_normal);
+    if (normal_length <= Epsilon) {
+        rec.tangent = Vector3f(0.0f);
+        rec.bitangent = Vector3f(0.0f);
+        return;
+    }
+
+    const Vector3f n = outward_normal / normal_length;
+    Vector3f tangent = outward_tangent - n * glm::dot(n, outward_tangent);
+    if (glm::length2(tangent) <= Epsilon * Epsilon) {
+        BuildFallbackTangentFrame(n, tangent, rec.bitangent);
+        rec.tangent = tangent;
+        if (!rec.front_face) {
+            rec.bitangent = -rec.bitangent;
+        }
+        return;
+    }
+
+    tangent = glm::normalize(tangent);
+    const float handedness = glm::dot(glm::cross(n, tangent), outward_bitangent) < 0.0f
+        ? -1.0f
+        : 1.0f;
+    rec.tangent = tangent;
+    rec.bitangent = handedness * glm::normalize(glm::cross(rec.geometric_normal, tangent));
+}
+
+} // namespace
+
 
 bool Sphere::isHit(const Ray &r, Vector2f t_interval, Hit_Payload &rec) const
 {
@@ -24,8 +78,14 @@ bool Sphere::isHit(const Ray &r, Vector2f t_interval, Hit_Payload &rec) const
             // rec.normal = (rec.p - center) / radius;
             Vector3f outward_normal = (rec.p - center) / radius;
             rec.set_face_normal(r, outward_normal);
+            SetHitTangentFrame(rec,
+                               outward_normal,
+                               Vector3f(-outward_normal.z, 0.0f, outward_normal.x),
+                               glm::cross(outward_normal,
+                                          Vector3f(-outward_normal.z, 0.0f, outward_normal.x)));
             rec.mat = mat;
             rec.uv = getSphereUV(rec.p);
+            rec.hit_object = this;
             rec.interior_medium_id = interior_id;
             rec.exterior_medium_id = exterior_id;
             return true;
@@ -36,8 +96,14 @@ bool Sphere::isHit(const Ray &r, Vector2f t_interval, Hit_Payload &rec) const
             rec.p = r.at(rec.t);
             Vector3f outward_normal = (rec.p - center) / radius;
             rec.set_face_normal(r, outward_normal);
+            SetHitTangentFrame(rec,
+                               outward_normal,
+                               Vector3f(-outward_normal.z, 0.0f, outward_normal.x),
+                               glm::cross(outward_normal,
+                                          Vector3f(-outward_normal.z, 0.0f, outward_normal.x)));
             rec.mat = mat;
             rec.uv = getSphereUV(rec.p);
+            rec.hit_object = this;
             rec.interior_medium_id = interior_id;
             rec.exterior_medium_id = exterior_id;
             return true;
@@ -94,8 +160,10 @@ bool Quad::isHit(const Ray &r, Vector2f t_interval, Hit_Payload &rec) const
     rec.t = t;
     rec.p = hit_point;
     rec.set_face_normal(r, normal);
+    SetHitTangentFrame(rec, normal, u, v);
     rec.mat = mat;
     rec.uv = Vector2f(alpha, beta);
+    rec.hit_object = this;
     rec.interior_medium_id = interior_id;
     rec.exterior_medium_id = exterior_id;
 
@@ -113,6 +181,7 @@ bool Box::isHit(const Ray &r, Vector2f t_interval, Hit_Payload &rec) const {
             hit_anything = true;
             closest_t = temp_rec.t;
             rec = temp_rec;
+            rec.hit_object = this;
         }
     }
     
@@ -351,8 +420,6 @@ void Mesh::CommitEmbree()
     rtcCommitGeometry(embree_geometry);
     rtcAttachGeometry(embree_scene, embree_geometry);
     rtcCommitScene(embree_scene);
-    vertices.clear();
-    vertices.shrink_to_fit();
 }
 
 void Mesh::CalculateFaceNormals()
@@ -458,6 +525,37 @@ Vector2f Mesh::InterpolateTexCoord(int triangle_id, float u, float v) const
     return w * texcoords[triangle.x] + u * texcoords[triangle.y] + v * texcoords[triangle.z];
 }
 
+void Mesh::ComputeTangentFrame(int triangle_id, Vector3f& tangent, Vector3f& bitangent) const
+{
+    const Vector3i& triangle = indices[triangle_id];
+    const Vector3f edge_1 = vertices[triangle.y] - vertices[triangle.x];
+    const Vector3f edge_2 = vertices[triangle.z] - vertices[triangle.x];
+    const Vector3f unnormalized_geometric_normal = glm::cross(edge_1, edge_2);
+    const float normal_length = glm::length(unnormalized_geometric_normal);
+    if (normal_length <= Epsilon) {
+        tangent = Vector3f(0.0f);
+        bitangent = Vector3f(0.0f);
+        return;
+    }
+    const Vector3f geometric_normal = unnormalized_geometric_normal / normal_length;
+
+    if (texcoords.empty()) {
+        BuildFallbackTangentFrame(geometric_normal, tangent, bitangent);
+        return;
+    }
+
+    const Vector2f uv_1 = texcoords[triangle.y] - texcoords[triangle.x];
+    const Vector2f uv_2 = texcoords[triangle.z] - texcoords[triangle.x];
+    const float determinant = uv_1.x * uv_2.y - uv_1.y * uv_2.x;
+    if (std::abs(determinant) <= Epsilon) {
+        BuildFallbackTangentFrame(geometric_normal, tangent, bitangent);
+        return;
+    }
+
+    tangent = (edge_1 * uv_2.y - edge_2 * uv_1.y) / determinant;
+    bitangent = (edge_2 * uv_1.x - edge_1 * uv_2.x) / determinant;
+}
+
 bool Mesh::isHit(const Ray& r, Vector2f t_interval, Hit_Payload& rec) const
 {
     RTCRayHit rayhit;
@@ -481,8 +579,19 @@ bool Mesh::isHit(const Ray& r, Vector2f t_interval, Hit_Payload& rec) const
 
     rec.t = rayhit.ray.tfar;
     rec.p = r.at(rec.t);
+    Vector3f geometric_normal(rayhit.hit.Ng_x, rayhit.hit.Ng_y, rayhit.hit.Ng_z);
+    const float geometric_length = glm::length(geometric_normal);
     Vector3f interpolated_normal = InterpolateNormal(rayhit.hit.primID, rayhit.hit.u, rayhit.hit.v);
-    rec.set_face_normal(r, interpolated_normal);
+    if (geometric_length > Epsilon) {
+        geometric_normal /= geometric_length;
+    } else {
+        geometric_normal = interpolated_normal;
+    }
+    rec.set_face_normals(r, geometric_normal, interpolated_normal);
+    Vector3f tangent;
+    Vector3f bitangent;
+    ComputeTangentFrame(rayhit.hit.primID, tangent, bitangent);
+    SetHitTangentFrame(rec, geometric_normal, tangent, bitangent);
 
     if (!texcoords.empty()) {
         rec.uv = InterpolateTexCoord(rayhit.hit.primID, rayhit.hit.u, rayhit.hit.v);
@@ -491,6 +600,7 @@ bool Mesh::isHit(const Ray& r, Vector2f t_interval, Hit_Payload& rec) const
     }
 
     rec.mat = mat;
+    rec.hit_object = this;
     rec.interior_medium_id = interior_id;
     rec.exterior_medium_id = exterior_id;
 

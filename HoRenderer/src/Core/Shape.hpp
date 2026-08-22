@@ -145,6 +145,7 @@ private:
 
     Vector3f InterpolateNormal(int triangle_id, float u, float v) const;
     Vector2f InterpolateTexCoord(int triangle_id, float u, float v) const;
+    void ComputeTangentFrame(int triangle_id, Vector3f& tangent, Vector3f& bitangent) const;
 
 private:
     std::vector<Vector3f> vertices; 

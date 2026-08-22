@@ -53,9 +53,9 @@ Vector3f HenyeyGreensteinPhase::Sample(const Vector3f &wi, const Vector2f &sampl
 }
 
 float HenyeyGreensteinPhase::Evaluate(const Vector3f &wi, const Vector3f &wo) const {
-    // ρ(cos θ) = (1-g²) / (4π(1+g²+2g cos θ)^(3/2))
+    // ρ(cos θ) = (1-g²) / (4π(1+g²-2g cos θ)^(3/2))
     float cos_theta = glm::dot(-wi, wo); 
-    float temp = 1.0f + g * g + 2.0f * g * cos_theta;
+    float temp = 1.0f + g * g - 2.0f * g * cos_theta;
     if (temp > Epsilon) 
         return INV_4PI * (1.0f - g * g) / (temp * std::sqrt(temp));
     

@@ -20,11 +20,11 @@ public:
     ~Integrator();
 
     void RenderImage(Camera &cam, Scene &world, Sampler &sampler, int sample_index);
-    void write_color(int u, int v, const Vector3f &color);
+    void write_radiance(int u, int v, const Vector3f &radiance);
     Vector3f VolumeIntegrator(const Ray &r, int max_depth, const Scene &world, Sampler &sampler, int initial_medium_id);
-    Vector3f EstimateDirectLighting(const Ray &r_in, const Hit_Payload &rec, const Scene &world, Sampler &sampler, float cumulative_trans_pdf, int current_medium_id);
+    Vector3f EstimateDirectLighting(const Ray &r_in, const Hit_Payload &rec, const Scene &world, Sampler &sampler, int current_medium_id);
     float PowerHeuristic(float pdf1, float pdf2, int beta = 2);
-    Vector3f CalculateShadowTransmittance(const Ray &shadow_ray, const Scene &world, int initial_medium_id);
+    Vector3f CalculateShadowTransmittance(const Ray &shadow_ray, const Scene &world, int initial_medium_id, const Hittable* target_light_shape);
 
     void SetNumThreads(int threads);
     int GetNumThreads() const;

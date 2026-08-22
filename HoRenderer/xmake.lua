@@ -60,6 +60,55 @@ target("HoRenderer")
             add_linkdirs(libomp_prefix .. "/lib")
         end
     end
+
+target("HoRendererMathTests")
+    set_kind("binary")
+    set_default(false)
+    set_symbols("debug")
+    set_rundir(os.projectdir())
+
+    add_files("tests/RendererMathTests.cpp",
+              "src/Core/AABB.cpp",
+              "src/Core/BSDF.cpp",
+              "src/Core/BVH.cpp",
+              "src/Core/Camera.cpp",
+              "src/Core/Filter.cpp",
+              "src/Core/Hittable.cpp",
+              "src/Core/Integrator.cpp",
+              "src/Core/Light.cpp",
+              "src/Core/Material.cpp",
+              "src/Core/Medium.cpp",
+              "src/Core/PhaseFunction.cpp",
+              "src/Core/Ray.cpp",
+              "src/Core/Sampler.cpp",
+              "src/Core/Scene.cpp",
+              "src/Core/Shape.cpp",
+              "src/Core/Texture.cpp",
+              "src/Core/Transform.cpp")
+    add_packages("glfw", "glad", "glm", "embree", "nlohmann_json", "tinyobjloader")
+
+    if is_plat("windows") then
+        add_cxflags("/openmp:llvm")
+    elseif is_plat("macosx") then
+        add_defines("GL_SILENCE_DEPRECATION")
+        add_frameworks("Cocoa", "IOKit", "OpenGL")
+        add_cxflags("-Xpreprocessor", "-fopenmp")
+        add_links("omp")
+
+        local libomp_prefix = os.getenv("LIBOMP_PREFIX")
+        if not libomp_prefix or not os.isdir(libomp_prefix .. "/include") then
+            if os.isdir("/opt/homebrew/opt/libomp/include") then
+                libomp_prefix = "/opt/homebrew/opt/libomp"
+            elseif os.isdir("/usr/local/opt/libomp/include") then
+                libomp_prefix = "/usr/local/opt/libomp"
+            end
+        end
+
+        if libomp_prefix and os.isdir(libomp_prefix .. "/include") and os.isdir(libomp_prefix .. "/lib") then
+            add_includedirs(libomp_prefix .. "/include")
+            add_linkdirs(libomp_prefix .. "/lib")
+        end
+    end
 --
 -- If you want to known more usage about xmake, please see https://xmake.io
 --

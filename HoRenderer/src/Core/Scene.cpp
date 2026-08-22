@@ -6,6 +6,30 @@
 #include "Light.hpp"
 #include "Sampler.hpp"
 
+namespace {
+
+struct LightCategoryProbabilities {
+    float finite;
+    float environment;
+};
+
+LightCategoryProbabilities GetLightCategoryProbabilities(bool has_finite_lights,
+                                                         bool has_environment_light)
+{
+    if (has_finite_lights && has_environment_light) {
+        return {0.5f, 0.5f};
+    }
+    if (has_finite_lights) {
+        return {1.0f, 0.0f};
+    }
+    if (has_environment_light) {
+        return {0.0f, 1.0f};
+    }
+    return {0.0f, 0.0f};
+}
+
+} // namespace
+
 
 AliasTable1D::AliasTable1D(const std::vector<float>& distrib) {
 	std::queue<Element> greater, lesser;
@@ -213,39 +237,37 @@ AABB Scene::getBoundingBox() const
     return output_box;
 }
 
-Vector3f Scene::SampleLights(const Ray& r_in, const Hit_Payload& rec, Vector3f& light_direction, float& pdf, Sampler& sampler) const
+Vector3f Scene::SampleLights(const Ray& r_in, const Hit_Payload& rec, Vector3f& light_direction, float& pdf, Sampler& sampler, const Hittable*& sampled_light_shape) const
 {
-    float total_power = lightTable.Sum();
-    float env_power = 0.0f;
-    
-    if (environment_light) {
-        env_power = environment_light->GetPower();
-        total_power += env_power;
-    }
+    sampled_light_shape = nullptr;
+    const bool has_finite_lights = !lights.empty() && lightTable.Sum() > 0.0f;
+    const bool has_environment_light = environment_light && environment_light->GetPower() > 0.0f;
+    const LightCategoryProbabilities category_probabilities =
+        GetLightCategoryProbabilities(has_finite_lights, has_environment_light);
 
-    if (total_power <= 0.0f) {
+    if (!has_finite_lights && !has_environment_light) {
         pdf = 0.0f;
         return Vector3f(0.0f);
     }
 
-    float env_prob = env_power / total_power;
-    if (sampler.random_float() < env_prob && environment_light) {
+    if (sampler.random_float() < category_probabilities.environment) {
         Vector3f radiance = environment_light->Sample(r_in, rec, light_direction, pdf, sampler);
-        pdf *= env_prob;
+        pdf *= category_probabilities.environment;
         return radiance;
-    } else if (!lights.empty()) {
+    } else if (has_finite_lights) {
         int index = lightTable.Sample(sampler.get_2d_sample());
         if (index < 0 || index >= lights.size()) {
             pdf = 0.0f;
             return Vector3f(0.0f);
         }
         auto light = lights[index];
+        sampled_light_shape = light->GetShape().get();
 
         float light_pdf = 0.0f;
         Vector3f radiance = light->Sample(r_in, rec, light_direction, light_pdf, sampler);
 
         float light_selection_pdf = light->GetPower() / lightTable.Sum();
-        pdf = light_pdf * light_selection_pdf * (1.0f - env_prob);
+        pdf = light_pdf * light_selection_pdf * category_probabilities.finite;
 
         return radiance;
     }
@@ -256,14 +278,12 @@ Vector3f Scene::SampleLights(const Ray& r_in, const Hit_Payload& rec, Vector3f& 
 
 Vector3f Scene::EvaluateLights(const Ray &light_ray, const Hit_Payload &light_rec, float &pdf) const
 {
-    float total_power = lightTable.Sum();
-    float env_power = 0.0f;
-    if (environment_light) {
-        env_power = environment_light->GetPower();
-        total_power += env_power;
-    }
-    
-    if (total_power <= 0.0f) {
+    const bool has_finite_lights = !lights.empty() && lightTable.Sum() > 0.0f;
+    const bool has_environment_light = environment_light && environment_light->GetPower() > 0.0f;
+    const LightCategoryProbabilities category_probabilities =
+        GetLightCategoryProbabilities(has_finite_lights, has_environment_light);
+
+    if (!has_finite_lights && !has_environment_light) {
         pdf = 0.0f;
         return Vector3f(0.0f);
     }
@@ -271,28 +291,31 @@ Vector3f Scene::EvaluateLights(const Ray &light_ray, const Hit_Payload &light_re
     Vector3f radiance(0.0f);
     pdf = 0.0f;
 
-    for (int i = 0; i < lights.size(); i++) {
-        auto light = lights[i];
-        float light_pdf = 0.0f;
+    if (has_finite_lights) {
+        for (int i = 0; i < lights.size(); i++) {
+            auto light = lights[i];
+            if (light->GetShape().get() != light_rec.hit_object) {
+                continue;
+            }
+            float light_pdf = 0.0f;
 
-        Vector3f light_radiance = light->Evaluate(light_ray, light_rec, light_pdf);
-        
-        if (light_pdf > 0.0f) {
-            float light_prob = light->GetPower() / lightTable.Sum();
-            float env_prob = env_power / total_power;
-            
-            light_pdf *= light_prob * (1.0f - env_prob);
-            radiance = light_radiance;
-            pdf = light_pdf;
-            return radiance;  
+            Vector3f light_radiance = light->Evaluate(light_ray, light_rec, light_pdf);
+
+            if (light_pdf > 0.0f) {
+                float light_prob = light->GetPower() / lightTable.Sum();
+
+                light_pdf *= light_prob * category_probabilities.finite;
+                radiance = light_radiance;
+                pdf = light_pdf;
+                return radiance;
+            }
         }
     }
 
     if (environment_light) {
         float env_pdf = 0.0f;
         Vector3f env_radiance = environment_light->Evaluate(light_ray, light_rec, env_pdf);
-        float env_prob = env_power / total_power;
-        pdf = env_pdf * env_prob;
+        pdf = env_pdf * category_probabilities.environment;
         return env_radiance;
     }
     
@@ -312,12 +335,13 @@ Vector3f Scene::SampleEnvLight(const Ray &ray) const
 Vector3f Scene::EvaluateEnvLight(const Ray &ray, float &pdf) const
 {
     if (environment_light) {
-        float env_power = environment_light->GetPower();
-        float total_power = lightTable.Sum() + env_power;
-        float env_prob = total_power > 0.0f ? env_power / total_power : 1.0f;
+        const bool has_finite_lights = !lights.empty() && lightTable.Sum() > 0.0f;
+        const bool has_environment_light = environment_light->GetPower() > 0.0f;
+        const LightCategoryProbabilities category_probabilities =
+            GetLightCategoryProbabilities(has_finite_lights, has_environment_light);
         Hit_Payload dummy_hit;
         Vector3f color = environment_light->Evaluate(ray, dummy_hit, pdf);
-        pdf *= env_prob;
+        pdf *= category_probabilities.environment;
         return color;
     }
     pdf = 0.0f;

@@ -5,6 +5,52 @@
 #include "Sampler.hpp"
 #include "Material.hpp"
 
+namespace {
+
+Vector3f EstimateAverageEmission(const Material& material)
+{
+    constexpr int SampleResolution = 8;
+    Vector3f emission_sum(0.0f);
+    for (int y = 0; y < SampleResolution; ++y) {
+        for (int x = 0; x < SampleResolution; ++x) {
+            const Vector2f uv((static_cast<float>(x) + 0.5f) / SampleResolution,
+                              (static_cast<float>(y) + 0.5f) / SampleResolution);
+            emission_sum += material.Emit(uv);
+        }
+    }
+    return emission_sum / static_cast<float>(SampleResolution * SampleResolution);
+}
+
+float EnvironmentRowMeasure(int y, int height)
+{
+    const float theta_min = PI * static_cast<float>(y) / static_cast<float>(height);
+    const float theta_max = PI * static_cast<float>(y + 1) / static_cast<float>(height);
+    return std::cos(theta_min) - std::cos(theta_max);
+}
+
+float EnvironmentTexelSolidAngle(int y, int width, int height)
+{
+    return (2.0f * PI / static_cast<float>(width)) * EnvironmentRowMeasure(y, height);
+}
+
+float EnvironmentDirectionalPdf(const AliasTable2D& table,
+                                int x,
+                                int y,
+                                int width,
+                                int height)
+{
+    const float solid_angle = EnvironmentTexelSolidAngle(y, width, height);
+    if (solid_angle <= 0.0f) {
+        return 0.0f;
+    }
+
+    const float cell_probability =
+        table.Pdf(x, y) / static_cast<float>(width * height);
+    return cell_probability / solid_angle;
+}
+
+} // namespace
+
 
 Vector3f QuadAreaLight::Sample(const Ray &r_in, const Hit_Payload &rec, Vector3f &light_direction, float &pdf, Sampler &sampler) const
 {
@@ -48,7 +94,7 @@ Vector3f QuadAreaLight::Evaluate(const Ray &r_in, const Hit_Payload &rec, float 
 
 float QuadAreaLight::GetPower() const
 {
-    Vector3f emission = quad->get_mat()->Emit(Vector2f(0.5f, 0.5f));                   
+    Vector3f emission = EstimateAverageEmission(*quad->get_mat());
     float luminance = 0.299f * emission.r + 0.587f * emission.g + 0.114f * emission.b; 
     return area * luminance * PI;
 }
@@ -140,7 +186,7 @@ Vector3f SphereAreaLight::Evaluate(const Ray &r_in, const Hit_Payload &rec, floa
 
 float SphereAreaLight::GetPower() const
 {
-    Vector3f emission = sphere->get_mat()->Emit(Vector2f(0.5f, 0.5f));
+    Vector3f emission = EstimateAverageEmission(*sphere->get_mat());
     float luminance = 0.299f * emission.r + 0.587f * emission.g + 0.114f * emission.b;
     return area * luminance * PI; 
 }
@@ -183,10 +229,8 @@ InfiniteAreaLight::InfiniteAreaLight(std::shared_ptr<HDRTexture> hdr, float scal
             Vector3f color = hdr_texture->GetColor(u, v);
             float luminance = Luminance(color);
 
-            float theta = v * PI;
-            float sin_theta = std::sin(theta);
-            
-            weights[y * width + x] = luminance * sin_theta;
+            weights[y * width + x] =
+                std::max(luminance, 0.0f) * EnvironmentRowMeasure(y, height);
         }
     }
 
@@ -211,21 +255,17 @@ Vector3f InfiniteAreaLight::Sample(const Ray &r_in, const Hit_Payload &rec, Vect
     int width = hdr_texture->getWidth();
     int height = hdr_texture->getHeight();
     
-    float u = (pixel.x + 0.5f) / width;
-    float v = (pixel.y + 0.5f) / height;
+    const Vector2f texel_sample = sampler.get_2d_sample();
+    const float u = (static_cast<float>(pixel.x) + texel_sample.x) /
+                    static_cast<float>(width);
+    const float theta_min = PI * static_cast<float>(pixel.y) / static_cast<float>(height);
+    const float theta_max = PI * static_cast<float>(pixel.y + 1) / static_cast<float>(height);
+    const float cos_theta = glm::mix(std::cos(theta_min), std::cos(theta_max), texel_sample.y);
+    const float v = std::acos(glm::clamp(cos_theta, -1.0f, 1.0f)) * INV_PI;
     light_direction = SphericalToCartesian(u, v);
 
     Vector3f color = hdr_texture->GetColor(u, v);
-    float theta = v * PI;
-    float sin_theta = std::sin(theta);
-    
-    if (sin_theta <= 0.0f) {
-        pdf = 0.0f;
-        return Vector3f(0.0f);
-    }
-    
-    float luminance = Luminance(color);
-    pdf = luminance / table.Sum() * width * height / (2.0f * PI * PI);
+    pdf = EnvironmentDirectionalPdf(table, pixel.x, pixel.y, width, height);
     
     return color * scale;
 }
@@ -241,19 +281,12 @@ Vector3f InfiniteAreaLight::Evaluate(const Ray &r_in, const Hit_Payload &rec, fl
     
     Vector3f color = hdr_texture->GetColor(uv.x, uv.y);
 
-    float theta = uv.y * PI;
-    float sin_theta = std::sin(theta);
-    
-    if (sin_theta <= 0.0f) {
-        pdf = 0.0f;
-        return Vector3f(0.0f);
-    }
-    
-    float luminance = Luminance(color);
     int width = hdr_texture->getWidth();
     int height = hdr_texture->getHeight();
-    
-    pdf = luminance / table.Sum() * width * height / (2.0f * PI * PI);
+    const int x = std::clamp(static_cast<int>(uv.x * width), 0, width - 1);
+    const int y = std::clamp(static_cast<int>(uv.y * height), 0, height - 1);
+
+    pdf = EnvironmentDirectionalPdf(table, x, y, width, height);
     
     return color * scale;
 }
@@ -265,7 +298,7 @@ float InfiniteAreaLight::GetPower() const
     if (width <= 0 || height <= 0) {
         return 0.0f;
     }
-    return table.Sum() * scale * 2.0f * PI * PI / (width * height);  
+    return table.Sum() * scale * 2.0f * PI / static_cast<float>(width);
 }
 
 std::shared_ptr<Hittable> InfiniteAreaLight::GetShape() const

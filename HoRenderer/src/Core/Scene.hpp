@@ -61,7 +61,7 @@ public:
     bool isHit(const Ray &r, Vector2f t_interval, Hit_Payload &rec) const override;
     AABB getBoundingBox() const override;
 
-    Vector3f SampleLights(const Ray &r_in, const Hit_Payload &rec, Vector3f &light_direction, float &pdf, Sampler &sampler) const;
+    Vector3f SampleLights(const Ray &r_in, const Hit_Payload &rec, Vector3f &light_direction, float &pdf, Sampler &sampler, const Hittable*& sampled_light_shape) const;
     Vector3f EvaluateLights(const Ray &light_ray, const Hit_Payload &light_rec, float &pdf) const;
     Vector3f SampleEnvLight(const Ray &ray) const;
     Vector3f EvaluateEnvLight(const Ray &ray, float &pdf) const;

@@ -18,6 +18,11 @@ public:
     virtual Vector3f Emit(const Ray& r_in, const Hit_Payload& rec, float u, float v) const;
     virtual Vector3f Emit(const Vector2f& uv) const { return Vector3f(0); }
     virtual bool IsEmit() const { return false; }
+    virtual bool IsDelta(const Hit_Payload& rec) const { return false; }
+    virtual bool SupportsTransmission() const { return false; }
+    bool IsScatteringDirectionValid(const Hit_Payload& rec,
+                                    const Vector3f& view_direction,
+                                    const Vector3f& scatter_direction) const;
     
 protected:
     Vector3f GetSurfaceNormal(const Hit_Payload &rec) const;
@@ -34,7 +39,6 @@ public:
 
     virtual Vector3f Sample(const Ray &r_in, const Hit_Payload &rec, Vector3f &scatter_direction, float &pdf, Sampler &sampler) const override;
     virtual Vector3f Evaluate(const Ray& r_in, const Hit_Payload& rec, const Vector3f& scatter_direction, float& pdf) const override;
-
 private:
     std::shared_ptr<Texture> albedo_texture;
     std::shared_ptr<Texture> roughness_texture;
@@ -50,6 +54,7 @@ public:
 
     virtual Vector3f Sample(const Ray &r_in, const Hit_Payload &rec, Vector3f &scatter_direction, float &pdf, Sampler &sampler) const override;
     virtual Vector3f Evaluate(const Ray& r_in, const Hit_Payload& rec, const Vector3f& scatter_direction, float& pdf) const override;
+    virtual bool IsDelta(const Hit_Payload& rec) const override;
 
 private:
     std::shared_ptr<Texture> albedo_texture; 
@@ -120,6 +125,8 @@ public:
 
     virtual Vector3f Sample(const Ray &r_in, const Hit_Payload &rec, Vector3f &scatter_direction, float &pdf, Sampler &sampler) const override;
     virtual Vector3f Evaluate(const Ray& r_in, const Hit_Payload& rec, const Vector3f& scatter_direction, float& pdf) const override;
+    virtual bool IsDelta(const Hit_Payload& rec) const override;
+    virtual bool SupportsTransmission() const override { return true; }
 
 private:
     std::shared_ptr<Texture> albedo_texture;
@@ -128,12 +135,12 @@ private:
     float eta;
 };
 
-class Fabric : public Material { // reference: Production Friendly Microfacet Sheen BRDF
+class Fabric : public Material { // Charlie sheen NDF with Cook-Torrance geometric attenuation
 public:
-    Fabric(const Vector3f &albedo, float roughness, float sheen_intensity = 1.0f, float sheen_tint = 0.0f) :
-        albedo_texture(std::make_shared<SolidTexture>(albedo)), roughness_texture(std::make_shared<SolidTexture>(Vector3f(roughness))), intensity(sheen_intensity), tint(sheen_tint) {}
-    Fabric(std::shared_ptr<Texture> albedo_tex, std::shared_ptr<Texture> rough_tex, float sheen_intensity = 1.0f, float sheen_tint = 0.0f) :
-        albedo_texture(albedo_tex), roughness_texture(rough_tex), intensity(sheen_intensity), tint(sheen_tint) {}
+    Fabric(const Vector3f &albedo, float roughness, float weight = 1.0f, float tint = 0.0f) :
+        albedo_texture(std::make_shared<SolidTexture>(albedo)), roughness_texture(std::make_shared<SolidTexture>(Vector3f(roughness))), sheen_weight(glm::clamp(weight, 0.0f, 1.0f)), sheen_tint(glm::clamp(tint, 0.0f, 1.0f)) {}
+    Fabric(std::shared_ptr<Texture> albedo_tex, std::shared_ptr<Texture> rough_tex, float weight = 1.0f, float tint = 0.0f) :
+        albedo_texture(albedo_tex), roughness_texture(rough_tex), sheen_weight(glm::clamp(weight, 0.0f, 1.0f)), sheen_tint(glm::clamp(tint, 0.0f, 1.0f)) {}
 
     virtual Vector3f Sample(const Ray &r_in, const Hit_Payload &rec, Vector3f &scatter_direction, float &pdf, Sampler &sampler) const override;
     virtual Vector3f Evaluate(const Ray &r_in, const Hit_Payload &rec, const Vector3f &scatter_direction, float &pdf) const override;
@@ -141,6 +148,6 @@ public:
 private:
     std::shared_ptr<Texture> albedo_texture;
     std::shared_ptr<Texture> roughness_texture;
-    float intensity;
-    float tint;
+    float sheen_weight;
+    float sheen_tint;
 };

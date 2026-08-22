@@ -52,7 +52,7 @@ namespace RendererScene
                                                                    1.0f);
         auto goldSilkMaterial = std::make_shared<Fabric>(Vector3f(0.9f, 0.7f, 0.2f), 
                                                          0.12f,                      
-                                                         4.0f,                      
+                                                         0.2f,
                                                          0.9f);
 
         scene->Add(std::make_shared<Quad>(Vector3f(555.0f, 0.0f, 0.0f),
@@ -162,7 +162,7 @@ namespace RendererScene
                                                          1.0f);
         auto goldFabricMaterial = std::make_shared<Fabric>(Vector3f(0.9f, 0.7f, 0.2f),
                                                            0.12f,
-                                                           4.0f,
+                                                           0.2f,
                                                            0.9f);
         auto frostedGlassMaterial = std::make_shared<Dielectric>(Vector3f(0.95f, 0.95f, 0.98f),
                                                                    0.05f,

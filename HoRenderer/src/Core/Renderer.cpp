@@ -152,10 +152,6 @@ void Renderer::Run() {
         auto frame_start = std::chrono::steady_clock::now();
 
         integrator->RenderImage(*camera, *scene, *sampler, frameCounter);
-        if (enable_denoising) {
-            float* pixel_data = const_cast<float*>(integrator->GetFloatPixels());
-            denoiser.Apply(pixel_data, width, height);
-        }
 
         glBindTexture(GL_TEXTURE_2D, nowFrame);
         glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RGBA, GL_FLOAT, integrator->GetFloatPixels());

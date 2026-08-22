@@ -6,7 +6,6 @@
 #include "Util.hpp"
 #include "RenderPass.hpp"
 #include "Integrator.hpp"
-#include "Denoiser.hpp"
 #include "../Common/FileManager.hpp"
 
 GLuint CreateTextureRGB32F(int w, int h);
@@ -31,8 +30,6 @@ public:
     std::unique_ptr<Integrator> integrator;
 	std::unique_ptr<Sampler> sampler;
     std::unique_ptr<Scene> scene;
-    Denoiser denoiser;
-    bool enable_denoising = true;
 
 private:
 	void CleanupOpenGLResources();

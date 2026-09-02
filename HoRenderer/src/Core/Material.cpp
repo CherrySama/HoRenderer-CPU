@@ -11,6 +11,14 @@ namespace {
 constexpr float DeltaRoughnessThreshold = 1e-6f;
 constexpr float MinMicrofacetAlpha = 1e-4f;
 
+bool IsFiniteNonZeroVector(const Vector3f& value)
+{
+    return std::isfinite(value.x) &&
+           std::isfinite(value.y) &&
+           std::isfinite(value.z) &&
+           glm::length2(value) > Epsilon * Epsilon;
+}
+
 struct PlasticSamplingWeights {
     float specular_probability;
     bool has_scattering;
@@ -85,11 +93,19 @@ bool Material::IsScatteringDirectionValid(const Hit_Payload& rec,
 }
 
 Vector3f Material::GetSurfaceNormal(const Hit_Payload& rec) const {
-    Vector3f surface_normal = glm::normalize(rec.normal);
+    const Vector3f fallback_normal(0.0f, 0.0f, 1.0f);
+    Vector3f surface_normal = IsFiniteNonZeroVector(rec.normal)
+        ? glm::normalize(rec.normal)
+        : (IsFiniteNonZeroVector(rec.geometric_normal)
+            ? glm::normalize(rec.geometric_normal)
+            : fallback_normal);
 
     if (normal_texture != nullptr) {
         Vector3f tangent_normal = normal_texture->GetColor(rec.uv.x, rec.uv.y);
         Vector3f mapped_normal = glm::normalize(tangent_normal * 2.0f - 1.0f);
+        if (!IsFiniteNonZeroVector(mapped_normal)) {
+            mapped_normal = surface_normal;
+        }
         if (glm::length2(rec.tangent) > Epsilon * Epsilon &&
             glm::length2(rec.bitangent) > Epsilon * Epsilon) {
             Vector3f tangent = glm::normalize(rec.tangent -

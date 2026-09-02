@@ -300,6 +300,13 @@ Vector3f Integrator::EstimateDirectLighting(const Ray &r_in, const Hit_Payload &
 
 float Integrator::PowerHeuristic(float pdf1, float pdf2, int beta)
 {
+    if (!std::isfinite(pdf1) || pdf1 < 0.0f) {
+        pdf1 = 0.0f;
+    }
+    if (!std::isfinite(pdf2) || pdf2 < 0.0f) {
+        pdf2 = 0.0f;
+    }
+
     pdf1 = std::max(pdf1, 1e-10f);
     pdf2 = std::max(pdf2, 1e-10f);
     

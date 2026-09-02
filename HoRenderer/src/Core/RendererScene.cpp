@@ -179,12 +179,12 @@ namespace RendererScene
         scene->AddEnvLight(env_light);
 
         // direct light
-        auto light = std::make_shared<QuadAreaLight>(std::make_shared<Quad>(Vector3f(-100.0f, 0.0f, 0.0f),
-                                                                            Vector3f(0.0f, 100.0f, 0.0f),
-                                                                            Vector3f(0.0f, 0.0f, 100.0f),
-                                                                            Transform::Rotate(Vector3f(0.0f, 25.0f, 0.0f)),
-                                                                            emitMaterial));
-        scene->AddLights(light);
+        // auto light = std::make_shared<QuadAreaLight>(std::make_shared<Quad>(Vector3f(-100.0f, 0.0f, 0.0f),
+        //                                                                     Vector3f(0.0f, 100.0f, 0.0f),
+        //                                                                     Vector3f(0.0f, 0.0f, 100.0f),
+        //                                                                     Transform::Rotate(Vector3f(0.0f, 25.0f, 0.0f)),
+        //                                                                     emitMaterial));
+        // scene->AddLights(light);
         // ground & wall
         scene->Add(std::make_shared<Quad>(Vector3f(555.0f, 0.0f, 0.0f),
                                           Vector3f(0.0f, 555.0f, 0.0f),
@@ -206,7 +206,7 @@ namespace RendererScene
         Transform dragon_transform = Transform::Translate(Vector3f(250.0f, 90.0f, 200.0f)) * Transform::Rotate(Vector3f(0.0f, -20.0f, 0.0f)) * Transform::Scale(300.0f);
         auto dragon_mesh = std::make_shared<Mesh>(fm->getModelPath("dragon.obj"),
                                                   dragon_transform,
-                                                  goldFabricMaterial);
+                                                  plasticMaterial);
         scene->Add(dragon_mesh);
 
         scene->BuildBVH();

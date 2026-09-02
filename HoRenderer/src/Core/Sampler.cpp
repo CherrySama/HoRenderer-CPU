@@ -35,7 +35,14 @@ Vector2f Sampler::get_2d_sample() const
     int dim1 = (pixel_dimension_offset + dimension_pair_index * 2) % SobolMatricesDim;
     int dim2 = (pixel_dimension_offset + dimension_pair_index * 2 + 1) % SobolMatricesDim;
 
-    uint64_t effective_sample_index = sample_index + (pixel_hash == 0 ? 7 : pixel_hash % 8);
+    uint64_t sample_offset = pixel_hash == 0 ? 7 : pixel_hash % 8;
+    // Sobol index zero is the all-zero point in every dimension. Starting a
+    // pixel there makes every decision in its first path choose the same
+    // boundary value, including BSDF directions and Russian roulette.
+    if (sample_offset == 0) {
+        sample_offset = 1;
+    }
+    uint64_t effective_sample_index = sample_index + sample_offset;
     uint32_t sobol_value1 = SobolSample(effective_sample_index, dim1);
     uint32_t sobol_value2 = SobolSample(effective_sample_index, dim2);
 

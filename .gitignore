@@ -80,3 +80,4 @@ build/
 
 .clang-format
 .xmake/
+.DS_Store

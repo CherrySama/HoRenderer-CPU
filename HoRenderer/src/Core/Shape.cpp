@@ -224,15 +224,15 @@ void Box::CreateSides(const Vector3f& center, const Vector3f& dimensions, const 
     // right (x+)
     sides.push_back(std::make_shared<Quad>(
         Vector3f(center.x + half_dim.x, center.y - half_dim.y, center.z - half_dim.z), // Q
-        Vector3f(0, 0, dimensions.z),                                                   // u
-        Vector3f(0, dimensions.y, 0),                                                   // v
+        Vector3f(0, dimensions.y, 0),                                                   // u
+        Vector3f(0, 0, dimensions.z),                                                   // v
         transform, mat, interior_id, exterior_id));
 
     // left (x-)
     sides.push_back(std::make_shared<Quad>(
         Vector3f(center.x - half_dim.x, center.y - half_dim.y, center.z + half_dim.z), // Q
-        Vector3f(0, 0, -dimensions.z),                                                  // u
-        Vector3f(0, dimensions.y, 0),                                                   // v
+        Vector3f(0, dimensions.y, 0),                                                   // u
+        Vector3f(0, 0, -dimensions.z),                                                  // v
         transform, mat, interior_id, exterior_id));
 
     if (!sides.empty()) {

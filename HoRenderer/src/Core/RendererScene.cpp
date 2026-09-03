@@ -22,7 +22,7 @@ namespace RendererScene
                                    Vector3f(0.0f, 1.0f, 0.0f),
                                    0.0f,
                                    1.0f,
-                                   0};
+                                   -1};
         std::unique_ptr<Camera> camera = std::make_unique<Camera>();
         camera->Create(camParams);
 
@@ -114,18 +114,18 @@ namespace RendererScene
                                                   goldSilkMaterial);
         scene->Add(dragon_mesh);
 
-        // auto smoke_boundary = std::make_shared<Box>(Vector3f(278.0f, 278.0f, 278.0f),
-        //                                             Vector3f(555.0f, 555.0f, 555.0f),
-        //                                             Transform(),
-        //                                             nullptr,
-        //                                             0,
-        //                                             -1);
-        // scene->Add(smoke_boundary);
+        auto smoke_boundary = std::make_shared<Box>(Vector3f(277.5f, 277.5f, 277.5f),
+                                                    Vector3f(554.0f, 554.0f, 554.0f),
+                                                    Transform(),
+                                                    nullptr,
+                                                    0,
+                                                    -1);
+        scene->Add(smoke_boundary);
 
-        // auto smoke_medium = std::make_shared<HomogeneousMedium>(Vector3f(0.005f, 0.005f, 0.005f),
-        //                                                         Vector3f(0.005f, 0.005f, 0.005f),
-        //                                                         std::make_shared<HenyeyGreensteinPhase>(0.3f));
-        // scene->AddMedium(smoke_medium); 
+        auto smoke_medium = std::make_shared<HomogeneousMedium>(Vector3f(0.001f, 0.001f, 0.001f),
+                                                                Vector3f(0.00005f, 0.00005f, 0.00005f),
+                                                                std::make_shared<HenyeyGreensteinPhase>(0.1f));
+        scene->AddMedium(smoke_medium);
 
         scene->BuildBVH();
         scene->BuildLightTable(); 
@@ -143,7 +143,7 @@ namespace RendererScene
                                    Vector3f(0.0f, 1.0f, 0.0f),
                                    0.0f,
                                    1.0f,
-                                   0};
+                                   -1};
         std::unique_ptr<Camera> camera = std::make_unique<Camera>();
         camera->Create(camParams);
 
@@ -174,7 +174,7 @@ namespace RendererScene
         // Env Light
         auto fm = FileManager::getInstance();
         fm->init();
-        auto hdr_texture = std::make_shared<HDRTexture>(fm->getEnvBGPath("spaichingen_hill_4k.hdr").c_str());
+        auto hdr_texture = std::make_shared<HDRTexture>(fm->getEnvBGPath("industrial.hdr").c_str());
         auto env_light = std::make_shared<InfiniteAreaLight>(hdr_texture, 1.0f);
         scene->AddEnvLight(env_light);
 

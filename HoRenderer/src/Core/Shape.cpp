@@ -606,3 +606,111 @@ bool Mesh::isHit(const Ray& r, Vector2f t_interval, Hit_Payload& rec) const
 
     return true;
 }
+
+bool Mesh::Contains(const Vector3f& point) const
+{
+    const Vector3f bounds_min = bbox.min();
+    const Vector3f bounds_max = bbox.max();
+    if (point.x < bounds_min.x || point.x > bounds_max.x ||
+        point.y < bounds_min.y || point.y > bounds_max.y ||
+        point.z < bounds_min.z || point.z > bounds_max.z) {
+        return false;
+    }
+
+    const Vector3f direction = glm::normalize(Vector3f(1.0f, 0.371f, 0.529f));
+    Vector3f origin = point;
+    int intersection_count = 0;
+
+    constexpr int MaxIntersections = 4096;
+    for (; intersection_count < MaxIntersections; intersection_count++) {
+        RTCRayHit rayhit{};
+        rayhit.ray.org_x = origin.x;
+        rayhit.ray.org_y = origin.y;
+        rayhit.ray.org_z = origin.z;
+        rayhit.ray.dir_x = direction.x;
+        rayhit.ray.dir_y = direction.y;
+        rayhit.ray.dir_z = direction.z;
+        rayhit.ray.tnear = Epsilon;
+        rayhit.ray.tfar = Infinity;
+        rayhit.ray.time = 0.0f;
+        rayhit.ray.mask = 0xFFFFFFFF;
+        rayhit.ray.id = 0;
+        rayhit.ray.flags = 0;
+        rayhit.hit.geomID = RTC_INVALID_GEOMETRY_ID;
+        rayhit.hit.primID = RTC_INVALID_GEOMETRY_ID;
+
+        rtcIntersect1(embree_scene, &rayhit);
+        if (rayhit.hit.geomID == RTC_INVALID_GEOMETRY_ID) {
+            break;
+        }
+
+        const float advance = rayhit.ray.tfar + 8.0f * Epsilon;
+        if (!std::isfinite(advance) || advance <= Epsilon) {
+            return false;
+        }
+        origin += direction * advance;
+    }
+
+    if (intersection_count == MaxIntersections) {
+        return false;
+    }
+    return (intersection_count % 2) == 1;
+}
+
+LiquidContainer::LiquidContainer(std::shared_ptr<Mesh> boundary,
+                                 float fill_ratio,
+                                 std::shared_ptr<Material> liquid_surface_material,
+                                 int liquid_medium_id,
+                                 int surrounding_medium_id)
+    : boundary(std::move(boundary)),
+      liquid_surface_material(std::move(liquid_surface_material)),
+      fill_ratio(glm::clamp(fill_ratio, 0.0f, 1.0f)),
+      liquid_medium_id(liquid_medium_id),
+      surrounding_medium_id(surrounding_medium_id)
+{
+    if (!this->boundary) {
+        throw std::invalid_argument("LiquidContainer requires a mesh boundary");
+    }
+
+    const AABB bounds = this->boundary->getBoundingBox();
+    fill_height = glm::mix(bounds.min().y, bounds.max().y, this->fill_ratio);
+}
+
+bool LiquidContainer::isHit(const Ray& r, Vector2f t_interval, Hit_Payload& rec) const
+{
+    Hit_Payload boundary_hit;
+    bool hit_anything = boundary->isHit(r, t_interval, boundary_hit);
+    float closest_t = hit_anything ? boundary_hit.t : t_interval.y;
+
+    if (hit_anything) {
+        boundary_hit.interior_medium_id = boundary_hit.p.y <= fill_height
+            ? liquid_medium_id
+            : surrounding_medium_id;
+        boundary_hit.exterior_medium_id = surrounding_medium_id;
+        rec = boundary_hit;
+    }
+
+    const float direction_y = r.direction().y;
+    const bool has_liquid_surface = fill_ratio > 0.0f && fill_ratio < 1.0f;
+    if (has_liquid_surface && std::abs(direction_y) > Epsilon) {
+        const float surface_t = (fill_height - r.origin().y) / direction_y;
+        if (surface_t >= t_interval.x && surface_t <= closest_t) {
+            const Vector3f surface_point = r.at(surface_t);
+            if (boundary->Contains(surface_point)) {
+                rec.t = surface_t;
+                rec.p = surface_point;
+                rec.set_face_normal(r, Vector3f(0.0f, 1.0f, 0.0f));
+                rec.tangent = Vector3f(1.0f, 0.0f, 0.0f);
+                rec.bitangent = Vector3f(0.0f, 0.0f, 1.0f);
+                rec.uv = Vector2f(surface_point.x, surface_point.z);
+                rec.mat = liquid_surface_material;
+                rec.hit_object = this;
+                rec.interior_medium_id = liquid_medium_id;
+                rec.exterior_medium_id = surrounding_medium_id;
+                hit_anything = true;
+            }
+        }
+    }
+
+    return hit_anything;
+}

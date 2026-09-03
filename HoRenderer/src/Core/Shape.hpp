@@ -133,6 +133,7 @@ public:
     ~Mesh();
 
     bool isHit(const Ray& r, Vector2f t_interval, Hit_Payload& rec) const override;
+    bool Contains(const Vector3f& point) const;
     AABB getBoundingBox() const override { return bbox; }
     std::shared_ptr<Material> get_mat() const { return mat; }
 
@@ -160,4 +161,26 @@ private:
     std::shared_ptr<Material> mat;
     AABB bbox;  
     int interior_id, exterior_id;
+};
+
+class LiquidContainer : public Hittable {
+public:
+    LiquidContainer(std::shared_ptr<Mesh> boundary,
+                    float fill_ratio,
+                    std::shared_ptr<Material> liquid_surface_material,
+                    int liquid_medium_id,
+                    int surrounding_medium_id = -1);
+
+    bool isHit(const Ray& r, Vector2f t_interval, Hit_Payload& rec) const override;
+    AABB getBoundingBox() const override { return boundary->getBoundingBox(); }
+    float GetFillRatio() const { return fill_ratio; }
+    float GetFillHeight() const { return fill_height; }
+
+private:
+    std::shared_ptr<Mesh> boundary;
+    std::shared_ptr<Material> liquid_surface_material;
+    float fill_ratio;
+    float fill_height;
+    int liquid_medium_id;
+    int surrounding_medium_id;
 };

@@ -45,11 +45,16 @@ namespace RendererScene
                                                          0.15f,
                                                          1.49f,
                                                          1.0f);
-        auto frostedGlassMaterial = std::make_shared<Dielectric>(Vector3f(0.95f, 0.95f, 0.98f),
-                                                                   0.05f,
-                                                                   0.05f,
-                                                                   1.3f,
-                                                                   1.0f);
+        auto blueFrostedGlassMaterial = std::make_shared<Dielectric>(Vector3f(0.30f, 0.55f, 0.95f),
+                                                                       0.03f,
+                                                                       0.03f,
+                                                                       1.5f,
+                                                                       1.0f);
+        auto clearFrostedGlassMaterial = std::make_shared<Dielectric>(Vector3f(0.98f, 0.98f, 0.99f),
+                                                                      0.03f,
+                                                                      0.03f,
+                                                                      1.5f,
+                                                                      1.0f);
         auto goldSilkMaterial = std::make_shared<Fabric>(Vector3f(0.9f, 0.7f, 0.2f), 
                                                          0.12f,                      
                                                          0.2f,
@@ -111,21 +116,15 @@ namespace RendererScene
         Transform dragon_transform = Transform::Translate(Vector3f(200.0f, 80.0f, 200.0f)) * Transform::Rotate(Vector3f(0.0f, 25.0f, 0.0f)) * Transform::Scale(300.0f);
         auto dragon_mesh = std::make_shared<Mesh>(fm->getModelPath("dragon.obj"),
                                                   dragon_transform,
-                                                  goldSilkMaterial);
+                                                  clearFrostedGlassMaterial,
+                                                  0,
+                                                  -1);
         scene->Add(dragon_mesh);
 
-        auto smoke_boundary = std::make_shared<Box>(Vector3f(277.5f, 277.5f, 277.5f),
-                                                    Vector3f(554.0f, 554.0f, 554.0f),
-                                                    Transform(),
-                                                    nullptr,
-                                                    0,
-                                                    -1);
-        scene->Add(smoke_boundary);
-
-        auto smoke_medium = std::make_shared<HomogeneousMedium>(Vector3f(0.001f, 0.001f, 0.001f),
-                                                                Vector3f(0.00005f, 0.00005f, 0.00005f),
-                                                                std::make_shared<HenyeyGreensteinPhase>(0.1f));
-        scene->AddMedium(smoke_medium);
+        auto blueLiquidMedium = std::make_shared<HomogeneousMedium>(Vector3f(0.0f, 0.0f, 0.0f),
+                                                                    Vector3f(0.024f, 0.008f, 0.0006f),
+                                                                    std::make_shared<IsotropicPhase>());
+        scene->AddMedium(blueLiquidMedium);
 
         scene->BuildBVH();
         scene->BuildLightTable(); 
@@ -206,7 +205,7 @@ namespace RendererScene
         Transform dragon_transform = Transform::Translate(Vector3f(250.0f, 90.0f, 200.0f)) * Transform::Rotate(Vector3f(0.0f, -20.0f, 0.0f)) * Transform::Scale(300.0f);
         auto dragon_mesh = std::make_shared<Mesh>(fm->getModelPath("dragon.obj"),
                                                   dragon_transform,
-                                                  plasticMaterial);
+                                                  frostedGlassMaterial);
         scene->Add(dragon_mesh);
 
         scene->BuildBVH();

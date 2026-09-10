@@ -24,7 +24,7 @@ public:
     Vector3f VolumeIntegrator(const Ray &r, int max_depth, const Scene &world, Sampler &sampler, int initial_medium_id);
     Vector3f EstimateDirectLighting(const Ray &r_in, const Hit_Payload &rec, const Scene &world, Sampler &sampler, int current_medium_id);
     float PowerHeuristic(float pdf1, float pdf2, int beta = 2);
-    Vector3f CalculateShadowTransmittance(const Ray &shadow_ray, const Scene &world, int initial_medium_id, const Hittable* target_light_shape);
+    Vector3f CalculateShadowTransmittance(const Ray &shadow_ray, const Scene &world, Sampler& sampler, int initial_medium_id, const Hittable* target_light_shape);
 
     void SetNumThreads(int threads);
     int GetNumThreads() const;

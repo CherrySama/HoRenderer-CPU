@@ -35,6 +35,7 @@ Ambient Light: Supports HDR environment maps
 🌫️ **Volume Rendering**
 
 Homogeneous Media  
+Heterogeneous Media  
 Phase Functions  
 Multiple Scattering 
 
@@ -56,8 +57,7 @@ Perspective Camera
 Depth of Field
 
 📝 **TODO List**
-
-Heterogeneous media ❎  
+ 
 Spectrum Sampling ❎
 
 ## Requirements📝

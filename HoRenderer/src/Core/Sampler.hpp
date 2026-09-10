@@ -14,9 +14,12 @@ struct SamplerParams {
     FilterType filter_type;
 };
 
+enum class SamplingSequence { Sobol, Independent };
+
 class Sampler {
 public:
-    Sampler(FilterType filter_type) {
+    Sampler(FilterType filter_type, SamplingSequence sequence = SamplingSequence::Sobol)
+        : sequence(sequence) {
         filter = Filter::Create(filter_type);
         current_sample = 0;
         pixel_x = 0;
@@ -45,6 +48,7 @@ private:
     int current_sample;
     int pixel_x, pixel_y;
     std::shared_ptr<Filter> filter;
+    SamplingSequence sequence;
 
     mutable int dimension_pair_index = 0;
     mutable bool use_second_sample = false;

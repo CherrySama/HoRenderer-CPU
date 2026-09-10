@@ -60,6 +60,7 @@ Vector3f Integrator::VolumeIntegrator(const Ray &r, int max_depth, const Scene &
     bool never_scattered = true;
     bool last_event_was_delta = false;
     float last_pdf = 0.0f;
+    Vector3f last_scatter_position = r.origin();
     int current_medium_id = initial_medium_id;
 
     auto HitLight = [](const Hit_Payload& hit) -> bool {
@@ -77,38 +78,20 @@ Vector3f Integrator::VolumeIntegrator(const Ray &r, int max_depth, const Scene &
 
         auto medium = world.GetMedium(current_medium_id);
 
-        bool will_scatter = false;
-        float t_scatter = Infinity;
-        Vector3f transmittance(1.0f);
-        float trans_pdf = 1.0f;
-
+        MediumSample medium_sample;
         if (medium) {
-            Vector3f sigma_t = medium->GetSigmaT(current_ray.origin());
-            float max_sigma_t = std::max({sigma_t.x, sigma_t.y, sigma_t.z});
-            if (max_sigma_t > Epsilon) {
-                float u = sampler.random_float();
-                t_scatter = -std::log(1.0f - u) / max_sigma_t;
-                will_scatter = (t_scatter < t_surface);
-
-                if (will_scatter) {
-                    transmittance = Vector3f(std::exp(-sigma_t.x * t_scatter),
-                                           std::exp(-sigma_t.y * t_scatter),
-                                           std::exp(-sigma_t.z * t_scatter));
-                    trans_pdf = max_sigma_t * std::exp(-max_sigma_t * t_scatter);
-                } else {
-                    transmittance = Vector3f(std::exp(-sigma_t.x * t_surface),
-                                           std::exp(-sigma_t.y * t_surface),
-                                           std::exp(-sigma_t.z * t_surface));
-                    trans_pdf = std::exp(-max_sigma_t * t_surface);
-                }
-            }
+            medium_sample = medium->Sample(current_ray, t_surface, sampler);
         }
 
-        if (will_scatter) {
-            Vector3f scatter_pos = current_ray.at(t_scatter);
-            Vector3f sigma_s = medium->GetSigmaS(scatter_pos);
-            
-            path_throughput *= transmittance * sigma_s / trans_pdf;
+        if (medium_sample.scattered) {
+            const Vector3f scatter_pos = medium_sample.position;
+            path_throughput *= medium_sample.weight;
+            const float max_throughput = std::max({path_throughput.x,
+                                                   path_throughput.y,
+                                                   path_throughput.z});
+            if (max_throughput <= Epsilon || !std::isfinite(max_throughput)) {
+                break;
+            }
             never_scattered = false;
             
             // NEE
@@ -125,8 +108,9 @@ Vector3f Integrator::VolumeIntegrator(const Ray &r, int max_depth, const Scene &
             Vector3f light_radiance = world.SampleLights(current_ray, temp_hit, light_direction, light_pdf, sampler, sampled_light_shape);
             
             if (light_pdf > Epsilon) {
-                Ray shadow_ray = Ray::SpawnRay(scatter_pos, light_direction, Vector3f(0, 1, 0));
-                Vector3f shadow_transmittance = CalculateShadowTransmittance(shadow_ray, world, current_medium_id, sampled_light_shape);
+                // A volume interaction has no surface normal to offset along.
+                Ray shadow_ray(scatter_pos, glm::normalize(light_direction));
+                Vector3f shadow_transmittance = CalculateShadowTransmittance(shadow_ray, world, sampler, current_medium_id, sampled_light_shape);
                 
                 auto phase_func = medium->GetPhaseFunction();
                 float phase_value = phase_func->Evaluate(-current_ray.direction(), light_direction);
@@ -148,23 +132,24 @@ Vector3f Integrator::VolumeIntegrator(const Ray &r, int max_depth, const Scene &
             if (phase_pdf > Epsilon) {
                 float phase_value = phase_func->Evaluate(-current_ray.direction(), new_direction);
                 path_throughput *= phase_value / phase_pdf;
-                current_ray = Ray::SpawnRay(scatter_pos, new_direction, Vector3f(0, 1, 0));
+                current_ray = Ray(scatter_pos, glm::normalize(new_direction));
+                last_scatter_position = scatter_pos;
                 last_pdf = phase_pdf;
                 last_event_was_delta = false;
             } else {
                 break;
             }
         } else if (hit_surface) {
-            if (trans_pdf <= 0.0f || !std::isfinite(trans_pdf)) {
-                break;
-            }
-            path_throughput *= transmittance / trans_pdf;
+            path_throughput *= medium_sample.weight;
             if (HitLight(surface_hit)) {
                 float mis_weight = 1.0f;
                 Vector3f emission = surface_hit.mat->Emit(current_ray, surface_hit, surface_hit.uv.x, surface_hit.uv.y);
                 if (!never_scattered && !last_event_was_delta) {
                     float light_pdf;
-                    world.EvaluateLights(current_ray, surface_hit, light_pdf);
+                    // Null boundaries move the ray origin, but do not move
+                    // the scattering vertex used by the competing light PDF.
+                    world.EvaluateLights(Ray(last_scatter_position, current_ray.direction()),
+                                         surface_hit, light_pdf);
 
                     if (light_pdf > Epsilon)
                         mis_weight = PowerHeuristic(last_pdf, light_pdf, 2);
@@ -211,6 +196,7 @@ Vector3f Integrator::VolumeIntegrator(const Ray &r, int max_depth, const Scene &
                                                 scatter_direction,
                                                 surface_hit.geometric_normal);
                     last_pdf = bsdf_pdf;
+                    last_scatter_position = surface_hit.p;
                     last_event_was_delta = surface_hit.mat->IsDelta(surface_hit);
                     never_scattered = false;
                 } else {
@@ -237,7 +223,10 @@ Vector3f Integrator::VolumeIntegrator(const Ray &r, int max_depth, const Scene &
 
         if (bounce >= 3) {
             float max_component = std::max({path_throughput.x, path_throughput.y, path_throughput.z});
-            float survival_prob = std::min(0.95f, max_component);
+            // In nearly conservative smoke, a fixed 0.95 cap repeatedly
+            // amplifies rare long paths. Let volume paths survive with their
+            // actual throughput; max_depth still bounds every path.
+            float survival_prob = std::min(medium_sample.scattered ? 1.0f : 0.95f, max_component);
 
             if (survival_prob <= Epsilon || !std::isfinite(survival_prob)) {
                 break;
@@ -274,7 +263,7 @@ Vector3f Integrator::EstimateDirectLighting(const Ray &r_in, const Hit_Payload &
         int shadow_medium_id = is_light_transmission
             ? world.UpdateMediumId(r_in, rec, current_medium_id)
             : current_medium_id;
-        Vector3f shadow_transmittance = CalculateShadowTransmittance(shadow_ray, world, shadow_medium_id, sampled_light_shape);
+        Vector3f shadow_transmittance = CalculateShadowTransmittance(shadow_ray, world, sampler, shadow_medium_id, sampled_light_shape);
         
         if (glm::length(shadow_transmittance) > Epsilon) {
             float brdf_pdf;
@@ -319,7 +308,11 @@ float Integrator::PowerHeuristic(float pdf1, float pdf2, int beta)
 }
 
 // Shadow transmittance calculation
-Vector3f Integrator::CalculateShadowTransmittance(const Ray &shadow_ray, const Scene &world, int initial_medium_id, const Hittable* target_light_shape)
+Vector3f Integrator::CalculateShadowTransmittance(const Ray &shadow_ray,
+                                                  const Scene &world,
+                                                  Sampler& sampler,
+                                                  int initial_medium_id,
+                                                  const Hittable* target_light_shape)
 {
     Vector3f transmittance(1.0f);
     Ray current_ray = shadow_ray;
@@ -336,9 +329,7 @@ Vector3f Integrator::CalculateShadowTransmittance(const Ray &shadow_ray, const S
         auto medium = world.GetMedium(medium_id);
 
         if (medium) {
-            Vector3f start_pos = current_ray.origin();
-            Vector3f end_pos = current_ray.at(hit.t);
-            transmittance *= medium->Transmittance(start_pos, end_pos);
+            transmittance *= medium->Transmittance(current_ray, hit.t, sampler);
 
             if (glm::length(transmittance) < 1e-6f) 
                 return Vector3f(0.0f); // Early withdrawal

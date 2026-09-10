@@ -65,6 +65,11 @@ class Fabric;
 
 class Medium;
 class HomogeneousMedium;
+class HeterogeneousMedium;
+class DensityField;
+class ConstantDensityField;
+class LinearDensityField;
+class GridDensityField;
 class PhaseFunction;
 class IsotropicPhase;
 class HenyeyGreensteinPhase;

@@ -1,0 +1,34 @@
+{
+  "file": "bunny_smoke.vdb",
+  "sha256": "3990bf72acfedde94078a4c21a51a3130de0a9e252a8a7e27fbf3cb6b03bb01e",
+  "source": "source/base_density.vdb",
+  "source_isovalue": 0.035,
+  "relief": 0.65,
+  "voxel_size": 0.000697003910318017,
+  "positive_voxels": 4027226,
+  "density_min_max": [
+    0.001000034506432712,
+    1.0
+  ],
+  "positive_density_percentiles_10_50_90": [
+    0.0103817880153656,
+    0.787710964679718,
+    0.8884450793266296
+  ],
+  "index_bbox_inclusive": [
+    [
+      -12,
+      -18,
+      -17
+    ],
+    [
+      263,
+      209,
+      259
+    ]
+  ],
+  "finite_nonnegative": true,
+  "generation_boundary_clear": true,
+  "exact_vdb_roundtrip": true,
+  "appearance_accepted": true
+}

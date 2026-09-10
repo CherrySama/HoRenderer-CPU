@@ -9,8 +9,9 @@ int main() {
     srand(static_cast<unsigned int>(time(nullptr)));
 
     try {
-        auto renderer = RendererScene::CornellBox();
-        // auto renderer = RendererScene::SpaichingenHill();
+        // auto renderer = RendererScene::HeterogeneousBunny();
+        // auto renderer = RendererScene::CornellBox();
+        auto renderer = RendererScene::SpaichingenHill();
         renderer->Run();
     } catch (const std::exception& error) {
         std::cerr << "Renderer startup failed: " << error.what() << std::endl;

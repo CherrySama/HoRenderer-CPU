@@ -29,24 +29,14 @@ bool AABB::isHit(const Ray &ray, Vector2f &t_interval) const {
 }
 
 void AABB::pad_to_minimums() {
-    float delta = 0.0001f;
-    // x axis
-    if (p_max.x - p_min.x < delta) {
-        float center = (p_max.x + p_min.x) * 0.5f;
-        p_min.x = center - delta * 0.5f;
-        p_max.x = center + delta * 0.5f;
-    }
-    // y
-    if (p_max.y - p_min.y < delta) {
-        float center = (p_max.y + p_min.y) * 0.5f;
-        p_min.y = center - delta * 0.5f;
-        p_max.y = center + delta * 0.5f;
-    }
-    // z
-    if (p_max.z - p_min.z < delta) {
-        float center = (p_max.z + p_min.z) * 0.5f;
-        p_min.z = center - delta * 0.5f;
-        p_max.z = center + delta * 0.5f;
+    for (int axis = 0; axis < 3; ++axis) {
+        // A fixed 1e-4 padding rounds away at large scene coordinates.
+        const float scale = std::max(std::abs(p_min[axis]), std::abs(p_max[axis]));
+        const float delta = std::max(1e-4f, 8.0f * std::numeric_limits<float>::epsilon() * scale);
+        if (p_max[axis] - p_min[axis] < delta) {
+            const float center = p_min[axis] + (p_max[axis] - p_min[axis]) * 0.5f;
+            p_min[axis] = center - delta * 0.5f;
+            p_max[axis] = center + delta * 0.5f;
+        }
     }
 }
-

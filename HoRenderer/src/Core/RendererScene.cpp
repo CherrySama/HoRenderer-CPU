@@ -8,6 +8,7 @@
 #include "Transform.hpp"
 #include "Light.hpp"
 #include "Medium.hpp"
+#include "VdbDensityField.hpp"
 #include "../Common/FileManager.hpp"
 
 namespace RendererScene
@@ -130,6 +131,89 @@ namespace RendererScene
         scene->BuildLightTable(); 
         auto renderer = std::make_shared<Renderer>(std::move(camera), std::move(integrator), std::move(sampler), std::move(scene));
         return renderer;
+    }
+
+    std::shared_ptr<Renderer> HeterogeneousBunny()
+    {
+        CameraParams camParams = { 1.0f,
+                                   600,
+                                   27.0f,
+                                   Vector3f(278.0f, 205.0f, -500.0f),
+                                   Vector3f(278.0f, 205.0f, 275.0f),
+                                   Vector3f(0.0f, 1.0f, 0.0f),
+                                   0.0f,
+                                   1.0f,
+                                   -1};
+        std::unique_ptr<Camera> camera = std::make_unique<Camera>();
+        camera->Create(camParams);
+
+        std::unique_ptr<Integrator> integrator = std::make_unique<Integrator>(camera->image_width, camera->image_height, 16, 256);
+        std::unique_ptr<Sampler> sampler = std::make_unique<Sampler>(FilterType::GAUSSIAN, SamplingSequence::Independent);
+        std::unique_ptr<Scene> scene = std::make_unique<Scene>();
+
+        // A distant luminous backdrop gives a flat blue-purple background.
+        // It is still physical geometry: indirect paths may receive its light.
+        auto smokeBackdrop = std::make_shared<Emission>(Vector3f(0.052f, 0.031f, 0.31f));
+        auto emitMaterial = std::make_shared<Emission>(Vector3f(8.0f, 7.6f, 7.2f));
+
+        scene->Add(std::make_shared<Quad>(Vector3f(-1500.0f, -1500.0f, 1800.0f),
+                                          Vector3f(0.0f, 3500.0f, 0.0f),
+                                          Vector3f(3500.0f, 0.0f, 0.0f),
+                                          Transform(),
+                                          smokeBackdrop));
+        auto key_quad = std::make_shared<Quad>(Vector3f(350.0f, 460.0f, -100.0f),
+                                                Vector3f(180.0f, 0.0f, 0.0f),
+                                                Vector3f(0.0f, 100.0f, 160.0f),
+                                                Transform(),
+                                                emitMaterial);
+        scene->AddLights(std::make_shared<QuadAreaLight>(key_quad));
+        auto fill_quad = std::make_shared<Quad>(Vector3f(-100, 0, -100),
+                                                Vector3f(250, 0, 0), Vector3f(0, 300, 0), Transform(),
+                                                std::make_shared<Emission>(Vector3f(0.9f, 0.95f, 1.05f)));
+        scene->AddLights(std::make_shared<QuadAreaLight>(fill_quad));
+
+        auto fm = FileManager::getInstance();
+        fm->init();
+        const auto vdb_path = fm->getModelPath("bunny_smoke/bunny_smoke.vdb");
+        AABB local_bounds;
+        {
+            const VdbDensityField local_density(vdb_path);
+            local_bounds = local_density.Bounds();
+        }
+        const Vector3f local_center = 0.5f * (local_bounds.min() + local_bounds.max());
+        // Cache is Z-up. Keep a right-handed rotation into this Y-up scene;
+        // camera looks along +Z, so its screen-right direction is world -X.
+        const Transform bunny_transform = Transform::Translate(Vector3f(278.0f, 205.0f, 275.0f)) *
+                                          Transform::Rotate(Vector3f(0.0f, -10.0f, 0.0f)) *
+                                          Transform::Rotate(Vector3f(0.0f, 180.0f, 0.0f)) *
+                                          Transform::Rotate(Vector3f(-90.0f, 0.0f, 0.0f)) *
+                                          Transform::Scale(1700.0f) * Transform::Translate(-local_center);
+        const auto bunny_density = std::make_shared<VdbDensityField>(vdb_path, bunny_transform);
+        std::cout << "VDB: " << vdb_path << ", max density=" << bunny_density->MaxDensity()
+                  << ", extinction=0.3, albedo=0.995, bounces=256, yaw=-10" << std::endl;
+
+        const AABB smoke_bounds = bunny_density->Bounds();
+        const Vector3f smoke_center = 0.5f * (smoke_bounds.min() + smoke_bounds.max());
+        const Vector3f smoke_dimensions = smoke_bounds.max() - smoke_bounds.min();
+        scene->Add(std::make_shared<Box>(smoke_center,
+                                         smoke_dimensions,
+                                         Transform(),
+                                         nullptr,
+                                         0,
+                                         -1));
+
+        auto smoke_medium = std::make_shared<HeterogeneousMedium>(bunny_density,
+                                                                  Vector3f(0.3f * 0.995f),
+                                                                  Vector3f(0.3f * (1.0f - 0.995f)),
+                                                                  std::make_shared<HenyeyGreensteinPhase>(0.18f));
+        scene->AddMedium(smoke_medium);
+
+        scene->BuildBVH();
+        scene->BuildLightTable();
+        return std::make_shared<Renderer>(std::move(camera),
+                                          std::move(integrator),
+                                          std::move(sampler),
+                                          std::move(scene));
     }
 
     std::shared_ptr<Renderer> SpaichingenHill()

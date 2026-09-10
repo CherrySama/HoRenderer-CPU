@@ -4,6 +4,15 @@
 #include "Sampler.hpp"
 #include "SobolMatrices1024x52.hpp"
 
+namespace {
+uint64_t MixBits64(uint64_t value)
+{
+    value = (value ^ (value >> 30)) * UINT64_C(0xbf58476d1ce4e5b9);
+    value = (value ^ (value >> 27)) * UINT64_C(0x94d049bb133111eb);
+    return value ^ (value >> 31);
+}
+}
+
 float Sampler::random_float() const
 {
     if (use_second_sample) {
@@ -29,6 +38,18 @@ Vector2f Sampler::get_2d_sample() const
     }
 
     uint64_t sample_index = static_cast<uint64_t>(current_sample);
+    if (sequence == SamplingSequence::Independent) {
+        // Counter-based per-path draws: no shared RNG state and no dimension
+        // wraparound during variable-length null-collision tracking.
+        const uint64_t pixel = (uint64_t(uint32_t(pixel_x)) << 32) | uint32_t(pixel_y);
+        const uint64_t seed = MixBits64(pixel + UINT64_C(0x9e3779b97f4a7c15)) ^
+                              MixBits64(sample_index + UINT64_C(0xd1b54a32d192ed03));
+        const uint64_t draw = 2 * uint64_t(dimension_pair_index++);
+        auto uniform = [&](uint64_t index) {
+            return float(MixBits64(seed + index * UINT64_C(0x9e3779b97f4a7c15)) >> 40) * 0x1p-24f;
+        };
+        return Vector2f(uniform(draw), uniform(draw + 1));
+    }
     uint32_t pixel_hash = hash_pixel(pixel_x, pixel_y);
     int pixel_dimension_offset = (pixel_hash % 512) * 2;
 
@@ -138,11 +159,29 @@ Vector3f Sampler::GGXNVDSample(const Vector3f &normal, const Vector3f &view, flo
 
 void Sampler::SetCurrentSample(int sample_index)
 {
+    if (current_sample == sample_index) {
+        return;
+    }
     current_sample = sample_index;
+    dimension_pair_index = 0;
+    use_second_sample = false;
+    cached_sample = 0.0f;
+    last_sample = current_sample;
+    last_pixel_x = pixel_x;
+    last_pixel_y = pixel_y;
 }
 
 void Sampler::SetPixel(int x, int y)
 {
+    if (pixel_x == x && pixel_y == y) {
+        return;
+    }
     pixel_x = x;
     pixel_y = y;
+    dimension_pair_index = 0;
+    use_second_sample = false;
+    cached_sample = 0.0f;
+    last_sample = current_sample;
+    last_pixel_x = pixel_x;
+    last_pixel_y = pixel_y;
 }
